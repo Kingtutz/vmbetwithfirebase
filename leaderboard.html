@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Top List - Prediction Scores</title>
+    <link rel="stylesheet" href="Css/shared.css" />
+    <link rel="stylesheet" href="Css/leaderboard.css" />
+  </head>
+  <body>
+    <main class="container">
+      <div class="header">
+        <div>
+          <h1>Top List</h1>
+          <p>Each correct answer gives 1 point.</p>
+        </div>
+        <div class="user-info">
+          <span id="userEmail">Loading...</span>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+      <nav class="nav-buttons">
+        <a href="index.html" class="nav-btn">Groups</a>
+        <a href="bets.html" class="nav-btn">Matches</a>
+        <a href="admin.html" class="nav-btn">Admin</a>
+        <button class="nav-btn active" disabled>Top List</button>
+      </nav>
+
+      <section id="notice" class="notice" style="display: none"></section>
+
+      <section class="leaderboard-card">
+        <h2 class="leaderboard-title">Ranking</h2>
+        <div id="leaderboard"></div>
+      </section>
+    </main>
+
+    <script type="module" src="Js/leaderboard.js"></script>
+  </body>
+</html>

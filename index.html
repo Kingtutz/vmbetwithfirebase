@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Cup Groups</title>
+    <link rel="stylesheet" href="Css/shared.css" />
+    <link rel="stylesheet" href="Css/index.css" />
+  </head>
+  <body>
+    <main class="container">
+      <div class="header">
+        <div>
+          <h1>World Cup Groups</h1>
+          <p>Click a team to see upcoming matches.</p>
+        </div>
+        <div class="user-info">
+          <span id="userEmail">Loading...</span>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input
+          id="teamSearch"
+          type="search"
+          placeholder="Search team name..."
+        />
+      </div>
+
+      <nav class="nav-buttons">
+        <button class="nav-btn active" disabled>Groups</button>
+        <a href="bets.html" class="nav-btn">Matches</a>
+        <a href="admin.html" class="nav-btn">Admin</a>
+        <a href="leaderboard.html" class="nav-btn">Top List</a>
+      </nav>
+
+      <section id="groups" class="groups"></section>
+
+      <section id="matchesPanel" class="matches-panel">
+        <h2 class="matches-title">Upcoming Matches</h2>
+        <p>Select a team to view matches.</p>
+      </section>
+    </main>
+
+    <script type="module" src="Js/index.js"></script>
+  </body>
+</html>

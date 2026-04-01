@@ -1,0 +1,442 @@
+{
+
+    "Omgång 1": [
+      {
+        "date": "11.06.",
+        "time": "21:00",
+        "team1": "Mexiko",
+        "team2": "Sydafrika"
+      },
+      {
+        "date": "12.06.",
+        "time": "04:00",
+        "team1": "Sydkorea",
+        "team2": "Tjeckien"
+      },
+      {
+        "date": "12.06.",
+        "time": "21:00",
+        "team1": "Kanada",
+        "team2": "Bosnien-Hercegovina"
+      },
+      {
+        "date": "13.06.",
+        "time": "03:00",
+        "team1": "USA",
+        "team2": "Paraguay"
+      },
+      {
+        "date": "13.06.",
+        "time": "21:00",
+        "team1": "Qatar",
+        "team2": "Schweiz"
+      },
+      {
+        "date": "14.06.",
+        "time": "00:00",
+        "team1": "Brasilien",
+        "team2": "Marocko"
+      },
+      {
+        "date": "14.06.",
+        "time": "03:00",
+        "team1": "Haiti",
+        "team2": "Skottland"
+      },
+      {
+        "date": "14.06.",
+        "time": "06:00",
+        "team1": "Australien",
+        "team2": "Turkiet"
+      },
+      {
+        "date": "14.06.",
+        "time": "19:00",
+        "team1": "Tyskland",
+        "team2": "Curacao"
+      },
+      {
+        "date": "14.06.",
+        "time": "22:00",
+        "team1": "Nederländerna",
+        "team2": "Japan"
+      },
+      {
+        "date": "15.06.",
+        "time": "01:00",
+        "team1": "Elfenbenskusten",
+        "team2": "Ecuador"
+      },
+      {
+        "date": "15.06.",
+        "time": "04:00",
+        "team1": "Sverige",
+        "team2": "Tunisien"
+      },
+      {
+        "date": "15.06.",
+        "time": "18:00",
+        "team1": "Spanien",
+        "team2": "Kap Verde"
+      },
+      {
+        "date": "15.06.",
+        "time": "21:00",
+        "team1": "Belgien",
+        "team2": "Egypten"
+      },
+      {
+        "date": "16.06.",
+        "time": "00:00",
+        "team1": "Saudiarabien",
+        "team2": "Uruguay"
+      },
+      {
+        "date": "16.06.",
+        "time": "03:00",
+        "team1": "Iran",
+        "team2": "New Zealand"
+      },
+      {
+        "date": "16.06.",
+        "time": "21:00",
+        "team1": "Frankrike",
+        "team2": "Senegal"
+      },
+      {
+        "date": "17.06.",
+        "time": "00:00",
+        "team1": "Irak",
+        "team2": "Norge"
+      },
+      {
+        "date": "17.06.",
+        "time": "03:00",
+        "team1": "Argentina",
+        "team2": "Algeriet"
+      },
+      {
+        "date": "17.06.",
+        "time": "06:00",
+        "team1": "Österrike",
+        "team2": "Jordan"
+      },
+      {
+        "date": "17.06.",
+        "time": "19:00",
+        "team1": "Portugal",
+        "team2": "DR Kongo"
+      },
+      {
+        "date": "17.06.",
+        "time": "22:00",
+        "team1": "England",
+        "team2": "Kroatien"
+      },
+      {
+        "date": "18.06.",
+        "time": "01:00",
+        "team1": "Ghana",
+        "team2": "Panama"
+      },
+      {
+        "date": "18.06.",
+        "time": "04:00",
+        "team1": "Uzbekistan",
+        "team2": "Colombia"
+      }
+    ],
+    "Omgång 2": [
+      {
+        "date": "18.06.",
+        "time": "18:00",
+        "team1": "Tjeckien",
+        "team2": "Sydafrika"
+      },
+      {
+        "date": "18.06.",
+        "time": "21:00",
+        "team1": "Schweiz",
+        "team2": "Bosnien-Hercegovina"
+      },
+      {
+        "date": "19.06.",
+        "time": "00:00",
+        "team1": "Kanada",
+        "team2": "Qatar"
+      },
+      {
+        "date": "19.06.",
+        "time": "03:00",
+        "team1": "Mexiko",
+        "team2": "Sydkorea"
+      },
+      {
+        "date": "19.06.",
+        "time": "21:00",
+        "team1": "USA",
+        "team2": "Australien"
+      },
+      {
+        "date": "20.06.",
+        "time": "00:00",
+        "team1": "Skottland",
+        "team2": "Marocko"
+      },
+      {
+        "date": "20.06.",
+        "time": "03:00",
+        "team1": "Brasilien",
+        "team2": "Haiti"
+      },
+      {
+        "date": "20.06.",
+        "time": "06:00",
+        "team1": "Turkiet",
+        "team2": "Paraguay"
+      },
+      {
+        "date": "20.06.",
+        "time": "19:00",
+        "team1": "Nederländerna",
+        "team2": "Sverige"
+      },
+      {
+        "date": "20.06.",
+        "time": "22:00",
+        "team1": "Tyskland",
+        "team2": "Elfenbenskusten"
+      },
+      {
+        "date": "21.06.",
+        "time": "02:00",
+        "team1": "Ecuador",
+        "team2": "Curacao"
+      },
+      {
+        "date": "21.06.",
+        "time": "06:00",
+        "team1": "Tunisien",
+        "team2": "Japan"
+      },
+      {
+        "date": "21.06.",
+        "time": "18:00",
+        "team1": "Spanien",
+        "team2": "Saudiarabien"
+      },
+      {
+        "date": "21.06.",
+        "time": "21:00",
+        "team1": "Belgien",
+        "team2": "Iran"
+      },
+      {
+        "date": "22.06.",
+        "time": "00:00",
+        "team1": "Uruguay",
+        "team2": "Kap Verde"
+      },
+      {
+        "date": "22.06.",
+        "time": "03:00",
+        "team1": "New Zealand",
+        "team2": "Egypten"
+      },
+      {
+        "date": "22.06.",
+        "time": "19:00",
+        "team1": "Argentina",
+        "team2": "Österrike"
+      },
+      {
+        "date": "22.06.",
+        "time": "23:00",
+        "team1": "Frankrike",
+        "team2": "Irak"
+      },
+      {
+        "date": "23.06.",
+        "time": "02:00",
+        "team1": "Norge",
+        "team2": "Senegal"
+      },
+      {
+        "date": "23.06.",
+        "time": "05:00",
+        "team1": "Jordan",
+        "team2": "Algeriet"
+      },
+      {
+        "date": "23.06.",
+        "time": "19:00",
+        "team1": "Portugal",
+        "team2": "Uzbekistan"
+      },
+      {
+        "date": "23.06.",
+        "time": "22:00",
+        "team1": "England",
+        "team2": "Ghana"
+      },
+      {
+        "date": "24.06.",
+        "time": "01:00",
+        "team1": "Panama",
+        "team2": "Kroatien"
+      },
+      {
+        "date": "24.06.",
+        "time": "04:00",
+        "team1": "Colombia",
+        "team2": "DR Kongo"
+      }
+    ],
+    "Omgång 3": [
+      {
+        "date": "24.06.",
+        "time": "21:00",
+        "team1": "Bosnien-Hercegovina",
+        "team2": "Qatar"
+      },
+      {
+        "date": "24.06.",
+        "time": "21:00",
+        "team1": "Schweiz",
+        "team2": "Kanada"
+      },
+      {
+        "date": "25.06.",
+        "time": "00:00",
+        "team1": "Marocko",
+        "team2": "Haiti"
+      },
+      {
+        "date": "25.06.",
+        "time": "00:00",
+        "team1": "Skottland",
+        "team2": "Brasilien"
+      },
+      {
+        "date": "25.06.",
+        "time": "03:00",
+        "team1": "Sydafrika",
+        "team2": "Sydkorea"
+      },
+      {
+        "date": "25.06.",
+        "time": "03:00",
+        "team1": "Tjeckien",
+        "team2": "Mexiko"
+      },
+      {
+        "date": "25.06.",
+        "time": "22:00",
+        "team1": "Curacao",
+        "team2": "Elfenbenskusten"
+      },
+      {
+        "date": "25.06.",
+        "time": "22:00",
+        "team1": "Ecuador",
+        "team2": "Tyskland"
+      },
+      {
+        "date": "26.06.",
+        "time": "01:00",
+        "team1": "Japan",
+        "team2": "Sverige"
+      },
+      {
+        "date": "26.06.",
+        "time": "01:00",
+        "team1": "Tunisien",
+        "team2": "Nederländerna"
+      },
+      {
+        "date": "26.06.",
+        "time": "04:00",
+        "team1": "Paraguay",
+        "team2": "Australien"
+      },
+      {
+        "date": "26.06.",
+        "time": "04:00",
+        "team1": "Turkiet",
+        "team2": "USA"
+      },
+      {
+        "date": "26.06.",
+        "time": "21:00",
+        "team1": "Norge",
+        "team2": "Frankrike"
+      },
+      {
+        "date": "26.06.",
+        "time": "21:00",
+        "team1": "Senegal",
+        "team2": "Irak"
+      },
+      {
+        "date": "27.06.",
+        "time": "02:00",
+        "team1": "Kap Verde",
+        "team2": "Saudiarabien"
+      },
+      {
+        "date": "27.06.",
+        "time": "02:00",
+        "team1": "Uruguay",
+        "team2": "Spanien"
+      },
+      {
+        "date": "27.06.",
+        "time": "05:00",
+        "team1": "Egypten",
+        "team2": "Iran"
+      },
+      {
+        "date": "27.06.",
+        "time": "05:00",
+        "team1": "New Zealand",
+        "team2": "Belgien"
+      },
+      {
+        "date": "27.06.",
+        "time": "23:00",
+        "team1": "Kroatien",
+        "team2": "Ghana"
+      },
+      {
+        "date": "27.06.",
+        "time": "23:00",
+        "team1": "Panama",
+        "team2": "England"
+      },
+      {
+        "date": "28.06.",
+        "time": "01:30",
+        "team1": "Colombia",
+        "team2": "Portugal"
+      },
+      {
+        "date": "28.06.",
+        "time": "01:30",
+        "team1": "DR Kongo",
+        "team2": "Uzbekistan"
+      },
+      {
+        "date": "28.06.",
+        "time": "04:00",
+        "team1": "Algeriet",
+        "team2": "Österrike"
+      },
+      {
+        "date": "28.06.",
+        "time": "04:00",
+        "team1": "Jordan",
+        "team2": "Argentina"
+      }
+    ]
+
+}

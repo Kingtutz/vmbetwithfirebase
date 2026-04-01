@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Set Match Winners</title>
+    <link rel="stylesheet" href="Css/shared.css" />
+    <link rel="stylesheet" href="Css/admin.css" />
+  </head>
+  <body>
+    <main class="container">
+      <div class="header">
+        <div>
+          <h1>Admin Panel</h1>
+          <p>Designate the winner for each match.</p>
+        </div>
+        <div class="user-info">
+          <span id="userEmail">Loading...</span>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input id="roundFilter" type="search" placeholder="Search round..." />
+      </div>
+
+      <nav class="nav-buttons">
+        <a href="index.html" class="nav-btn">Groups</a>
+        <a href="bets.html" class="nav-btn">Matches</a>
+        <button class="nav-btn active" disabled>Admin</button>
+        <a href="leaderboard.html" class="nav-btn">Top List</a>
+      </nav>
+
+      <section
+        id="adminNotice"
+        class="admin-notice"
+        style="display: none"
+      ></section>
+
+      <section id="matches" class="matches-grid"></section>
+
+      <section class="users-section">
+        <h2 class="users-heading">Registered Users</h2>
+        <div id="usersNotice" class="admin-notice" style="display: none"></div>
+        <div id="usersList"></div>
+      </section>
+    </main>
+
+    <script type="module" src="Js/admin.js"></script>
+  </body>
+</html>
