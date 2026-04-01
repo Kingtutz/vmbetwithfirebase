@@ -1,38 +1,90 @@
 const STORAGE_KEY = 'siteLanguage'
 
+const teamTranslations = {
+  Mexiko: 'Mexico',
+  Sydafrika: 'South Africa',
+  Sydkorea: 'South Korea',
+  Tjeckien: 'Czech Republic',
+  Kanada: 'Canada',
+  'Bosnien-Hercegovina': 'Bosnia and Herzegovina',
+  USA: 'United States',
+  Paraguay: 'Paraguay',
+  Qatar: 'Qatar',
+  Schweiz: 'Switzerland',
+  Brasilien: 'Brazil',
+  Marocko: 'Morocco',
+  Haiti: 'Haiti',
+  Skottland: 'Scotland',
+  Australien: 'Australia',
+  Turkiet: 'Turkey',
+  Tyskland: 'Germany',
+  Curacao: 'Curacao',
+  Nederländerna: 'Netherlands',
+  Japan: 'Japan',
+  Elfenbenskusten: 'Ivory Coast',
+  Ecuador: 'Ecuador',
+  Sverige: 'Sweden',
+  Tunisien: 'Tunisia',
+  Spanien: 'Spain',
+  'Kap Verde': 'Cape Verde',
+  Belgien: 'Belgium',
+  Egypten: 'Egypt',
+  Saudiarabien: 'Saudi Arabia',
+  Uruguay: 'Uruguay',
+  Iran: 'Iran',
+  'New Zealand': 'New Zealand',
+  Frankrike: 'France',
+  Senegal: 'Senegal',
+  Irak: 'Iraq',
+  Norge: 'Norway',
+  Argentina: 'Argentina',
+  Algeriet: 'Algeria',
+  Österrike: 'Austria',
+  Jordan: 'Jordan',
+  Portugal: 'Portugal',
+  'DR Kongo': 'DR Congo',
+  England: 'England',
+  Kroatien: 'Croatia',
+  Ghana: 'Ghana',
+  Panama: 'Panama',
+  Uzbekistan: 'Uzbekistan',
+  Colombia: 'Colombia'
+}
+
 const translations = {
   sv: {
-    'common.language': 'Sprak',
+    'common.language': 'Språk',
     'common.loading': 'Laddar...',
     'common.login': 'Logga in',
     'common.logout': 'Logga ut',
-    'common.guest': 'Gast',
+    'common.guest': 'Gäst',
     'common.groups': 'Grupper',
+    'common.info': 'Info',
     'common.matches': 'Matcher',
     'common.admin': 'Admin',
     'common.topList': 'Topplista',
-    'common.searchRound': 'Sok omgang...',
-    'common.searchTeam': 'Sok lag...',
+    'common.searchRound': 'Sök omgang...',
+    'common.searchTeam': 'Sök lag...',
     'common.draw': 'Oavgjort',
     'common.wins': 'vinner',
     'common.email': 'E-post',
-    'common.password': 'Losenord',
+    'common.password': 'Lösenord',
     'common.nickname': 'Smeknamn',
     'common.save': 'Spara',
-    'common.user': 'Anvandare',
-    'common.confirmPassword': 'Bekrafta losenord',
+    'common.user': 'Användare',
+    'common.confirmPassword': 'Bekräfta lösenord',
     'common.logoutFailed': 'Utloggningen misslyckades.',
     'common.currentWinner': 'Nuvarande vinnare: {winner}',
     'common.notSet': 'Ej satt',
     'common.matchesCount': '{count} matcher',
-    'common.pointsShort': 'poang',
+    'common.pointsShort': 'poäng',
     'common.predictionsLabel': 'tips',
     'common.scoredLabel': 'avgjorda',
 
     'landing.title': 'VM 2026 Tippning',
     'landing.heroTitle': 'VM 2026 Tippning',
     'landing.heroText':
-      'Tippa matchresultat, folj topplistan och tavla mot dina vanner pa ett stalle.',
+      'Tippa matchresultat, följ topplistan och tavla mot dina vanner pa ett stalle.',
     'landing.ctaLogin': 'Logga in / Skapa konto',
     'landing.ctaGroups': 'Oppna grupper',
     'landing.ctaTopList': 'Visa topplista',
@@ -43,7 +95,7 @@ const translations = {
       'Bladdra bland alla grupper och se gruppmatcher direkt i varje gruppkort.',
     'landing.leaderboardTitle': 'Topplista',
     'landing.leaderboardText':
-      'Se vem som leder med poang baserat pa admin-bekraftade matchresultat.',
+      'Se vem som leder med poäng baserat på matchresultat.',
 
     'groups.title': 'VM Grupper',
     'groups.headerTitle': 'VM Grupper',
@@ -151,6 +203,7 @@ const translations = {
     'common.logout': 'Logout',
     'common.guest': 'Guest',
     'common.groups': 'Groups',
+    'common.info': 'Info',
     'common.matches': 'Matches',
     'common.admin': 'Admin',
     'common.topList': 'Top List',
@@ -305,6 +358,11 @@ export const t = (key, variables = {}) => {
   const table = translations[currentLanguage] || translations.sv
   const fallback = translations.en[key] || translations.sv[key] || key
   return interpolate(table[key] || fallback, variables)
+}
+
+export const translateTeamName = teamName => {
+  if (currentLanguage === 'sv') return teamName
+  return teamTranslations[teamName] || teamName
 }
 
 const translateDocument = () => {

@@ -138,13 +138,15 @@ body {
 }
 
 .nav-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(96px, 100%), 1fr));
   gap: 10px;
   margin: 0 0 20px;
 }
 
 .nav-btn {
-  padding: 10px 16px;
+  min-width: 0;
+  padding: clamp(8px, 1.6vw, 10px) clamp(10px, 2vw, 16px);
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -153,7 +155,8 @@ body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 14px;
+  font-size: clamp(12px, 1.8vw, 14px);
+  text-align: center;
 }
 
 .nav-btn:hover:not(:disabled) {

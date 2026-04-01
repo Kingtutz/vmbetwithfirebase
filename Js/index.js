@@ -1,5 +1,6 @@
 import {
   getAllGroupTeams,
+  getAllMatchResults,
   getAllMatchesFlat,
   getUserProfile,
   getUserPredictions,
@@ -8,7 +9,7 @@ import {
   logOut,
   setUserNickname
 } from './firebase.js'
-import { initI18n, onLanguageChange, t } from './i18n.js'
+import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const groupsContainer = document.getElementById('groups')
 const searchInput = document.getElementById('teamSearch')
@@ -22,6 +23,7 @@ const matchesNavLink = document.querySelector(
 
 let allGroups = []
 let allMatches = []
+let allResults = {}
 let userPredictions = {}
 let currentUser = null
 let selectedTeam = null
@@ -95,8 +97,23 @@ const sortGroups = groups =>
     })
   )
 
+const getPredictionStatus = match => {
+  const prediction = userPredictions[match.id]
+  const winner = allResults[match.id]?.winner
+
+  if (!prediction || !winner) return ''
+  return prediction === winner ? 'correct' : 'wrong'
+}
+
+const getPredictionClass = predictionStatus => {
+  if (predictionStatus === 'correct') return ' prediction-correct'
+  if (predictionStatus === 'wrong') return ' prediction-wrong'
+  return ''
+}
+
 const renderMatchPanel = teamName => {
   selectedTeam = teamName
+  const displayTeamName = translateTeamName(teamName)
   const teamMatches = allMatches.filter(
     match => match.team1 === teamName || match.team2 === teamName
   )
@@ -104,7 +121,7 @@ const renderMatchPanel = teamName => {
   if (teamMatches.length === 0) {
     matchesPanel.innerHTML = `
       <h2 class="matches-title">${t('groups.upcomingMatches')}</h2>
-      <p>${t('groups.noMatchesFor', { team: teamName })}</p>
+      <p>${t('groups.noMatchesFor', { team: displayTeamName })}</p>
     `
     return
   }
@@ -112,15 +129,21 @@ const renderMatchPanel = teamName => {
   const matchesHtml = teamMatches
     .map(match => {
       const prediction = userPredictions[match.id]
+      const predictionStatus = getPredictionStatus(match)
+      const predictionClass = getPredictionClass(predictionStatus)
       let predictionLabel = ''
 
       if (prediction) {
         if (prediction === 'team1') {
-          predictionLabel = `<span class="prediction-badge">${match.team1} ✓</span>`
+          predictionLabel = `<span class="prediction-badge${predictionClass}">${translateTeamName(
+            match.team1
+          )} ✓</span>`
         } else if (prediction === 'team2') {
-          predictionLabel = `<span class="prediction-badge">${match.team2} ✓</span>`
+          predictionLabel = `<span class="prediction-badge${predictionClass}">${translateTeamName(
+            match.team2
+          )} ✓</span>`
         } else if (prediction === 'draw') {
-          predictionLabel = `<span class="prediction-badge">${t(
+          predictionLabel = `<span class="prediction-badge${predictionClass}">${t(
             'common.draw'
           )} ✓</span>`
         }
@@ -129,7 +152,9 @@ const renderMatchPanel = teamName => {
       return `
         <div class="match-row">
           <div class="match-info">
-            <strong>${match.team1}</strong> vs <strong>${match.team2}</strong>
+            <strong>${translateTeamName(
+              match.team1
+            )}</strong> vs <strong>${translateTeamName(match.team2)}</strong>
             <div>${match.date ?? ''} ${match.time ?? ''} ${
         match.round ? `- ${match.round}` : ''
       }</div>
@@ -142,7 +167,7 @@ const renderMatchPanel = teamName => {
 
   matchesPanel.innerHTML = `
     <h2 class="matches-title">${t('groups.upcomingMatchesFor', {
-      team: teamName
+      team: displayTeamName
     })}</h2>
     ${matchesHtml}
   `
@@ -150,12 +175,27 @@ const renderMatchPanel = teamName => {
 
 const predictionLabelForMatch = match => {
   const prediction = userPredictions[match.id]
-  if (!prediction) return ''
+  if (!prediction) return null
 
-  if (prediction === 'team1') return `${match.team1} ✓`
-  if (prediction === 'team2') return `${match.team2} ✓`
-  if (prediction === 'draw') return `${t('common.draw')} ✓`
-  return ''
+  const predictionStatus = getPredictionStatus(match)
+  const predictionClass = getPredictionClass(predictionStatus)
+
+  if (prediction === 'team1') {
+    return {
+      text: `${translateTeamName(match.team1)} ✓`,
+      className: predictionClass
+    }
+  }
+  if (prediction === 'team2') {
+    return {
+      text: `${translateTeamName(match.team2)} ✓`,
+      className: predictionClass
+    }
+  }
+  if (prediction === 'draw') {
+    return { text: `${t('common.draw')} ✓`, className: predictionClass }
+  }
+  return null
 }
 
 const getGroupMatches = group => {
@@ -179,10 +219,12 @@ const renderGroupMatches = group => {
         <div class="group-match-meta">${match.date ?? ''} ${
         match.time ?? ''
       }</div>
-          <div class="group-match-main">${match.team1} vs ${match.team2}</div>
+          <div class="group-match-main">${translateTeamName(
+            match.team1
+          )} vs ${translateTeamName(match.team2)}</div>
           ${
             predictionLabel
-              ? `<span class="group-match-prediction">${predictionLabel}</span>`
+              ? `<span class="group-match-prediction${predictionLabel.className}">${predictionLabel.text}</span>`
               : ''
           }
         </div>
@@ -210,7 +252,7 @@ const renderGroups = groups => {
       const button = document.createElement('button')
       button.className = 'team-btn'
       button.type = 'button'
-      button.textContent = team
+      button.textContent = translateTeamName(team)
       button.addEventListener('click', () => renderMatchPanel(team))
 
       li.appendChild(button)
@@ -241,7 +283,11 @@ const applySearch = () => {
   const filtered = allGroups
     .map(group => ({
       ...group,
-      teams: group.teams.filter(team => team.toLowerCase().includes(query))
+      teams: group.teams.filter(team => {
+        const rawName = team.toLowerCase()
+        const translatedName = translateTeamName(team).toLowerCase()
+        return rawName.includes(query) || translatedName.includes(query)
+      })
     }))
     .filter(group => group.teams.length > 0)
 
@@ -250,14 +296,16 @@ const applySearch = () => {
 
 const run = async () => {
   try {
-    const [groups, matches, predictions] = await Promise.all([
+    const [groups, matches, results, predictions] = await Promise.all([
       getAllGroupTeams(),
       getAllMatchesFlat(),
+      getAllMatchResults(),
       currentUser ? getUserPredictions(currentUser.uid) : Promise.resolve([])
     ])
 
     allGroups = sortGroups(groups)
     allMatches = matches
+    allResults = results || {}
 
     // Build predictions map
     userPredictions = {}

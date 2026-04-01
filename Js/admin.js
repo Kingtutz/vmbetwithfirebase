@@ -10,7 +10,7 @@ import {
   setMatchWinner,
   setUserPaid
 } from './firebase.js'
-import { initI18n, onLanguageChange, t } from './i18n.js'
+import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
 const userEmail = document.getElementById('userEmail')
@@ -297,8 +297,8 @@ const attachNicknameEditor = currentNickname => {
 }
 
 const winnerLabel = (winner, match) => {
-  if (winner === 'team1') return match.team1
-  if (winner === 'team2') return match.team2
+  if (winner === 'team1') return translateTeamName(match.team1)
+  if (winner === 'team2') return translateTeamName(match.team2)
   if (winner === 'draw') return t('common.draw')
   return t('common.notSet')
 }
@@ -315,9 +315,9 @@ const renderMatchCard = match => {
       </div>
       <div class="match-content">
         <div class="teams">
-          <span class="team-name">${match.team1}</span>
+          <span class="team-name">${translateTeamName(match.team1)}</span>
           <span class="vs">VS</span>
-          <span class="team-name">${match.team2}</span>
+          <span class="team-name">${translateTeamName(match.team2)}</span>
         </div>
         <div class="winner-buttons">
           <button class="winner-btn ${
@@ -325,7 +325,7 @@ const renderMatchCard = match => {
           }" data-match-id="${match.id}" data-winner="team1" ${
     isSaving ? 'disabled' : ''
   }>
-            ${match.team1}
+            ${translateTeamName(match.team1)}
           </button>
           <button class="winner-btn ${
             winner === 'draw' ? 'active' : ''
@@ -339,7 +339,7 @@ const renderMatchCard = match => {
           }" data-match-id="${match.id}" data-winner="team2" ${
     isSaving ? 'disabled' : ''
   }>
-            ${match.team2}
+            ${translateTeamName(match.team2)}
           </button>
         </div>
         <div class="current-winner">${t('common.currentWinner', {

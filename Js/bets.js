@@ -9,7 +9,7 @@ import {
   logOut,
   setUserNickname
 } from './firebase.js'
-import { initI18n, onLanguageChange, t } from './i18n.js'
+import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
 const roundFilter = document.getElementById('roundFilter')
@@ -95,9 +95,9 @@ const renderPredictionForm = match => {
   const winner = allResults[match.id]?.winner
   const winnerLabel =
     winner === 'team1'
-      ? match.team1
+      ? translateTeamName(match.team1)
       : winner === 'team2'
-      ? match.team2
+      ? translateTeamName(match.team2)
       : winner === 'draw'
       ? t('common.draw')
       : ''
@@ -110,9 +110,9 @@ const renderPredictionForm = match => {
       </div>
       <div class="match-content">
         <div class="teams">
-          <span class="team-name">${match.team1}</span>
+          <span class="team-name">${translateTeamName(match.team1)}</span>
           <span class="vs">VS</span>
-          <span class="team-name">${match.team2}</span>
+          <span class="team-name">${translateTeamName(match.team2)}</span>
         </div>
         <div class="prediction-buttons">
           <button class="prediction-btn ${
@@ -120,7 +120,7 @@ const renderPredictionForm = match => {
           }" data-match-id="${match.id}" data-prediction="team1" ${
     locked ? 'disabled' : ''
   }>
-            ${match.team1} Wins
+            ${translateTeamName(match.team1)} ${t('common.wins')}
           </button>
           <button class="prediction-btn draw ${
             currentPrediction === 'draw' ? 'active' : ''
@@ -134,7 +134,7 @@ const renderPredictionForm = match => {
           }" data-match-id="${match.id}" data-prediction="team2" ${
     locked ? 'disabled' : ''
   }>
-            ${match.team2} Wins
+            ${translateTeamName(match.team2)} ${t('common.wins')}
           </button>
         </div>
         ${
@@ -212,9 +212,9 @@ const renderUserPredictions = () => {
 
         const label =
           prediction === 'team1'
-            ? match.team1
+            ? translateTeamName(match.team1)
             : prediction === 'team2'
-            ? match.team2
+            ? translateTeamName(match.team2)
             : t('common.draw')
         const isSaved = userPredictions[matchId] === prediction
         const isTemp = tempPredictions[matchId] === prediction
@@ -224,7 +224,9 @@ const renderUserPredictions = () => {
           isSaved ? 'saved' : ''
         }">
             <div class="prediction-label">${label}</div>
-            <div class="prediction-match">${match.team1} vs ${match.team2}</div>
+            <div class="prediction-match">${translateTeamName(
+              match.team1
+            )} vs ${translateTeamName(match.team2)}</div>
             ${
               isTemp
                 ? `<div class="unsaved-badge">${t('bets.unsaved')}</div>`
