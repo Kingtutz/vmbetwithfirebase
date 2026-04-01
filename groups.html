@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World Cup Groups</title>
+    <title data-i18n="groups.title">World Cup Groups</title>
     <link rel="stylesheet" href="Css/shared.css" />
     <link rel="stylesheet" href="Css/index.css" />
   </head>
@@ -11,15 +11,15 @@
     <main class="container">
       <div class="header">
         <div>
-          <h1>World Cup Groups</h1>
-          <p>
+          <h1 data-i18n="groups.headerTitle">World Cup Groups</h1>
+          <p data-i18n="groups.headerText">
             Each group card now shows its group matches. Click a team for full
             list.
           </p>
         </div>
         <div class="user-info">
-          <span id="userEmail">Loading...</span>
-          <button id="logoutBtn">Logout</button>
+          <span id="userEmail" data-i18n="common.loading">Loading...</span>
+          <button id="logoutBtn" data-i18n="common.logout">Logout</button>
         </div>
       </div>
 
@@ -28,21 +28,30 @@
           id="teamSearch"
           type="search"
           placeholder="Search team name..."
+          data-i18n-placeholder="common.searchTeam"
         />
       </div>
 
       <nav class="nav-buttons">
-        <button class="nav-btn active" disabled>Groups</button>
-        <a href="bets.html" class="nav-btn">Matches</a>
-        <a href="admin.html" class="nav-btn">Admin</a>
-        <a href="leaderboard.html" class="nav-btn">Top List</a>
+        <button class="nav-btn active" disabled data-i18n="common.groups">
+          Groups
+        </button>
+        <a href="bets.html" class="nav-btn" data-i18n="common.matches"
+          >Matches</a
+        >
+        <a href="admin.html" class="nav-btn" data-i18n="common.admin">Admin</a>
+        <a href="leaderboard.html" class="nav-btn" data-i18n="common.topList"
+          >Top List</a
+        >
       </nav>
 
       <section id="groups" class="groups"></section>
 
       <section id="matchesPanel" class="matches-panel">
-        <h2 class="matches-title">Upcoming Matches</h2>
-        <p>Select a team to view matches.</p>
+        <h2 class="matches-title" data-i18n="groups.upcomingMatches">
+          Upcoming Matches
+        </h2>
+        <p data-i18n="groups.selectTeam">Select a team to view matches.</p>
       </section>
     </main>
 

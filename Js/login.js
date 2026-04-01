@@ -1,4 +1,5 @@
 import { logIn, signUp } from './firebase.js'
+import { initI18n, t } from './i18n.js'
 
 const loginForm = document.getElementById('loginForm')
 const signupForm = document.getElementById('signupForm')
@@ -14,7 +15,7 @@ const signupPasswordConfirm = document.getElementById('signupPasswordConfirm')
 const signupBtn = document.getElementById('signupBtn')
 const signupError = document.getElementById('signupError')
 
-const toggleFormBtns = document.querySelectorAll('.toggle-form-btn')
+initI18n()
 
 const showError = (element, message) => {
   element.textContent = message
@@ -42,20 +43,20 @@ loginBtn.addEventListener('click', async () => {
   const password = loginPassword.value
 
   if (!email || !password) {
-    showError(loginError, 'Please fill in all fields.')
+    showError(loginError, t('login.fillAllFields'))
     return
   }
 
   try {
     loginBtn.disabled = true
-    loginBtn.textContent = 'Signing in...'
+    loginBtn.textContent = t('login.signingIn')
     await logIn(email, password)
     window.location.href = 'groups.html'
   } catch (error) {
-    showError(loginError, error.message || 'Login failed.')
+    showError(loginError, error.message || t('login.loginFailed'))
   } finally {
     loginBtn.disabled = false
-    loginBtn.textContent = 'Sign In'
+    loginBtn.textContent = t('login.signInButton')
   }
 })
 
@@ -67,35 +68,35 @@ signupBtn.addEventListener('click', async () => {
   const confirm = signupPasswordConfirm.value
 
   if (!email || !nickname || !password || !confirm) {
-    showError(signupError, 'Please fill in all fields.')
+    showError(signupError, t('login.fillAllFields'))
     return
   }
 
   if (nickname.length < 2) {
-    showError(signupError, 'Nickname must be at least 2 characters.')
+    showError(signupError, t('login.nicknameTooShort'))
     return
   }
 
   if (password !== confirm) {
-    showError(signupError, 'Passwords do not match.')
+    showError(signupError, t('login.passwordsNoMatch'))
     return
   }
 
   if (password.length < 6) {
-    showError(signupError, 'Password must be at least 6 characters.')
+    showError(signupError, t('login.passwordTooShort'))
     return
   }
 
   try {
     signupBtn.disabled = true
-    signupBtn.textContent = 'Creating account...'
+    signupBtn.textContent = t('login.creatingAccount')
     await signUp(email, password, nickname)
     window.location.href = 'groups.html'
   } catch (error) {
-    showError(signupError, error.message || 'Signup failed.')
+    showError(signupError, error.message || t('login.signupFailed'))
   } finally {
     signupBtn.disabled = false
-    signupBtn.textContent = 'Create Account'
+    signupBtn.textContent = t('login.createAccountButton')
   }
 })
 

@@ -8,6 +8,7 @@ import {
   logOut,
   setUserNickname
 } from './firebase.js'
+import { initI18n, onLanguageChange, t } from './i18n.js'
 
 const groupsContainer = document.getElementById('groups')
 const searchInput = document.getElementById('teamSearch')
@@ -23,6 +24,9 @@ let allGroups = []
 let allMatches = []
 let userPredictions = {}
 let currentUser = null
+let selectedTeam = null
+
+initI18n()
 
 if (adminNavLink) {
   adminNavLink.style.display = 'none'
@@ -46,13 +50,13 @@ const updateMatchesTabVisibility = user => {
 
 const attachNicknameEditor = currentNickname => {
   userEmail.style.cursor = 'pointer'
-  userEmail.title = 'Click to change nickname'
+  userEmail.title = t('nickname.clickToChange')
 
   userEmail.onclick = async () => {
     if (!currentUser) return
 
     const nextNickname = window.prompt(
-      'Enter your nickname',
+      t('nickname.prompt'),
       currentNickname || userEmail.textContent || ''
     )
 
@@ -60,7 +64,7 @@ const attachNicknameEditor = currentNickname => {
 
     const cleanNickname = nextNickname.trim()
     if (!cleanNickname) {
-      window.alert('Nickname cannot be empty.')
+      window.alert(t('nickname.empty'))
       return
     }
 
@@ -72,9 +76,16 @@ const attachNicknameEditor = currentNickname => {
       userEmail.textContent = savedNickname
     } catch (error) {
       console.error('Nickname update failed:', error)
-      window.alert(error.message || 'Could not update nickname.')
+      window.alert(error.message || t('nickname.updateFailed'))
     }
   }
+}
+
+const renderDefaultMatchesPanel = () => {
+  matchesPanel.innerHTML = `
+    <h2 class="matches-title">${t('groups.upcomingMatches')}</h2>
+    <p>${t('groups.selectTeam')}</p>
+  `
 }
 
 const sortGroups = groups =>
@@ -85,14 +96,15 @@ const sortGroups = groups =>
   )
 
 const renderMatchPanel = teamName => {
+  selectedTeam = teamName
   const teamMatches = allMatches.filter(
     match => match.team1 === teamName || match.team2 === teamName
   )
 
   if (teamMatches.length === 0) {
     matchesPanel.innerHTML = `
-      <h2 class="matches-title">Upcoming Matches</h2>
-      <p>No matches found for <strong>${teamName}</strong>.</p>
+      <h2 class="matches-title">${t('groups.upcomingMatches')}</h2>
+      <p>${t('groups.noMatchesFor', { team: teamName })}</p>
     `
     return
   }
@@ -108,7 +120,9 @@ const renderMatchPanel = teamName => {
         } else if (prediction === 'team2') {
           predictionLabel = `<span class="prediction-badge">${match.team2} ✓</span>`
         } else if (prediction === 'draw') {
-          predictionLabel = `<span class="prediction-badge">Draw ✓</span>`
+          predictionLabel = `<span class="prediction-badge">${t(
+            'common.draw'
+          )} ✓</span>`
         }
       }
 
@@ -127,7 +141,9 @@ const renderMatchPanel = teamName => {
     .join('')
 
   matchesPanel.innerHTML = `
-    <h2 class="matches-title">Upcoming Matches - ${teamName}</h2>
+    <h2 class="matches-title">${t('groups.upcomingMatchesFor', {
+      team: teamName
+    })}</h2>
     ${matchesHtml}
   `
 }
@@ -138,7 +154,7 @@ const predictionLabelForMatch = match => {
 
   if (prediction === 'team1') return `${match.team1} ✓`
   if (prediction === 'team2') return `${match.team2} ✓`
-  if (prediction === 'draw') return 'Draw ✓'
+  if (prediction === 'draw') return `${t('common.draw')} ✓`
   return ''
 }
 
@@ -152,7 +168,7 @@ const getGroupMatches = group => {
 const renderGroupMatches = group => {
   const groupMatches = getGroupMatches(group)
   if (!groupMatches.length) {
-    return '<p class="group-matches-empty">No group matches found yet.</p>'
+    return `<p class="group-matches-empty">${t('groups.noGroupMatches')}</p>`
   }
 
   return groupMatches
@@ -184,7 +200,7 @@ const renderGroups = groups => {
 
     const title = document.createElement('h2')
     title.className = 'group-title'
-    title.textContent = `Group ${group.groupName}`
+    title.textContent = t('groups.groupLabel', { group: group.groupName })
 
     const list = document.createElement('ul')
     group.teams.forEach(team => {
@@ -204,7 +220,7 @@ const renderGroups = groups => {
     const groupMatchesSection = document.createElement('section')
     groupMatchesSection.className = 'group-matches'
     groupMatchesSection.innerHTML = `
-      <h3 class="group-matches-title">Group Matches</h3>
+      <h3 class="group-matches-title">${t('groups.groupMatches')}</h3>
       ${renderGroupMatches(group)}
     `
 
@@ -251,7 +267,7 @@ const run = async () => {
 
     renderGroups(allGroups)
   } catch (error) {
-    groupsContainer.innerHTML = '<p>Could not load groups from Firebase.</p>'
+    groupsContainer.innerHTML = `<p>${t('groups.couldNotLoad')}</p>`
     console.error(error)
   }
 }
@@ -278,22 +294,40 @@ onAuthChange(async user => {
   if (!user) {
     await updateAdminTabVisibility(null)
     updateMatchesTabVisibility(null)
-    userEmail.textContent = 'Guest'
+    userEmail.textContent = t('common.guest')
     userEmail.style.cursor = 'default'
-    userEmail.title = 'Log in to set a nickname'
+    userEmail.title = t('nickname.loginToSet')
     userEmail.onclick = null
     logoutBtn.style.display = ''
-    logoutBtn.textContent = 'Login'
+    logoutBtn.textContent = t('common.login')
     run()
     return
   }
 
   logoutBtn.style.display = ''
-  logoutBtn.textContent = 'Logout'
+  logoutBtn.textContent = t('common.logout')
   updateMatchesTabVisibility(user)
   await updateAdminTabVisibility(user)
   const profile = await getUserProfile(user.uid)
-  userEmail.textContent = profile.nickname || user.email || 'User'
+  userEmail.textContent = profile.nickname || user.email || t('common.user')
   attachNicknameEditor(profile.nickname || '')
   run()
+})
+
+onLanguageChange(() => {
+  if (!currentUser) {
+    userEmail.textContent = t('common.guest')
+    userEmail.title = t('nickname.loginToSet')
+    logoutBtn.textContent = t('common.login')
+  } else {
+    logoutBtn.textContent = t('common.logout')
+    attachNicknameEditor(userEmail.textContent)
+  }
+
+  renderGroups(allGroups)
+  if (selectedTeam) {
+    renderMatchPanel(selectedTeam)
+  } else {
+    renderDefaultMatchesPanel()
+  }
 })

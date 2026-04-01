@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin - Set Match Winners</title>
+    <title data-i18n="admin.title">Admin - Set Match Winners</title>
     <link rel="stylesheet" href="Css/shared.css" />
     <link rel="stylesheet" href="Css/admin.css" />
   </head>
@@ -11,22 +11,22 @@
     <main class="container">
       <div class="header">
         <div>
-          <h1>Admin Panel</h1>
-          <p>Designate the winner for each match.</p>
+          <h1 data-i18n="admin.headerTitle">Admin Panel</h1>
+          <p data-i18n="admin.headerText">
+            Designate the winner for each match.
+          </p>
         </div>
         <div class="user-info">
-          <span id="userEmail">Loading...</span>
-          <button id="logoutBtn">Logout</button>
+          <span id="userEmail" data-i18n="common.loading">Loading...</span>
+          <button id="logoutBtn" data-i18n="common.logout">Logout</button>
         </div>
-      </div>
-
-      <div class="toolbar">
-        <input id="roundFilter" type="search" placeholder="Search round..." />
       </div>
 
       <section class="api-sync-card">
-        <h2 class="api-sync-title">API-FOOTBALL Live Sync</h2>
-        <p class="api-sync-subtitle">
+        <h2 class="api-sync-title" data-i18n="admin.apiSyncTitle">
+          API-FOOTBALL Live Sync
+        </h2>
+        <p class="api-sync-subtitle" data-i18n="admin.apiSyncSubtitle">
           Add your API key and sync finished World Cup matches automatically.
         </p>
         <div class="api-sync-row">
@@ -34,12 +34,23 @@
             id="apiFootballKey"
             type="password"
             placeholder="API-FOOTBALL key"
+            data-i18n-placeholder="admin.apiKeyPlaceholder"
             autocomplete="off"
           />
-          <button id="saveApiKeyBtn" class="api-btn" type="button">
+          <button
+            id="saveApiKeyBtn"
+            class="api-btn"
+            type="button"
+            data-i18n="admin.saveKey"
+          >
             Save key
           </button>
-          <button id="syncLiveBtn" class="api-btn" type="button">
+          <button
+            id="syncLiveBtn"
+            class="api-btn"
+            type="button"
+            data-i18n="admin.syncLive"
+          >
             Sync live scores
           </button>
         </div>
@@ -47,10 +58,18 @@
       </section>
 
       <nav class="nav-buttons">
-        <a href="groups.html" class="nav-btn">Groups</a>
-        <a href="bets.html" class="nav-btn">Matches</a>
-        <button class="nav-btn active" disabled>Admin</button>
-        <a href="leaderboard.html" class="nav-btn">Top List</a>
+        <a href="groups.html" class="nav-btn" data-i18n="common.groups"
+          >Groups</a
+        >
+        <a href="bets.html" class="nav-btn" data-i18n="common.matches"
+          >Matches</a
+        >
+        <button class="nav-btn active" disabled data-i18n="common.admin">
+          Admin
+        </button>
+        <a href="leaderboard.html" class="nav-btn" data-i18n="common.topList"
+          >Top List</a
+        >
       </nav>
 
       <section
@@ -63,7 +82,7 @@
 
       <section class="users-section">
         <h2 class="users-heading">
-          Registered Users
+          <span data-i18n="admin.registeredUsers">Registered Users</span>
           <span id="usersBetSummary" class="users-bet-summary"
             >Total bet: 0 kr</span
           >

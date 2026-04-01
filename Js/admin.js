@@ -10,9 +10,9 @@ import {
   setMatchWinner,
   setUserPaid
 } from './firebase.js'
+import { initI18n, onLanguageChange, t } from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
-const roundFilter = document.getElementById('roundFilter')
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
 const adminNotice = document.getElementById('adminNotice')
@@ -32,6 +32,8 @@ let isSaving = false
 let isTogglingPaid = false
 let roundCollapsed = {}
 let isSyncingLive = false
+
+initI18n()
 
 const API_FOOTBALL_KEY_STORAGE = 'apiFootballKey'
 const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io'
@@ -137,7 +139,7 @@ const fetchWorldCupFixtures = async apiKey => {
   })
 
   if (!response.ok) {
-    throw new Error('API-FOOTBALL request failed. Check your API key.')
+    throw new Error(t('admin.apiRequestFailed'))
   }
 
   const payload = await response.json()
@@ -193,14 +195,14 @@ const syncLiveScoresFromApiFootball = async () => {
 
   const apiKey = String(apiFootballKeyInput?.value || '').trim()
   if (!apiKey) {
-    setApiSyncStatus('Add and save an API key first.')
+    setApiSyncStatus(t('admin.addSaveKeyFirst'))
     return
   }
 
   try {
     isSyncingLive = true
     setApiControlsDisabled(true)
-    setApiSyncStatus('Syncing finished World Cup fixtures...')
+    setApiSyncStatus(t('admin.syncing'))
 
     const fixtures = await fetchWorldCupFixtures(apiKey)
     const finishedMap = buildFinishedFixtureMap(fixtures)
@@ -225,12 +227,15 @@ const syncLiveScoresFromApiFootball = async () => {
       updatedCount += 1
     }
 
-    renderMatches(getFilteredMatches())
+    renderMatches(allMatches)
     setApiSyncStatus(
-      `Sync complete. Updated ${updatedCount} match(es). Skipped ${skippedCount} unmatched fixture(s).`
+      t('admin.syncComplete', {
+        updated: updatedCount,
+        skipped: skippedCount
+      })
     )
   } catch (error) {
-    setApiSyncStatus(error.message || 'Live sync failed.')
+    setApiSyncStatus(error.message || t('admin.syncFailed'))
   } finally {
     isSyncingLive = false
     setApiControlsDisabled(false)
@@ -245,12 +250,12 @@ const initializeApiSyncPanel = () => {
   saveApiKeyBtn.addEventListener('click', () => {
     const key = String(apiFootballKeyInput.value || '').trim()
     if (!key) {
-      setApiSyncStatus('API key cannot be empty.')
+      setApiSyncStatus(t('admin.apiKeyEmpty'))
       return
     }
 
     setStoredApiFootballKey(key)
-    setApiSyncStatus('API key saved in this browser.')
+    setApiSyncStatus(t('admin.apiKeySaved'))
   })
 
   syncLiveBtn.addEventListener('click', async () => {
@@ -260,13 +265,13 @@ const initializeApiSyncPanel = () => {
 
 const attachNicknameEditor = currentNickname => {
   userEmail.style.cursor = 'pointer'
-  userEmail.title = 'Click to change nickname'
+  userEmail.title = t('nickname.clickToChange')
 
   userEmail.onclick = async () => {
     if (!currentUser) return
 
     const nextNickname = window.prompt(
-      'Enter your nickname',
+      t('nickname.prompt'),
       currentNickname || userEmail.textContent || ''
     )
 
@@ -274,7 +279,7 @@ const attachNicknameEditor = currentNickname => {
 
     const cleanNickname = nextNickname.trim()
     if (!cleanNickname) {
-      window.alert('Nickname cannot be empty.')
+      window.alert(t('nickname.empty'))
       return
     }
 
@@ -286,7 +291,7 @@ const attachNicknameEditor = currentNickname => {
       userEmail.textContent = savedNickname
     } catch (error) {
       console.error('Nickname update failed:', error)
-      window.alert(error.message || 'Could not update nickname.')
+      window.alert(error.message || t('nickname.updateFailed'))
     }
   }
 }
@@ -294,8 +299,8 @@ const attachNicknameEditor = currentNickname => {
 const winnerLabel = (winner, match) => {
   if (winner === 'team1') return match.team1
   if (winner === 'team2') return match.team2
-  if (winner === 'draw') return 'Draw'
-  return 'Not set'
+  if (winner === 'draw') return t('common.draw')
+  return t('common.notSet')
 }
 
 const renderMatchCard = match => {
@@ -327,7 +332,7 @@ const renderMatchCard = match => {
           }" data-match-id="${match.id}" data-winner="draw" ${
     isSaving ? 'disabled' : ''
   }>
-            Draw
+            ${t('common.draw')}
           </button>
           <button class="winner-btn ${
             winner === 'team2' ? 'active' : ''
@@ -337,10 +342,9 @@ const renderMatchCard = match => {
             ${match.team2}
           </button>
         </div>
-        <div class="current-winner">Current winner: ${winnerLabel(
-          winner,
-          match
-        )}</div>
+        <div class="current-winner">${t('common.currentWinner', {
+          winner: winnerLabel(winner, match)
+        })}</div>
       </div>
     </article>
   `
@@ -350,7 +354,7 @@ const getGroupedMatches = matches => {
   const grouped = {}
 
   matches.forEach(match => {
-    const roundName = String(match.round || 'Unknown round')
+    const roundName = String(match.round || t('common.notSet'))
     if (!grouped[roundName]) {
       grouped[roundName] = []
     }
@@ -366,12 +370,23 @@ const renderRoundSection = (roundName, roundMatches) => {
   const isCollapsed = Boolean(roundCollapsed[roundName])
 
   return `
-    <section class="round-section">
-      <button class="round-toggle" type="button" data-round="${roundName}">
+    <section class="round-section ${
+      isCollapsed ? 'collapsed' : ''
+    }" data-round-section="${roundName}">
+      <div class="round-header">
         <span class="round-title">${roundName}</span>
-        <span class="round-meta">${roundMatches.length} matches</span>
-        <span class="round-chevron ${isCollapsed ? 'collapsed' : ''}">▾</span>
-      </button>
+        <span class="round-meta">${t('common.matchesCount', {
+          count: roundMatches.length
+        })}</span>
+        <button
+          class="round-toggle-btn"
+          type="button"
+          data-round="${roundName}"
+          aria-expanded="${isCollapsed ? 'false' : 'true'}"
+        >
+          <span class="round-chevron ${isCollapsed ? 'collapsed' : ''}">▾</span>
+        </button>
+      </div>
       <div class="round-matches-grid ${isCollapsed ? 'collapsed' : ''}">
         ${roundMatches.map(renderMatchCard).join('')}
       </div>
@@ -380,56 +395,63 @@ const renderRoundSection = (roundName, roundMatches) => {
 }
 
 const attachRoundToggleHandlers = () => {
-  document.querySelectorAll('.round-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
+  document.querySelectorAll('.round-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.preventDefault()
+      event.stopPropagation()
+
       const roundName = btn.dataset.round
       if (!roundName) return
 
-      roundCollapsed[roundName] = !Boolean(roundCollapsed[roundName])
-      renderMatches(getFilteredMatches())
+      const section = document.querySelector(
+        `[data-round-section="${CSS.escape(roundName)}"]`
+      )
+      const nextCollapsed = !Boolean(roundCollapsed[roundName])
+
+      roundCollapsed[roundName] = nextCollapsed
+
+      if (section) {
+        section.classList.toggle('collapsed', nextCollapsed)
+      }
+
+      btn.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true')
+      const chevron = btn.querySelector('.round-chevron')
+      if (chevron) {
+        chevron.classList.toggle('collapsed', nextCollapsed)
+      }
     })
   })
 }
 
 const attachWinnerHandlers = () => {
   document.querySelectorAll('.winner-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async event => {
+      event.stopPropagation()
+
       const matchId = btn.dataset.matchId
       const winner = btn.dataset.winner
       if (!matchId || !winner || isSaving) return
 
       try {
         isSaving = true
-        renderMatches(getFilteredMatches())
+        renderMatches(allMatches)
         const payload = await setMatchWinner(currentUser, matchId, winner)
         allResults[matchId] = payload
         adminNotice.style.display = 'none'
       } catch (error) {
         adminNotice.style.display = 'block'
-        adminNotice.textContent =
-          error.message || 'Could not save match winner.'
+        adminNotice.textContent = error.message || t('admin.couldNotSaveWinner')
       } finally {
         isSaving = false
-        renderMatches(getFilteredMatches())
+        renderMatches(allMatches)
       }
     })
   })
 }
 
-const getFilteredMatches = () => {
-  const query = roundFilter.value.trim().toLowerCase()
-  if (!query) return allMatches
-
-  return allMatches.filter(match =>
-    String(match.round || '')
-      .toLowerCase()
-      .includes(query)
-  )
-}
-
 const renderMatches = matches => {
   if (!matches.length) {
-    matchesContainer.innerHTML = '<p>No matches found.</p>'
+    matchesContainer.innerHTML = `<p>${t('admin.noMatchesFound')}</p>`
     return
   }
 
@@ -449,12 +471,11 @@ const renderUsers = () => {
   const totalBet = paidUsersCount * 100
 
   if (usersBetSummary) {
-    usersBetSummary.textContent = `Total bet: ${totalBet} kr`
+    usersBetSummary.textContent = t('admin.totalBet', { amount: totalBet })
   }
 
   if (!allUsers.length) {
-    usersList.innerHTML =
-      '<p class="users-empty">No registered users found.</p>'
+    usersList.innerHTML = `<p class="users-empty">${t('admin.noUsers')}</p>`
     return
   }
 
@@ -477,14 +498,14 @@ const renderUsers = () => {
           }
         </div>
         <span class="paid-badge ${u.hasPaid ? 'paid' : 'unpaid'}">
-          ${u.hasPaid ? 'Paid' : 'Unpaid'}
+          ${u.hasPaid ? t('admin.paid') : t('admin.unpaid')}
         </span>
         <button
           class="toggle-paid-btn"
           data-uid="${u.uid}"
           data-paid="${u.hasPaid}"
           ${isTogglingPaid ? 'disabled' : ''}>
-          ${u.hasPaid ? 'Mark as Unpaid' : 'Mark as Paid'}
+          ${u.hasPaid ? t('admin.markUnpaid') : t('admin.markPaid')}
         </button>
       </div>`
     )
@@ -511,7 +532,7 @@ const attachPaymentHandlers = () => {
       } catch (error) {
         usersNotice.style.display = 'block'
         usersNotice.textContent =
-          error.message || 'Could not update payment status.'
+          error.message || t('admin.couldNotUpdatePayment')
       } finally {
         isTogglingPaid = false
         renderUsers()
@@ -524,8 +545,7 @@ const loadPage = async () => {
   const admin = await isAdminUser(currentUser)
   if (!admin) {
     adminNotice.style.display = 'block'
-    adminNotice.textContent =
-      'You are logged in, but this account is not an admin.'
+    adminNotice.textContent = t('admin.notAdmin')
     matchesContainer.innerHTML = ''
     usersList.innerHTML = ''
     return
@@ -541,7 +561,7 @@ const loadPage = async () => {
   allResults = results || {}
   allUsers = users || []
   const availableRounds = new Set(
-    allMatches.map(match => String(match.round || 'Unknown round'))
+    allMatches.map(match => String(match.round || t('common.notSet')))
   )
 
   Object.keys(roundCollapsed).forEach(roundName => {
@@ -557,13 +577,9 @@ const loadPage = async () => {
   })
 
   adminNotice.style.display = 'none'
-  renderMatches(getFilteredMatches())
+  renderMatches(allMatches)
   renderUsers()
 }
-
-roundFilter.addEventListener('input', () => {
-  renderMatches(getFilteredMatches())
-})
 
 initializeApiSyncPanel()
 
@@ -573,7 +589,7 @@ logoutBtn.addEventListener('click', async () => {
     window.location.href = 'login.html'
   } catch (error) {
     adminNotice.style.display = 'block'
-    adminNotice.textContent = error.message || 'Logout failed.'
+    adminNotice.textContent = error.message || t('common.logoutFailed')
   }
 })
 
@@ -585,13 +601,27 @@ onAuthChange(async user => {
 
   currentUser = user
   const profile = await getUserProfile(user.uid)
-  userEmail.textContent = profile.nickname || user.email || 'User'
+  userEmail.textContent = profile.nickname || user.email || t('common.user')
+  logoutBtn.textContent = t('common.logout')
   attachNicknameEditor(profile.nickname || '')
 
   try {
     await loadPage()
   } catch (error) {
     adminNotice.style.display = 'block'
-    adminNotice.textContent = error.message || 'Could not load admin page.'
+    adminNotice.textContent = error.message || t('admin.couldNotLoadPage')
+  }
+})
+
+onLanguageChange(() => {
+  logoutBtn.textContent = t('common.logout')
+  attachNicknameEditor(userEmail.textContent)
+  renderMatches(allMatches)
+  renderUsers()
+  if (
+    !apiSyncStatus.textContent ||
+    apiSyncStatus.textContent === t('admin.apiKeySaved')
+  ) {
+    setApiSyncStatus('')
   }
 })

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World Cup Matches - Make Predictions</title>
+    <title data-i18n="bets.title">World Cup Matches - Make Predictions</title>
     <link rel="stylesheet" href="Css/shared.css" />
     <link rel="stylesheet" href="Css/bets.css" />
   </head>
@@ -11,31 +11,48 @@
     <main class="container">
       <div class="header">
         <div>
-          <h1>World Cup Matches</h1>
-          <p>Make your predictions for every match.</p>
+          <h1 data-i18n="bets.headerTitle">World Cup Matches</h1>
+          <p data-i18n="bets.headerText">
+            Make your predictions for every match.
+          </p>
         </div>
         <div class="user-info">
-          <span id="userEmail">Loading...</span>
-          <button id="logoutBtn">Logout</button>
+          <span id="userEmail" data-i18n="common.loading">Loading...</span>
+          <button id="logoutBtn" data-i18n="common.logout">Logout</button>
         </div>
       </div>
 
       <div class="toolbar">
-        <input id="roundFilter" type="search" placeholder="Search round..." />
+        <input
+          id="roundFilter"
+          type="search"
+          placeholder="Search round..."
+          data-i18n-placeholder="common.searchRound"
+        />
       </div>
 
       <nav class="nav-buttons">
-        <a href="groups.html" class="nav-btn">Groups</a>
-        <button class="nav-btn active" disabled>Matches</button>
-        <a href="admin.html" class="nav-btn">Admin</a>
-        <a href="leaderboard.html" class="nav-btn">Top List</a>
+        <a href="groups.html" class="nav-btn" data-i18n="common.groups"
+          >Groups</a
+        >
+        <button class="nav-btn active" disabled data-i18n="common.matches">
+          Matches
+        </button>
+        <a href="admin.html" class="nav-btn" data-i18n="common.admin">Admin</a>
+        <a href="leaderboard.html" class="nav-btn" data-i18n="common.topList"
+          >Top List</a
+        >
       </nav>
 
       <section id="matches" class="matches-grid"></section>
 
       <section id="betsPanel" class="bets-panel">
-        <h2 class="panel-title">My Predictions</h2>
-        <p>Your predictions will appear here.</p>
+        <h2 class="panel-title" data-i18n="bets.myPredictions">
+          My Predictions
+        </h2>
+        <p data-i18n="bets.predictionsAppearHere">
+          Your predictions will appear here.
+        </p>
       </section>
     </main>
 

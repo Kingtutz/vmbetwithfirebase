@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World Cup 2026 Betting</title>
+    <title data-i18n="landing.title">World Cup 2026 Betting</title>
     <link rel="stylesheet" href="Css/shared.css" />
     <style>
       body {
@@ -81,41 +81,55 @@
   <body>
     <main class="landing">
       <section class="hero">
-        <h1>World Cup 2026 Betting</h1>
-        <p>
+        <h1 data-i18n="landing.heroTitle">World Cup 2026 Betting</h1>
+        <p data-i18n="landing.heroText">
           Predict match outcomes, follow the top list, and compete with your
           friends in one place.
         </p>
         <div class="cta-row">
-          <a href="login.html" class="cta-btn primary">Login / Sign Up</a>
-          <a href="groups.html" class="cta-btn">Open Groups</a>
-          <a href="leaderboard.html" class="cta-btn">View Top List</a>
+          <a
+            href="login.html"
+            class="cta-btn primary"
+            data-i18n="landing.ctaLogin"
+            >Login / Sign Up</a
+          >
+          <a href="groups.html" class="cta-btn" data-i18n="landing.ctaGroups"
+            >Open Groups</a
+          >
+          <a
+            href="leaderboard.html"
+            class="cta-btn"
+            data-i18n="landing.ctaTopList"
+            >View Top List</a
+          >
         </div>
       </section>
 
       <section class="info-grid">
         <article class="info-card">
-          <h2>How It Works</h2>
-          <p>
+          <h2 data-i18n="landing.howItWorksTitle">How It Works</h2>
+          <p data-i18n="landing.howItWorksText">
             Make predictions for each match. Every correct prediction gives 1
             point.
           </p>
         </article>
         <article class="info-card">
-          <h2>Group Overview</h2>
-          <p>
+          <h2 data-i18n="landing.groupOverviewTitle">Group Overview</h2>
+          <p data-i18n="landing.groupOverviewText">
             Browse all tournament groups and see group matches directly inside
             each group card.
           </p>
         </article>
         <article class="info-card">
-          <h2>Leaderboard</h2>
-          <p>
+          <h2 data-i18n="landing.leaderboardTitle">Leaderboard</h2>
+          <p data-i18n="landing.leaderboardText">
             Track who is leading with live points based on admin-confirmed match
             results.
           </p>
         </article>
       </section>
     </main>
+
+    <script type="module" src="Js/landing.js"></script>
   </body>
 </html>

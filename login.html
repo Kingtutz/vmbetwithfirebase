@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World Cup Betting - Login</title>
+    <title data-i18n="login.title">World Cup Betting - Login</title>
     <link rel="stylesheet" href="Css/shared.css" />
     <link rel="stylesheet" href="Css/login.css" />
   </head>
@@ -11,76 +11,110 @@
     <div class="login-container">
       <!-- Login Form -->
       <div id="loginForm">
-        <h1>Login</h1>
-        <p class="subtitle">Sign in to your account</p>
+        <h1 data-i18n="login.signIn">Login</h1>
+        <p class="subtitle" data-i18n="login.signInSubtitle">
+          Sign in to your account
+        </p>
         <div class="form-group">
-          <label for="loginEmail">Email</label>
+          <label for="loginEmail" data-i18n="common.email">Email</label>
           <input
             id="loginEmail"
             type="email"
             placeholder="your@email.com"
+            data-i18n-placeholder="login.emailPlaceholder"
             required
           />
         </div>
         <div class="form-group">
-          <label for="loginPassword">Password</label>
+          <label for="loginPassword" data-i18n="common.password"
+            >Password</label
+          >
           <input
             id="loginPassword"
             type="password"
             placeholder="Your password"
+            data-i18n-placeholder="login.passwordPlaceholder"
             required
           />
         </div>
         <div class="error" id="loginError"></div>
-        <button id="loginBtn" type="button">Sign In</button>
-        <button class="toggle-btn toggle-to-signup" type="button">
+        <button id="loginBtn" type="button" data-i18n="login.signInButton">
+          Sign In
+        </button>
+        <button
+          class="toggle-btn toggle-to-signup"
+          type="button"
+          data-i18n="login.noAccount"
+        >
           Don't have an account? Sign up
         </button>
       </div>
 
       <!-- Signup Form -->
       <div id="signupForm">
-        <h1>Create Account</h1>
-        <p class="subtitle">Join the world cup betting</p>
+        <h1 data-i18n="login.createAccount">Create Account</h1>
+        <p class="subtitle" data-i18n="login.createAccountSubtitle">
+          Join the world cup betting
+        </p>
         <div class="form-group">
-          <label for="signupEmail">Email</label>
+          <label for="signupEmail" data-i18n="common.email">Email</label>
           <input
             id="signupEmail"
             type="email"
             placeholder="your@email.com"
+            data-i18n-placeholder="login.emailPlaceholder"
             required
           />
         </div>
         <div class="form-group">
-          <label for="signupNickname">Nickname</label>
+          <label for="signupNickname" data-i18n="common.nickname"
+            >Nickname</label
+          >
           <input
             id="signupNickname"
             type="text"
             placeholder="Pick a nickname"
+            data-i18n-placeholder="login.nicknamePlaceholder"
             required
           />
         </div>
         <div class="form-group">
-          <label for="signupPassword">Password</label>
+          <label for="signupPassword" data-i18n="common.password"
+            >Password</label
+          >
           <input
             id="signupPassword"
             type="password"
             placeholder="Min. 6 characters"
+            data-i18n-placeholder="login.passwordMin"
             required
           />
         </div>
         <div class="form-group">
-          <label for="signupPasswordConfirm">Confirm Password</label>
+          <label for="signupPasswordConfirm" data-i18n="common.confirmPassword"
+            >Confirm Password</label
+          >
           <input
             id="signupPasswordConfirm"
             type="password"
             placeholder="Confirm password"
+            data-i18n-placeholder="login.confirmPasswordPlaceholder"
             required
           />
         </div>
         <div class="error" id="signupError"></div>
-        <button id="signupBtn" type="button">Create Account</button>
-        <button class="toggle-btn toggle-to-login" type="button">
+        <button
+          id="signupBtn"
+          type="button"
+          data-i18n="login.createAccountButton"
+        >
+          Create Account
+        </button>
+        <button
+          class="toggle-btn toggle-to-login"
+          type="button"
+          data-i18n="login.haveAccount"
+        >
           Already have an account? Sign in
         </button>
       </div>

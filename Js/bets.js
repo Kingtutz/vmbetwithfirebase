@@ -9,6 +9,7 @@ import {
   logOut,
   setUserNickname
 } from './firebase.js'
+import { initI18n, onLanguageChange, t } from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
 const roundFilter = document.getElementById('roundFilter')
@@ -23,6 +24,8 @@ let tempPredictions = {} // Local predictions awaiting submission
 let allResults = {}
 let currentUser = null
 let isSubmitting = false
+
+initI18n()
 
 if (adminNavLink) {
   adminNavLink.style.display = 'none'
@@ -44,13 +47,13 @@ const getRequiredPredictionCount = () => getUnlockedMatches().length
 
 const attachNicknameEditor = currentNickname => {
   userEmail.style.cursor = 'pointer'
-  userEmail.title = 'Click to change nickname'
+  userEmail.title = t('nickname.clickToChange')
 
   userEmail.onclick = async () => {
     if (!currentUser) return
 
     const nextNickname = window.prompt(
-      'Enter your nickname',
+      t('nickname.prompt'),
       currentNickname || userEmail.textContent || ''
     )
 
@@ -58,7 +61,7 @@ const attachNicknameEditor = currentNickname => {
 
     const cleanNickname = nextNickname.trim()
     if (!cleanNickname) {
-      window.alert('Nickname cannot be empty.')
+      window.alert(t('nickname.empty'))
       return
     }
 
@@ -70,7 +73,7 @@ const attachNicknameEditor = currentNickname => {
       userEmail.textContent = savedNickname
     } catch (error) {
       console.error('Nickname update failed:', error)
-      window.alert(error.message || 'Could not update nickname.')
+      window.alert(error.message || t('nickname.updateFailed'))
     }
   }
 }
@@ -96,7 +99,7 @@ const renderPredictionForm = match => {
       : winner === 'team2'
       ? match.team2
       : winner === 'draw'
-      ? 'Draw'
+      ? t('common.draw')
       : ''
 
   return `
@@ -124,7 +127,7 @@ const renderPredictionForm = match => {
           }" data-match-id="${match.id}" data-prediction="draw" ${
     locked ? 'disabled' : ''
   }>
-            Draw
+            ${t('common.draw')}
           </button>
           <button class="prediction-btn ${
             currentPrediction === 'team2' ? 'active' : ''
@@ -136,7 +139,9 @@ const renderPredictionForm = match => {
         </div>
         ${
           locked
-            ? `<div class="locked-note">Locked - result set: ${winnerLabel}</div>`
+            ? `<div class="locked-note">${t('bets.lockedResult', {
+                winner: winnerLabel
+              })}</div>`
             : ''
         }
       </div>
@@ -148,8 +153,9 @@ const renderMatches = matches => {
   matchesContainer.innerHTML = ''
 
   if (matches.length === 0) {
-    matchesContainer.innerHTML =
-      '<p style="grid-column: 1/-1; text-align: center; padding: 20px;">No matches found.</p>'
+    matchesContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 20px;">${t(
+      'bets.noMatchesFound'
+    )}</p>`
     return
   }
 
@@ -183,8 +189,8 @@ const updateSubmitButton = () => {
   if (submitBtn) {
     submitBtn.disabled = !hasAll || isSubmitting || requiredCount === 0
     submitBtn.textContent = isSubmitting
-      ? 'Saving...'
-      : `Place Bet (${tempCount}/${requiredCount})`
+      ? t('bets.saving')
+      : t('bets.placeBet', { done: tempCount, total: requiredCount })
   }
 }
 
@@ -194,10 +200,10 @@ const renderUserPredictions = () => {
     ([, pred]) => pred
   )
 
-  let html = `<h2 class="panel-title">My Predictions</h2>`
+  let html = `<h2 class="panel-title">${t('bets.myPredictions')}</h2>`
 
   if (predictions.length === 0) {
-    html += `<p>You haven't made any predictions yet.</p>`
+    html += `<p>${t('bets.noPredictionsYet')}</p>`
   } else {
     const predictionsHtml = predictions
       .map(([matchId, prediction]) => {
@@ -209,7 +215,7 @@ const renderUserPredictions = () => {
             ? match.team1
             : prediction === 'team2'
             ? match.team2
-            : 'Draw'
+            : t('common.draw')
         const isSaved = userPredictions[matchId] === prediction
         const isTemp = tempPredictions[matchId] === prediction
 
@@ -219,7 +225,11 @@ const renderUserPredictions = () => {
         }">
             <div class="prediction-label">${label}</div>
             <div class="prediction-match">${match.team1} vs ${match.team2}</div>
-            ${isTemp ? '<div class="unsaved-badge">Unsaved</div>' : ''}
+            ${
+              isTemp
+                ? `<div class="unsaved-badge">${t('bets.unsaved')}</div>`
+                : ''
+            }
           </div>
         `
       })
@@ -248,7 +258,9 @@ const renderUserPredictions = () => {
       !hasAll || isSubmitting || requiredCount === 0 ? 'disabled' : ''
     }>
       ${
-        isSubmitting ? 'Saving...' : `Place Bet (${tempCount}/${requiredCount})`
+        isSubmitting
+          ? t('bets.saving')
+          : t('bets.placeBet', { done: tempCount, total: requiredCount })
       }
     </button>
     <div id="submitMessage" class="submit-message" style="display: none;"></div>
@@ -274,7 +286,7 @@ const submitAllPredictions = async () => {
     )
 
     if (Object.keys(allPredictionsToSubmit).length === 0) {
-      messageDiv.textContent = 'No unlocked predictions to save.'
+      messageDiv.textContent = t('bets.noUnlockedToSave')
       messageDiv.className = 'submit-message error'
       messageDiv.style.display = 'block'
       return
@@ -286,7 +298,7 @@ const submitAllPredictions = async () => {
     Object.assign(userPredictions, allPredictionsToSubmit)
     tempPredictions = {}
 
-    messageDiv.textContent = '✓ All predictions saved successfully!'
+    messageDiv.textContent = `✓ ${t('bets.saveSuccess')}`
     messageDiv.className = 'submit-message success'
     messageDiv.style.display = 'block'
 
@@ -298,7 +310,7 @@ const submitAllPredictions = async () => {
     }, 3000)
   } catch (error) {
     console.error('Failed to save predictions:', error)
-    messageDiv.textContent = '✗ Failed to save predictions. Please try again.'
+    messageDiv.textContent = `✗ ${t('bets.saveFailed')}`
     messageDiv.className = 'submit-message error'
     messageDiv.style.display = 'block'
   } finally {
@@ -337,7 +349,7 @@ const run = async () => {
     renderMatches(allMatches)
     renderUserPredictions()
   } catch (error) {
-    matchesContainer.innerHTML = '<p>Could not load matches from Firebase.</p>'
+    matchesContainer.innerHTML = `<p>${t('bets.couldNotLoad')}</p>`
     console.error(error)
   }
 }
@@ -362,7 +374,15 @@ onAuthChange(async user => {
   currentUser = user
   await updateAdminTabVisibility(user)
   const profile = await getUserProfile(user.uid)
-  userEmail.textContent = profile.nickname || user.email || 'User'
+  userEmail.textContent = profile.nickname || user.email || t('common.user')
+  logoutBtn.textContent = t('common.logout')
   attachNicknameEditor(profile.nickname || '')
   run()
+})
+
+onLanguageChange(() => {
+  logoutBtn.textContent = t('common.logout')
+  attachNicknameEditor(userEmail.textContent)
+  applyFilter()
+  renderUserPredictions()
 })

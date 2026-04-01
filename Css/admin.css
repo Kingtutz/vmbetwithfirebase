@@ -192,17 +192,13 @@ body {
   overflow: hidden;
 }
 
-.round-toggle {
-  width: 100%;
-  border: 0;
+.round-header {
   border-bottom: 1px solid var(--border);
   background: linear-gradient(135deg, #f7f4ea, #f3efe2);
   padding: 12px 14px;
   display: flex;
   align-items: center;
   gap: 10px;
-  text-align: left;
-  cursor: pointer;
 }
 
 .round-title {
@@ -224,6 +220,23 @@ body {
   transition: transform 0.2s;
 }
 
+.round-toggle-btn {
+  margin-left: 0;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.round-toggle-btn:hover {
+  border-color: var(--accent);
+}
+
+.round-section.collapsed .round-chevron,
 .round-chevron.collapsed {
   transform: rotate(-90deg);
 }
@@ -235,6 +248,7 @@ body {
   padding: 14px;
 }
 
+.round-section.collapsed .round-matches-grid,
 .round-matches-grid.collapsed {
   display: none;
 }
@@ -348,7 +362,7 @@ body {
     padding: 8px;
   }
 
-  .round-toggle {
+  .round-header {
     padding: 8px 10px;
   }
 
