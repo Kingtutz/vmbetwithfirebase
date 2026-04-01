@@ -1,4 +1,5 @@
 import {
+  getAllUsers,
   getLeaderboard,
   getUserProfile,
   isAdminUser,
@@ -8,14 +9,22 @@ import {
 } from './firebase.js'
 
 const leaderboardContainer = document.getElementById('leaderboard')
+const payoutBreakdown = document.getElementById('payoutBreakdown')
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
 const notice = document.getElementById('notice')
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
+const matchesNavLink = document.querySelector(
+  '.nav-buttons a[href="bets.html"]'
+)
 let currentUser = null
 
 if (adminNavLink) {
   adminNavLink.style.display = 'none'
+}
+
+if (matchesNavLink) {
+  matchesNavLink.style.display = 'none'
 }
 
 const updateAdminTabVisibility = async user => {
@@ -23,6 +32,11 @@ const updateAdminTabVisibility = async user => {
 
   const admin = await isAdminUser(user)
   adminNavLink.style.display = admin ? '' : 'none'
+}
+
+const updateMatchesTabVisibility = user => {
+  if (!matchesNavLink) return
+  matchesNavLink.style.display = user ? '' : 'none'
 }
 
 const attachNicknameEditor = currentNickname => {
@@ -93,7 +107,21 @@ const renderLeaderboard = rows => {
 
 const run = async () => {
   try {
-    const rows = await getLeaderboard()
+    const [rows, users] = await Promise.all([getLeaderboard(), getAllUsers()])
+    const paidUsers = users.filter(user => user.hasPaid)
+    const totalPool = paidUsers.length * 100
+    const firstPrize = Math.round(totalPool * 0.65)
+    const secondPrize = Math.round(totalPool * 0.15)
+    const thirdPrize = Math.round(totalPool * 0.1)
+
+    if (payoutBreakdown) {
+      payoutBreakdown.innerHTML = `
+        <span class="payout-chip">1st: ${firstPrize} kr</span>
+        <span class="payout-chip">2nd: ${secondPrize} kr</span>
+        <span class="payout-chip">3rd: ${thirdPrize} kr</span>
+      `
+    }
+
     notice.style.display = 'none'
     renderLeaderboard(rows)
   } catch (error) {
@@ -104,6 +132,11 @@ const run = async () => {
 }
 
 logoutBtn.addEventListener('click', async () => {
+  if (!currentUser) {
+    window.location.href = 'login.html'
+    return
+  }
+
   try {
     await logOut()
     window.location.href = 'login.html'
@@ -114,12 +147,24 @@ logoutBtn.addEventListener('click', async () => {
 })
 
 onAuthChange(async user => {
+  currentUser = user || null
+
   if (!user) {
-    window.location.href = 'login.html'
+    await updateAdminTabVisibility(null)
+    updateMatchesTabVisibility(null)
+    userEmail.textContent = 'Guest'
+    userEmail.style.cursor = 'default'
+    userEmail.title = 'Log in to set a nickname'
+    userEmail.onclick = null
+    logoutBtn.style.display = ''
+    logoutBtn.textContent = 'Login'
+    run()
     return
   }
 
-  currentUser = user
+  logoutBtn.style.display = ''
+  logoutBtn.textContent = 'Logout'
+  updateMatchesTabVisibility(user)
   await updateAdminTabVisibility(user)
   const profile = await getUserProfile(user.uid)
   userEmail.textContent = profile.nickname || user.email || 'User'

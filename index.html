@@ -3,46 +3,119 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>World Cup Groups</title>
+    <title>World Cup 2026 Betting</title>
     <link rel="stylesheet" href="Css/shared.css" />
-    <link rel="stylesheet" href="Css/index.css" />
+    <style>
+      body {
+        background: radial-gradient(circle at top left, #f2ead5, var(--bg));
+      }
+
+      .landing {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 28px 20px;
+      }
+
+      .hero,
+      .info-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 22px;
+      }
+
+      .hero h1 {
+        margin: 0 0 10px;
+        font-size: 30px;
+      }
+
+      .hero p {
+        margin: 0;
+        color: #555;
+      }
+
+      .cta-row {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+
+      .cta-btn {
+        display: inline-block;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 600;
+        background: #fff;
+      }
+
+      .cta-btn.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .info-grid {
+        margin-top: 14px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+
+      .info-card h2 {
+        margin: 0 0 8px;
+        font-size: 17px;
+        color: var(--accent);
+      }
+
+      .info-card p {
+        margin: 0;
+        color: #555;
+        font-size: 14px;
+      }
+    </style>
   </head>
   <body>
-    <main class="container">
-      <div class="header">
-        <div>
-          <h1>World Cup Groups</h1>
-          <p>Click a team to see upcoming matches.</p>
+    <main class="landing">
+      <section class="hero">
+        <h1>World Cup 2026 Betting</h1>
+        <p>
+          Predict match outcomes, follow the top list, and compete with your
+          friends in one place.
+        </p>
+        <div class="cta-row">
+          <a href="login.html" class="cta-btn primary">Login / Sign Up</a>
+          <a href="groups.html" class="cta-btn">Open Groups</a>
+          <a href="leaderboard.html" class="cta-btn">View Top List</a>
         </div>
-        <div class="user-info">
-          <span id="userEmail">Loading...</span>
-          <button id="logoutBtn">Logout</button>
-        </div>
-      </div>
+      </section>
 
-      <div class="toolbar">
-        <input
-          id="teamSearch"
-          type="search"
-          placeholder="Search team name..."
-        />
-      </div>
-
-      <nav class="nav-buttons">
-        <button class="nav-btn active" disabled>Groups</button>
-        <a href="bets.html" class="nav-btn">Matches</a>
-        <a href="admin.html" class="nav-btn">Admin</a>
-        <a href="leaderboard.html" class="nav-btn">Top List</a>
-      </nav>
-
-      <section id="groups" class="groups"></section>
-
-      <section id="matchesPanel" class="matches-panel">
-        <h2 class="matches-title">Upcoming Matches</h2>
-        <p>Select a team to view matches.</p>
+      <section class="info-grid">
+        <article class="info-card">
+          <h2>How It Works</h2>
+          <p>
+            Make predictions for each match. Every correct prediction gives 1
+            point.
+          </p>
+        </article>
+        <article class="info-card">
+          <h2>Group Overview</h2>
+          <p>
+            Browse all tournament groups and see group matches directly inside
+            each group card.
+          </p>
+        </article>
+        <article class="info-card">
+          <h2>Leaderboard</h2>
+          <p>
+            Track who is leading with live points based on admin-confirmed match
+            results.
+          </p>
+        </article>
       </section>
     </main>
-
-    <script type="module" src="Js/index.js"></script>
   </body>
 </html>

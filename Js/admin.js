@@ -18,6 +18,11 @@ const logoutBtn = document.getElementById('logoutBtn')
 const adminNotice = document.getElementById('adminNotice')
 const usersList = document.getElementById('usersList')
 const usersNotice = document.getElementById('usersNotice')
+const usersBetSummary = document.getElementById('usersBetSummary')
+const apiFootballKeyInput = document.getElementById('apiFootballKey')
+const saveApiKeyBtn = document.getElementById('saveApiKeyBtn')
+const syncLiveBtn = document.getElementById('syncLiveBtn')
+const apiSyncStatus = document.getElementById('apiSyncStatus')
 
 let currentUser = null
 let allMatches = []
@@ -25,6 +30,233 @@ let allResults = {}
 let allUsers = []
 let isSaving = false
 let isTogglingPaid = false
+let roundCollapsed = {}
+let isSyncingLive = false
+
+const API_FOOTBALL_KEY_STORAGE = 'apiFootballKey'
+const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io'
+const WORLD_CUP_LEAGUE_ID = 1
+const WORLD_CUP_SEASON = 2026
+
+const TEAM_NAME_ALIASES = {
+  mexiko: 'Mexico',
+  sydafrika: 'South Africa',
+  sydkorea: 'South Korea',
+  tjeckien: 'Czech Republic',
+  kanada: 'Canada',
+  bosnienhercegovina: 'Bosnia and Herzegovina',
+  usa: 'United States',
+  qatar: 'Qatar',
+  schweiz: 'Switzerland',
+  brasilien: 'Brazil',
+  marocko: 'Morocco',
+  haiti: 'Haiti',
+  skottland: 'Scotland',
+  australien: 'Australia',
+  turkiet: 'Turkey',
+  tyskland: 'Germany',
+  nederlanderna: 'Netherlands',
+  elfenbenskusten: 'Ivory Coast',
+  sverige: 'Sweden',
+  tunisien: 'Tunisia',
+  spanien: 'Spain',
+  belgien: 'Belgium',
+  egypten: 'Egypt',
+  saudiarabien: 'Saudi Arabia',
+  uruguay: 'Uruguay',
+  iran: 'Iran',
+  frankrike: 'France',
+  senegal: 'Senegal',
+  irak: 'Iraq',
+  norge: 'Norway',
+  argentina: 'Argentina',
+  algeriet: 'Algeria',
+  osterrike: 'Austria',
+  jordan: 'Jordan',
+  portugal: 'Portugal',
+  drkongo: 'DR Congo',
+  england: 'England',
+  kroatien: 'Croatia',
+  ghana: 'Ghana',
+  panama: 'Panama',
+  uzbekistan: 'Uzbekistan',
+  colombia: 'Colombia',
+  paraguay: 'Paraguay',
+  curacao: 'Curacao',
+  kapverde: 'Cape Verde'
+}
+
+const FINAL_STATUSES = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO'])
+
+const normalizeTeamName = name =>
+  String(name || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+
+const toApiComparableTeamName = name => {
+  const normalized = normalizeTeamName(name)
+  const aliased = TEAM_NAME_ALIASES[normalized] || name
+  return normalizeTeamName(aliased)
+}
+
+const fixtureKey = (homeName, awayName) => {
+  const a = toApiComparableTeamName(homeName)
+  const b = toApiComparableTeamName(awayName)
+  return [a, b].sort().join('|')
+}
+
+const getStoredApiFootballKey = () =>
+  window.localStorage.getItem(API_FOOTBALL_KEY_STORAGE) || ''
+
+const setStoredApiFootballKey = key => {
+  window.localStorage.setItem(API_FOOTBALL_KEY_STORAGE, key)
+}
+
+const setApiSyncStatus = message => {
+  if (!apiSyncStatus) return
+  apiSyncStatus.textContent = message
+}
+
+const setApiControlsDisabled = disabled => {
+  if (saveApiKeyBtn) saveApiKeyBtn.disabled = disabled
+  if (syncLiveBtn) syncLiveBtn.disabled = disabled
+  if (apiFootballKeyInput) apiFootballKeyInput.disabled = disabled
+}
+
+const fetchWorldCupFixtures = async apiKey => {
+  const url =
+    `${API_FOOTBALL_BASE_URL}/fixtures?league=${WORLD_CUP_LEAGUE_ID}` +
+    `&season=${WORLD_CUP_SEASON}`
+
+  const response = await fetch(url, {
+    headers: {
+      'x-apisports-key': apiKey
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('API-FOOTBALL request failed. Check your API key.')
+  }
+
+  const payload = await response.json()
+  return payload?.response || []
+}
+
+const getApiWinnerForMatch = (match, fixture) => {
+  const goalsHome = fixture?.goals?.home
+  const goalsAway = fixture?.goals?.away
+
+  if (goalsHome == null || goalsAway == null) return null
+
+  const homeKey = toApiComparableTeamName(fixture?.teams?.home?.name)
+  const awayKey = toApiComparableTeamName(fixture?.teams?.away?.name)
+  const localTeam1Key = toApiComparableTeamName(match.team1)
+  const localTeam2Key = toApiComparableTeamName(match.team2)
+
+  const isNormalOrder = homeKey === localTeam1Key && awayKey === localTeam2Key
+  const isSwappedOrder = homeKey === localTeam2Key && awayKey === localTeam1Key
+
+  if (!isNormalOrder && !isSwappedOrder) return null
+
+  if (goalsHome === goalsAway) return 'draw'
+
+  if (isNormalOrder) {
+    return goalsHome > goalsAway ? 'team1' : 'team2'
+  }
+
+  return goalsHome > goalsAway ? 'team2' : 'team1'
+}
+
+const buildFinishedFixtureMap = fixtures => {
+  const map = new Map()
+
+  fixtures.forEach(fixture => {
+    const statusShort = String(
+      fixture?.fixture?.status?.short || ''
+    ).toUpperCase()
+    if (!FINAL_STATUSES.has(statusShort)) return
+
+    const homeName = fixture?.teams?.home?.name
+    const awayName = fixture?.teams?.away?.name
+    if (!homeName || !awayName) return
+
+    map.set(fixtureKey(homeName, awayName), fixture)
+  })
+
+  return map
+}
+
+const syncLiveScoresFromApiFootball = async () => {
+  if (isSyncingLive || !currentUser) return
+
+  const apiKey = String(apiFootballKeyInput?.value || '').trim()
+  if (!apiKey) {
+    setApiSyncStatus('Add and save an API key first.')
+    return
+  }
+
+  try {
+    isSyncingLive = true
+    setApiControlsDisabled(true)
+    setApiSyncStatus('Syncing finished World Cup fixtures...')
+
+    const fixtures = await fetchWorldCupFixtures(apiKey)
+    const finishedMap = buildFinishedFixtureMap(fixtures)
+
+    let updatedCount = 0
+    let skippedCount = 0
+
+    for (const match of allMatches) {
+      const fixture = finishedMap.get(fixtureKey(match.team1, match.team2))
+      if (!fixture) continue
+
+      const winner = getApiWinnerForMatch(match, fixture)
+      if (!winner) {
+        skippedCount += 1
+        continue
+      }
+
+      if (allResults[match.id]?.winner === winner) continue
+
+      const payload = await setMatchWinner(currentUser, match.id, winner)
+      allResults[match.id] = payload
+      updatedCount += 1
+    }
+
+    renderMatches(getFilteredMatches())
+    setApiSyncStatus(
+      `Sync complete. Updated ${updatedCount} match(es). Skipped ${skippedCount} unmatched fixture(s).`
+    )
+  } catch (error) {
+    setApiSyncStatus(error.message || 'Live sync failed.')
+  } finally {
+    isSyncingLive = false
+    setApiControlsDisabled(false)
+  }
+}
+
+const initializeApiSyncPanel = () => {
+  if (!apiFootballKeyInput || !saveApiKeyBtn || !syncLiveBtn) return
+
+  apiFootballKeyInput.value = getStoredApiFootballKey()
+
+  saveApiKeyBtn.addEventListener('click', () => {
+    const key = String(apiFootballKeyInput.value || '').trim()
+    if (!key) {
+      setApiSyncStatus('API key cannot be empty.')
+      return
+    }
+
+    setStoredApiFootballKey(key)
+    setApiSyncStatus('API key saved in this browser.')
+  })
+
+  syncLiveBtn.addEventListener('click', async () => {
+    await syncLiveScoresFromApiFootball()
+  })
+}
 
 const attachNicknameEditor = currentNickname => {
   userEmail.style.cursor = 'pointer'
@@ -114,6 +346,51 @@ const renderMatchCard = match => {
   `
 }
 
+const getGroupedMatches = matches => {
+  const grouped = {}
+
+  matches.forEach(match => {
+    const roundName = String(match.round || 'Unknown round')
+    if (!grouped[roundName]) {
+      grouped[roundName] = []
+    }
+    grouped[roundName].push(match)
+  })
+
+  return Object.entries(grouped).sort(([a], [b]) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+  )
+}
+
+const renderRoundSection = (roundName, roundMatches) => {
+  const isCollapsed = Boolean(roundCollapsed[roundName])
+
+  return `
+    <section class="round-section">
+      <button class="round-toggle" type="button" data-round="${roundName}">
+        <span class="round-title">${roundName}</span>
+        <span class="round-meta">${roundMatches.length} matches</span>
+        <span class="round-chevron ${isCollapsed ? 'collapsed' : ''}">▾</span>
+      </button>
+      <div class="round-matches-grid ${isCollapsed ? 'collapsed' : ''}">
+        ${roundMatches.map(renderMatchCard).join('')}
+      </div>
+    </section>
+  `
+}
+
+const attachRoundToggleHandlers = () => {
+  document.querySelectorAll('.round-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const roundName = btn.dataset.round
+      if (!roundName) return
+
+      roundCollapsed[roundName] = !Boolean(roundCollapsed[roundName])
+      renderMatches(getFilteredMatches())
+    })
+  })
+}
+
 const attachWinnerHandlers = () => {
   document.querySelectorAll('.winner-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
@@ -156,11 +433,25 @@ const renderMatches = matches => {
     return
   }
 
-  matchesContainer.innerHTML = matches.map(renderMatchCard).join('')
+  const groupedMatches = getGroupedMatches(matches)
+  matchesContainer.innerHTML = groupedMatches
+    .map(([roundName, roundMatches]) =>
+      renderRoundSection(roundName, roundMatches)
+    )
+    .join('')
+
+  attachRoundToggleHandlers()
   attachWinnerHandlers()
 }
 
 const renderUsers = () => {
+  const paidUsersCount = allUsers.filter(user => user.hasPaid).length
+  const totalBet = paidUsersCount * 100
+
+  if (usersBetSummary) {
+    usersBetSummary.textContent = `Total bet: ${totalBet} kr`
+  }
+
   if (!allUsers.length) {
     usersList.innerHTML =
       '<p class="users-empty">No registered users found.</p>'
@@ -249,6 +540,22 @@ const loadPage = async () => {
   allMatches = matches
   allResults = results || {}
   allUsers = users || []
+  const availableRounds = new Set(
+    allMatches.map(match => String(match.round || 'Unknown round'))
+  )
+
+  Object.keys(roundCollapsed).forEach(roundName => {
+    if (!availableRounds.has(roundName)) {
+      delete roundCollapsed[roundName]
+    }
+  })
+
+  availableRounds.forEach(roundName => {
+    if (!(roundName in roundCollapsed)) {
+      roundCollapsed[roundName] = false
+    }
+  })
+
   adminNotice.style.display = 'none'
   renderMatches(getFilteredMatches())
   renderUsers()
@@ -257,6 +564,8 @@ const loadPage = async () => {
 roundFilter.addEventListener('input', () => {
   renderMatches(getFilteredMatches())
 })
+
+initializeApiSyncPanel()
 
 logoutBtn.addEventListener('click', async () => {
   try {

@@ -302,11 +302,14 @@ export const getLeaderboard = async () => {
 
       const email = usersByUid[userId]?.email || ''
       const nickname = usersByUid[userId]?.nickname || ''
+      const hasPaid = usersByUid[userId]?.hasPaid === true
 
       return {
         userId,
         email,
         nickname,
+        hasPaid,
+        bettingTotal: hasPaid ? 100 : 0,
         points,
         predictionsCount: predictionList.length,
         resolvedMatchesCount: predictionList.filter(

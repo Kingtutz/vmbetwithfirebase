@@ -15,6 +15,9 @@ const matchesPanel = document.getElementById('matchesPanel')
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
+const matchesNavLink = document.querySelector(
+  '.nav-buttons a[href="bets.html"]'
+)
 
 let allGroups = []
 let allMatches = []
@@ -25,11 +28,20 @@ if (adminNavLink) {
   adminNavLink.style.display = 'none'
 }
 
+if (matchesNavLink) {
+  matchesNavLink.style.display = 'none'
+}
+
 const updateAdminTabVisibility = async user => {
   if (!adminNavLink) return
 
   const admin = await isAdminUser(user)
   adminNavLink.style.display = admin ? '' : 'none'
+}
+
+const updateMatchesTabVisibility = user => {
+  if (!matchesNavLink) return
+  matchesNavLink.style.display = user ? '' : 'none'
 }
 
 const attachNicknameEditor = currentNickname => {
@@ -120,6 +132,49 @@ const renderMatchPanel = teamName => {
   `
 }
 
+const predictionLabelForMatch = match => {
+  const prediction = userPredictions[match.id]
+  if (!prediction) return ''
+
+  if (prediction === 'team1') return `${match.team1} ✓`
+  if (prediction === 'team2') return `${match.team2} ✓`
+  if (prediction === 'draw') return 'Draw ✓'
+  return ''
+}
+
+const getGroupMatches = group => {
+  const teamSet = new Set(group.teams)
+  return allMatches.filter(
+    match => teamSet.has(match.team1) && teamSet.has(match.team2)
+  )
+}
+
+const renderGroupMatches = group => {
+  const groupMatches = getGroupMatches(group)
+  if (!groupMatches.length) {
+    return '<p class="group-matches-empty">No group matches found yet.</p>'
+  }
+
+  return groupMatches
+    .map(match => {
+      const predictionLabel = predictionLabelForMatch(match)
+      return `
+        <div class="group-match-row">
+        <div class="group-match-meta">${match.date ?? ''} ${
+        match.time ?? ''
+      }</div>
+          <div class="group-match-main">${match.team1} vs ${match.team2}</div>
+          ${
+            predictionLabel
+              ? `<span class="group-match-prediction">${predictionLabel}</span>`
+              : ''
+          }
+        </div>
+      `
+    })
+    .join('')
+}
+
 const renderGroups = groups => {
   groupsContainer.innerHTML = ''
 
@@ -146,8 +201,16 @@ const renderGroups = groups => {
       list.appendChild(li)
     })
 
+    const groupMatchesSection = document.createElement('section')
+    groupMatchesSection.className = 'group-matches'
+    groupMatchesSection.innerHTML = `
+      <h3 class="group-matches-title">Group Matches</h3>
+      ${renderGroupMatches(group)}
+    `
+
     card.appendChild(title)
     card.appendChild(list)
+    card.appendChild(groupMatchesSection)
     groupsContainer.appendChild(card)
   })
 }
@@ -196,6 +259,11 @@ const run = async () => {
 searchInput.addEventListener('input', applySearch)
 
 logoutBtn.addEventListener('click', async () => {
+  if (!currentUser) {
+    window.location.href = 'login.html'
+    return
+  }
+
   try {
     await logOut()
     window.location.href = 'login.html'
@@ -205,12 +273,24 @@ logoutBtn.addEventListener('click', async () => {
 })
 
 onAuthChange(async user => {
+  currentUser = user || null
+
   if (!user) {
-    window.location.href = 'login.html'
+    await updateAdminTabVisibility(null)
+    updateMatchesTabVisibility(null)
+    userEmail.textContent = 'Guest'
+    userEmail.style.cursor = 'default'
+    userEmail.title = 'Log in to set a nickname'
+    userEmail.onclick = null
+    logoutBtn.style.display = ''
+    logoutBtn.textContent = 'Login'
+    run()
     return
   }
 
-  currentUser = user
+  logoutBtn.style.display = ''
+  logoutBtn.textContent = 'Logout'
+  updateMatchesTabVisibility(user)
   await updateAdminTabVisibility(user)
   const profile = await getUserProfile(user.uid)
   userEmail.textContent = profile.nickname || user.email || 'User'

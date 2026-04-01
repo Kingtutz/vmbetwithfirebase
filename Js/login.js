@@ -1,10 +1,9 @@
-import { logIn, setUserNickname, signUp } from './firebase.js'
+import { logIn, signUp } from './firebase.js'
 
 const loginForm = document.getElementById('loginForm')
 const signupForm = document.getElementById('signupForm')
 const loginEmail = document.getElementById('loginEmail')
 const loginPassword = document.getElementById('loginPassword')
-const loginNickname = document.getElementById('loginNickname')
 const loginBtn = document.getElementById('loginBtn')
 const loginError = document.getElementById('loginError')
 
@@ -41,7 +40,6 @@ loginBtn.addEventListener('click', async () => {
   clearError(loginError)
   const email = loginEmail.value.trim()
   const password = loginPassword.value
-  const nickname = loginNickname.value.trim()
 
   if (!email || !password) {
     showError(loginError, 'Please fill in all fields.')
@@ -51,11 +49,8 @@ loginBtn.addEventListener('click', async () => {
   try {
     loginBtn.disabled = true
     loginBtn.textContent = 'Signing in...'
-    const user = await logIn(email, password)
-    if (nickname) {
-      await setUserNickname(user.uid, nickname)
-    }
-    window.location.href = 'index.html'
+    await logIn(email, password)
+    window.location.href = 'groups.html'
   } catch (error) {
     showError(loginError, error.message || 'Login failed.')
   } finally {
@@ -95,7 +90,7 @@ signupBtn.addEventListener('click', async () => {
     signupBtn.disabled = true
     signupBtn.textContent = 'Creating account...'
     await signUp(email, password, nickname)
-    window.location.href = 'index.html'
+    window.location.href = 'groups.html'
   } catch (error) {
     showError(signupError, error.message || 'Signup failed.')
   } finally {

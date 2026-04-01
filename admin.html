@@ -24,8 +24,30 @@
         <input id="roundFilter" type="search" placeholder="Search round..." />
       </div>
 
+      <section class="api-sync-card">
+        <h2 class="api-sync-title">API-FOOTBALL Live Sync</h2>
+        <p class="api-sync-subtitle">
+          Add your API key and sync finished World Cup matches automatically.
+        </p>
+        <div class="api-sync-row">
+          <input
+            id="apiFootballKey"
+            type="password"
+            placeholder="API-FOOTBALL key"
+            autocomplete="off"
+          />
+          <button id="saveApiKeyBtn" class="api-btn" type="button">
+            Save key
+          </button>
+          <button id="syncLiveBtn" class="api-btn" type="button">
+            Sync live scores
+          </button>
+        </div>
+        <p id="apiSyncStatus" class="api-sync-status"></p>
+      </section>
+
       <nav class="nav-buttons">
-        <a href="index.html" class="nav-btn">Groups</a>
+        <a href="groups.html" class="nav-btn">Groups</a>
         <a href="bets.html" class="nav-btn">Matches</a>
         <button class="nav-btn active" disabled>Admin</button>
         <a href="leaderboard.html" class="nav-btn">Top List</a>
@@ -40,7 +62,12 @@
       <section id="matches" class="matches-grid"></section>
 
       <section class="users-section">
-        <h2 class="users-heading">Registered Users</h2>
+        <h2 class="users-heading">
+          Registered Users
+          <span id="usersBetSummary" class="users-bet-summary"
+            >Total bet: 0 kr</span
+          >
+        </h2>
         <div id="usersNotice" class="admin-notice" style="display: none"></div>
         <div id="usersList"></div>
       </section>
