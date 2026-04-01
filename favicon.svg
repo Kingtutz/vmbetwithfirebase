@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="World Cup 2026 favicon">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1f5fd6" />
+      <stop offset="1" stop-color="#0f3f95" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#sky)" />
+  <circle cx="32" cy="24" r="14" fill="#ffffff" />
+  <path d="M24 19l8-5 8 5-2 9h-12z" fill="#111827" />
+  <path d="M18 24h28M22 31l10-7M42 31l-10-7" stroke="#111827" stroke-width="1.8" stroke-linecap="round" fill="none" />
+  <path d="M26 40h12l-2 9h-8z" fill="#f6c143" />
+  <rect x="24" y="37" width="16" height="4" rx="2" fill="#ffdb70" />
+  <rect x="23" y="49" width="18" height="4" rx="2" fill="#c9931f" />
+  <text x="32" y="61" text-anchor="middle" font-size="9" font-family="Segoe UI, Arial, sans-serif" fill="#ffffff" font-weight="700">26</text>
+</svg>
