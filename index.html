@@ -6,104 +6,39 @@
     <title data-i18n="landing.title">World Cup 2026 Betting</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="Css/shared.css" />
-    <style>
-      body {
-        background: radial-gradient(circle at top left, #f2ead5, var(--bg));
-      }
-
-      .landing {
-        max-width: 920px;
-        margin: 0 auto;
-        padding: 28px 20px;
-      }
-
-      .hero,
-      .info-card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 22px;
-      }
-
-      .hero h1 {
-        margin: 0 0 10px;
-        font-size: 30px;
-      }
-
-      .hero p {
-        margin: 0;
-        color: #555;
-      }
-
-      .cta-row {
-        display: flex;
-        gap: 10px;
-        margin-top: 16px;
-        flex-wrap: wrap;
-      }
-
-      .cta-btn {
-        display: inline-block;
-        padding: 10px 16px;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        text-decoration: none;
-        color: var(--text);
-        font-weight: 600;
-        background: #fff;
-      }
-
-      .cta-btn.primary {
-        background: var(--accent);
-        border-color: var(--accent);
-        color: #fff;
-      }
-
-      .info-grid {
-        margin-top: 14px;
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-      }
-
-      .info-card h2 {
-        margin: 0 0 8px;
-        font-size: 17px;
-        color: var(--accent);
-      }
-
-      .info-card p {
-        margin: 0;
-        color: #555;
-        font-size: 14px;
-      }
-    </style>
+    <link rel="stylesheet" href="Css/landing.css" />
   </head>
   <body>
     <main class="landing">
+      <div class="topbar">
+        <div class="user-info">
+          <span id="userEmail" data-i18n="common.loading">Loading...</span>
+          <button id="logoutBtn" data-i18n="common.logout">Logout</button>
+        </div>
+      </div>
+
+      <nav class="nav-buttons">
+        <button class="nav-btn active" disabled data-i18n="common.info">
+          Info
+        </button>
+        <a href="groups.html" class="nav-btn" data-i18n="common.groups"
+          >Groups</a
+        >
+        <a href="bets.html" class="nav-btn" data-i18n="common.matches"
+          >Matches</a
+        >
+        <a href="admin.html" class="nav-btn" data-i18n="common.admin">Admin</a>
+        <a href="leaderboard.html" class="nav-btn" data-i18n="common.topList"
+          >Top List</a
+        >
+      </nav>
+
       <section class="hero">
         <h1 data-i18n="landing.heroTitle">World Cup 2026 Betting</h1>
         <p data-i18n="landing.heroText">
           Predict match outcomes, follow the top list, and compete with your
           friends in one place.
         </p>
-        <div class="cta-row">
-          <a
-            href="login.html"
-            class="cta-btn primary"
-            data-i18n="landing.ctaLogin"
-            >Login / Sign Up</a
-          >
-          <a href="groups.html" class="cta-btn" data-i18n="landing.ctaGroups"
-            >Open Groups</a
-          >
-          <a
-            href="leaderboard.html"
-            class="cta-btn"
-            data-i18n="landing.ctaTopList"
-            >View Top List</a
-          >
-        </div>
       </section>
 
       <section class="info-grid">

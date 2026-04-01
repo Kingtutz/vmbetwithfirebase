@@ -1,0 +1,134 @@
+body {
+  background: radial-gradient(circle at top left, #f2ead5, var(--bg));
+}
+
+.landing {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+
+.hero,
+.info-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+#logoutBtn {
+  padding: 8px 16px;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+#logoutBtn:hover {
+  background: #1a5d50;
+}
+
+.nav-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(96px, 100%), 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.nav-btn {
+  min-width: 0;
+  padding: clamp(8px, 1.6vw, 10px) clamp(10px, 2vw, 16px);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-size: clamp(12px, 1.8vw, 14px);
+  text-align: center;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.nav-btn.active,
+.nav-btn:disabled {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  cursor: not-allowed;
+}
+
+.hero h1 {
+  margin: 0 0 10px;
+  font-size: 30px;
+}
+
+.hero p {
+  margin: 0;
+  color: #555;
+}
+
+.cta-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.cta-btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 600;
+  background: #fff;
+}
+
+.cta-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.info-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.info-card h2 {
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: var(--accent);
+}
+
+.info-card p {
+  margin: 0;
+  color: #555;
+  font-size: 14px;
+}
