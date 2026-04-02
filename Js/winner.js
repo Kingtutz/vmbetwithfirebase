@@ -1,6 +1,5 @@
 import {
   getAllGroupTeams,
-  getAllTournamentWinnerBets,
   getBetLocks,
   getTournamentWinnerBet,
   getUserProfile,
@@ -18,7 +17,6 @@ const teamsGrid = document.getElementById('teamsGrid')
 const currentPick = document.getElementById('currentPick')
 const statusMessage = document.getElementById('statusMessage')
 const saveWinnerBtn = document.getElementById('saveWinnerBtn')
-const winnerBetSummary = document.getElementById('winnerBetSummary')
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
 
 let currentUser = null
@@ -27,9 +25,6 @@ let savedWinner = ''
 let selectedWinner = ''
 let isSaving = false
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
-let totalWinnerBetCount = 0
-
-const WINNER_BET_AMOUNT_PER_USER = 50
 
 initI18n()
 
@@ -80,16 +75,6 @@ const updateCurrentPick = () => {
 
   currentPick.textContent = t('winner.currentPick', {
     team: translateTeamName(savedWinner)
-  })
-}
-
-const updateWinnerBetSummary = () => {
-  if (!winnerBetSummary) return
-
-  const amount = totalWinnerBetCount * WINNER_BET_AMOUNT_PER_USER
-  winnerBetSummary.textContent = t('winner.totalBet', {
-    amount,
-    count: totalWinnerBetCount
   })
 }
 
@@ -157,11 +142,10 @@ const attachNicknameEditor = currentNickname => {
 
 const run = async () => {
   try {
-    const [groups, winnerBet, locks, allWinnerBets] = await Promise.all([
+    const [groups, winnerBet, locks] = await Promise.all([
       getAllGroupTeams(),
       getTournamentWinnerBet(currentUser.uid),
-      getBetLocks(),
-      getAllTournamentWinnerBets()
+      getBetLocks()
     ])
 
     betLocks = locks || { matchesLockedAt: '', winnerLockedAt: '' }
@@ -172,7 +156,6 @@ const run = async () => {
 
     savedWinner = winnerBet?.winnerTeam || ''
     selectedWinner = savedWinner || selectedWinner
-    totalWinnerBetCount = allWinnerBets.filter(bet => bet.winnerTeam).length
 
     setStatus('', '')
     if (isWinnerBetLockedByAdmin()) {
@@ -180,7 +163,6 @@ const run = async () => {
     }
     renderTeams()
     updateCurrentPick()
-    updateWinnerBetSummary()
     updateSaveButton()
   } catch (error) {
     setStatus('error', error.message || t('winner.couldNotLoad'))
@@ -196,16 +178,11 @@ saveWinnerBtn.addEventListener('click', async () => {
   }
 
   try {
-    const hadSavedWinner = Boolean(savedWinner)
     isSaving = true
     updateSaveButton()
     await setTournamentWinnerBet(currentUser.uid, selectedWinner)
     savedWinner = selectedWinner
-    if (!hadSavedWinner) {
-      totalWinnerBetCount += 1
-    }
     updateCurrentPick()
-    updateWinnerBetSummary()
     setStatus('success', t('winner.saveSuccess'))
     renderTeams()
   } catch (error) {
@@ -248,7 +225,6 @@ onAuthChange(async user => {
 onLanguageChange(() => {
   logoutBtn.textContent = t('common.logout')
   updateCurrentPick()
-  updateWinnerBetSummary()
   updateSaveButton()
   renderTeams()
 })
