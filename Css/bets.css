@@ -467,7 +467,13 @@ body {
   }
 
   .matches-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .compact-mode .matches-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
   }
 
   .match-content {
@@ -495,6 +501,11 @@ body {
 
 @media (max-width: 500px) {
   .matches-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .compact-mode .matches-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px;
   }
