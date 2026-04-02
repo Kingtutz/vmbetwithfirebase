@@ -23,6 +23,7 @@ const apiFootballKeyInput = document.getElementById('apiFootballKey')
 const saveApiKeyBtn = document.getElementById('saveApiKeyBtn')
 const syncLiveBtn = document.getElementById('syncLiveBtn')
 const apiSyncStatus = document.getElementById('apiSyncStatus')
+const compactToggle = document.getElementById('compactToggle')
 
 let currentUser = null
 let allMatches = []
@@ -32,8 +33,24 @@ let isSaving = false
 let isTogglingPaid = false
 let roundCollapsed = {}
 let isSyncingLive = false
+const COMPACT_MODE_KEY = 'adminCompactMode'
+let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
 
 initI18n()
+
+const updateCompactToggleLabel = () => {
+  if (!compactToggle) return
+  compactToggle.textContent = compactMode
+    ? t('admin.compactOn')
+    : t('admin.compactOff')
+}
+
+const applyCompactMode = () => {
+  document.body.classList.toggle('compact-mode', compactMode)
+  updateCompactToggleLabel()
+}
+
+applyCompactMode()
 
 const API_FOOTBALL_KEY_STORAGE = 'apiFootballKey'
 const API_FOOTBALL_BASE_URL = 'https://v3.football.api-sports.io'
@@ -394,31 +411,45 @@ const renderRoundSection = (roundName, roundMatches) => {
   `
 }
 
+const toggleRoundSection = section => {
+  if (!section) return
+
+  const btn = section.querySelector('.round-toggle-btn')
+  const grid = section.querySelector('.round-matches-grid')
+  const roundName = btn?.dataset.round
+  if (!roundName) return
+
+  const nextCollapsed = !Boolean(roundCollapsed[roundName])
+  roundCollapsed[roundName] = nextCollapsed
+
+  section.classList.toggle('collapsed', nextCollapsed)
+  if (grid) {
+    grid.classList.toggle('collapsed', nextCollapsed)
+  }
+  btn.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true')
+
+  const chevron = btn.querySelector('.round-chevron')
+  if (chevron) {
+    chevron.classList.toggle('collapsed', nextCollapsed)
+  }
+}
+
 const attachRoundToggleHandlers = () => {
-  document.querySelectorAll('.round-toggle-btn').forEach(btn => {
-    btn.addEventListener('click', event => {
-      event.preventDefault()
-      event.stopPropagation()
-
-      const roundName = btn.dataset.round
-      if (!roundName) return
-
-      const section = document.querySelector(
-        `[data-round-section="${CSS.escape(roundName)}"]`
-      )
-      const nextCollapsed = !Boolean(roundCollapsed[roundName])
-
-      roundCollapsed[roundName] = nextCollapsed
-
-      if (section) {
-        section.classList.toggle('collapsed', nextCollapsed)
+  document.querySelectorAll('.round-header').forEach(header => {
+    header.addEventListener('click', event => {
+      const target = event.target
+      if (target instanceof HTMLElement) {
+        // Keep other controls in the header safe if any are added later.
+        if (
+          target.closest('.winner-btn') ||
+          target.closest('.toggle-paid-btn')
+        ) {
+          return
+        }
       }
 
-      btn.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true')
-      const chevron = btn.querySelector('.round-chevron')
-      if (chevron) {
-        chevron.classList.toggle('collapsed', nextCollapsed)
-      }
+      const section = header.closest('.round-section')
+      toggleRoundSection(section)
     })
   })
 }
@@ -572,7 +603,7 @@ const loadPage = async () => {
 
   availableRounds.forEach(roundName => {
     if (!(roundName in roundCollapsed)) {
-      roundCollapsed[roundName] = false
+      roundCollapsed[roundName] = true
     }
   })
 
@@ -582,6 +613,12 @@ const loadPage = async () => {
 }
 
 initializeApiSyncPanel()
+
+compactToggle?.addEventListener('click', () => {
+  compactMode = !compactMode
+  window.localStorage.setItem(COMPACT_MODE_KEY, compactMode ? 'on' : 'off')
+  applyCompactMode()
+})
 
 logoutBtn.addEventListener('click', async () => {
   try {
@@ -615,6 +652,7 @@ onAuthChange(async user => {
 
 onLanguageChange(() => {
   logoutBtn.textContent = t('common.logout')
+  updateCompactToggleLabel()
   attachNicknameEditor(userEmail.textContent)
   renderMatches(allMatches)
   renderUsers()

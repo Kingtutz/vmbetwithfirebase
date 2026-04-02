@@ -1,5 +1,5 @@
 body {
-  background: radial-gradient(circle at top left, #f2ead5, var(--bg));
+  background:var(--bg);
 }
 
 .container {
@@ -48,7 +48,7 @@ body {
 }
 
 #logoutBtn:hover {
-  background: #1a5d50;
+  background: #225d1a;
 }
 
 .nav-buttons {
@@ -63,7 +63,7 @@ body {
   padding: clamp(8px, 1.6vw, 10px) clamp(10px, 2vw, 16px);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 1px;
   color: var(--text);
   text-decoration: none;
   font-weight: 600;
@@ -148,6 +148,7 @@ body {
 
 .player {
   font-weight: 600;
+  color: var(--bg);
 }
 
 .stats {
@@ -160,7 +161,7 @@ body {
 
 .points {
   background: var(--accent);
-  color: #fff;
+  color: var(--text);
   padding: 4px 10px;
   border-radius: 999px;
   font-weight: 700;

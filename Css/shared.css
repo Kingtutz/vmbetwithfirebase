@@ -1,10 +1,14 @@
 :root {
-  --bg: #f8f6ef;
-  --text: #1d1b16;
+  --bg: hsla(218, 49%, 14%, 1);
+  --text: hsla(22, 46%, 53%, 1);
   --card: #fffdf7;
-  --border: #d7cfbc;
-  --accent: #1f6f5f;
+  --border:hsla(22, 46%, 53%, 1);
+  --accent: hsl(218, 71%, 30%);
   --error: #c53030;
+  --btn-bg: #0b1740;
+  --btn-bg-hover: #11225c;
+  --btn-border: #d8cfc0;
+  --btn-text:hsla(22, 46%, 53%, 1);
 }
 
 * {
@@ -47,8 +51,8 @@ button {
   top: 12px;
   right: 12px;
   z-index: 1000;
-  background: rgba(255, 253, 247, 0.96);
-  border: 1px solid var(--border);
+  background: var(--bg);
+  border: 2px solid var(--text);
   border-radius: 999px;
   padding: 6px 10px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
@@ -56,13 +60,13 @@ button {
 
 .language-label {
   font-size: 12px;
-  color: #666;
+  color: var(--text);
   white-space: nowrap;
 }
 
 .language-select {
-  border: 1px solid var(--border);
-  background: #fff;
+  border: 1px solid var(--text);
+  background: var(--bg);
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
@@ -71,5 +75,107 @@ button {
 
 .language-select:focus {
   outline: none;
-  border-color: var(--accent);
+}
+
+/* Shared button skin inspired by the reference style */
+#logoutBtn,
+.nav-btn,
+.cta-btn,
+#loginBtn,
+#signupBtn,
+.google-btn,
+.api-btn,
+.compact-toggle,
+.place-bet-btn,
+.toggle-paid-btn,
+.prediction-btn,
+.winner-btn {
+  background: var(--bg) !important;
+  border: 1px solid var(--text) !important;
+  color: var(--text) !important;
+  box-shadow: inset 0 0 0 1px rgba(216, 207, 192, 0.25);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color 0.28s ease, border-color 0.28s ease;
+}
+
+#logoutBtn::after,
+.nav-btn::after,
+.cta-btn::after,
+#loginBtn::after,
+#signupBtn::after,
+.google-btn::after,
+.api-btn::after,
+.compact-toggle::after,
+.place-bet-btn::after,
+.toggle-paid-btn::after,
+.prediction-btn::after,
+.winner-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.28s ease;
+  z-index: -1;
+  pointer-events: none;
+}
+
+#logoutBtn:hover,
+.nav-btn:hover:not(:disabled),
+.cta-btn:hover,
+#loginBtn:hover,
+#signupBtn:hover,
+.google-btn:hover,
+.api-btn:hover:not(:disabled),
+.compact-toggle:hover,
+.place-bet-btn:hover:not(:disabled),
+.toggle-paid-btn:hover:not(:disabled),
+.prediction-btn:hover,
+.winner-btn:hover {
+  background: var(--bg) !important;
+  border-color: var(--text) !important;
+  color: var(--bg) !important;
+}
+
+#logoutBtn:hover::after,
+.nav-btn:hover:not(:disabled)::after,
+.cta-btn:hover::after,
+#loginBtn:hover::after,
+#signupBtn:hover::after,
+.google-btn:hover::after,
+.api-btn:hover:not(:disabled)::after,
+.compact-toggle:hover::after,
+.place-bet-btn:hover:not(:disabled)::after,
+.toggle-paid-btn:hover:not(:disabled)::after,
+.prediction-btn:hover::after,
+.winner-btn:hover::after {
+  transform: scaleY(1);
+}
+
+.prediction-btn.active,
+.winner-btn.active {
+  background: var(--text) !important;
+  border-color: var(--text) !important;
+  color: var(--bg) !important;
+  box-shadow: inset 0 0 0 1px rgba(240, 199, 170, 0.35);
+}
+
+.nav-btn.active,
+.nav-btn:disabled,
+#logoutBtn:disabled,
+#loginBtn:disabled,
+#signupBtn:disabled,
+.google-btn:disabled,
+.api-btn:disabled,
+.compact-toggle:disabled,
+.place-bet-btn:disabled,
+.toggle-paid-btn:disabled,
+.prediction-btn:disabled,
+.winner-btn:disabled {
+  background: var(--text) !important;
+  color: var(--bg) !important;
+  border-color: var(--text) !important;
 }

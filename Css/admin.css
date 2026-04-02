@@ -1,5 +1,5 @@
 body {
-  background: radial-gradient(circle at top left, #f2ead5, var(--bg));
+ background:var(--bg);
 }
 
 .container {
@@ -55,6 +55,37 @@ body {
   display: flex;
   gap: 10px;
   margin: 0 0 16px;
+}
+
+.compact-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.compact-toggle::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 3px;
+  box-sizing: border-box;
+  box-shadow: inset 0 -4px 0 0 currentColor;
+  opacity: 0.8;
+}
+
+.compact-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 #roundFilter {
@@ -149,7 +180,7 @@ body {
   padding: clamp(8px, 1.6vw, 10px) clamp(10px, 2vw, 16px);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 1px;
   color: var(--text);
   text-decoration: none;
   font-weight: 600;
@@ -251,6 +282,12 @@ body {
   padding: 14px;
 }
 
+.compact-mode .round-matches-grid {
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+
 .round-section.collapsed .round-matches-grid,
 .round-matches-grid.collapsed {
   display: none;
@@ -274,11 +311,21 @@ body {
   font-weight: 600;
 }
 
+.compact-mode .match-header {
+  padding: 8px 9px;
+  font-size: 10px;
+}
+
 .match-content {
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.compact-mode .match-content {
+  padding: 10px;
+  gap: 8px;
 }
 
 .teams {
@@ -288,6 +335,10 @@ body {
   font-weight: 600;
   font-size: 14px;
   text-align: center;
+}
+
+.compact-mode .teams {
+  font-size: 12px;
 }
 
 .team-name {
@@ -301,9 +352,17 @@ body {
   white-space: nowrap;
 }
 
+.compact-mode .vs {
+  font-size: 10px;
+}
+
 .winner-buttons {
   display: flex;
   gap: 8px;
+}
+
+.compact-mode .winner-buttons {
+  gap: 4px;
 }
 
 .winner-btn {
@@ -316,6 +375,11 @@ body {
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
+}
+
+.compact-mode .winner-btn {
+  padding: 6px 4px;
+  font-size: 10px;
 }
 
 .winner-btn.active {
@@ -332,6 +396,10 @@ body {
 .current-winner {
   font-size: 12px;
   color: #666;
+}
+
+.compact-mode .current-winner {
+  font-size: 10px;
 }
 
 @media (max-width: 768px) {
@@ -355,6 +423,10 @@ body {
 
   .round-matches-grid {
     grid-template-columns: 1fr;
+  }
+
+  .compact-toggle {
+    width: 100%;
   }
 }
 

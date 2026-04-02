@@ -13,6 +13,7 @@ import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
 const roundFilter = document.getElementById('roundFilter')
+const compactToggle = document.getElementById('compactToggle')
 const betsPanel = document.getElementById('betsPanel')
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
@@ -24,8 +25,24 @@ let tempPredictions = {} // Local predictions awaiting submission
 let allResults = {}
 let currentUser = null
 let isSubmitting = false
+const COMPACT_MODE_KEY = 'betsCompactMode'
+let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
 
 initI18n()
+
+const updateCompactToggleLabel = () => {
+  if (!compactToggle) return
+  compactToggle.textContent = compactMode
+    ? t('bets.compactOn')
+    : t('bets.compactOff')
+}
+
+const applyCompactMode = () => {
+  document.body.classList.toggle('compact-mode', compactMode)
+  updateCompactToggleLabel()
+}
+
+applyCompactMode()
 
 if (adminNavLink) {
   adminNavLink.style.display = 'none'
@@ -358,6 +375,12 @@ const run = async () => {
 
 roundFilter.addEventListener('input', applyFilter)
 
+compactToggle?.addEventListener('click', () => {
+  compactMode = !compactMode
+  window.localStorage.setItem(COMPACT_MODE_KEY, compactMode ? 'on' : 'off')
+  applyCompactMode()
+})
+
 logoutBtn.addEventListener('click', async () => {
   try {
     await logOut()
@@ -384,6 +407,7 @@ onAuthChange(async user => {
 
 onLanguageChange(() => {
   logoutBtn.textContent = t('common.logout')
+  updateCompactToggleLabel()
   attachNicknameEditor(userEmail.textContent)
   applyFilter()
   renderUserPredictions()

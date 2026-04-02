@@ -124,6 +124,8 @@ const translations = {
     'bets.noPredictionsYet': 'Du har inte gjort nagra tips an.',
     'bets.unsaved': 'Inte sparad',
     'bets.lockedResult': 'Last - resultat satt: {winner}',
+    'bets.compactOn': 'Kompakt lage: Pa',
+    'bets.compactOff': 'Kompakt lage: Av',
     'bets.couldNotLoad': 'Kunde inte ladda matcher fran Firebase.',
 
     'leaderboard.title': 'Topplista - Tippningspoang',
@@ -154,10 +156,12 @@ const translations = {
     'login.passwordsNoMatch': 'Losenorden matchar inte.',
     'login.passwordTooShort': 'Losenordet maste vara minst 6 tecken.',
     'login.signingIn': 'Loggar in...',
+    'login.signingInGoogle': 'Loggar in med Google...',
     'login.loginFailed': 'Inloggningen misslyckades.',
     'login.creatingAccount': 'Skapar konto...',
     'login.signupFailed': 'Registreringen misslyckades.',
     'login.createAccountButton': 'Skapa konto',
+    'login.googleButton': 'Fortsatt med Google',
 
     'admin.title': 'Admin - Satt matchvinnare',
     'admin.headerTitle': 'Adminpanel',
@@ -189,6 +193,8 @@ const translations = {
     'admin.apiKeySaved': 'API-nyckeln sparades i den har webblasaren.',
     'admin.syncComplete':
       'Synk klar. Uppdaterade {updated} match(er). Hoppade over {skipped} omatchade fixture(s).',
+    'admin.compactOn': 'Kompakt lage: Pa',
+    'admin.compactOff': 'Kompakt lage: Av',
 
     'nickname.prompt': 'Ange ditt smeknamn',
     'nickname.empty': 'Smeknamnet kan inte vara tomt.',
@@ -269,6 +275,8 @@ const translations = {
     'bets.noPredictionsYet': "You haven't made any predictions yet.",
     'bets.unsaved': 'Unsaved',
     'bets.lockedResult': 'Locked - result set: {winner}',
+    'bets.compactOn': 'Compact Mode: On',
+    'bets.compactOff': 'Compact Mode: Off',
     'bets.couldNotLoad': 'Could not load matches from Firebase.',
 
     'leaderboard.title': 'Top List - Prediction Scores',
@@ -299,10 +307,12 @@ const translations = {
     'login.passwordsNoMatch': 'Passwords do not match.',
     'login.passwordTooShort': 'Password must be at least 6 characters.',
     'login.signingIn': 'Signing in...',
+    'login.signingInGoogle': 'Signing in with Google...',
     'login.loginFailed': 'Login failed.',
     'login.creatingAccount': 'Creating account...',
     'login.signupFailed': 'Signup failed.',
     'login.createAccountButton': 'Create Account',
+    'login.googleButton': 'Continue with Google',
 
     'admin.title': 'Admin - Set Match Winners',
     'admin.headerTitle': 'Admin Panel',
@@ -334,6 +344,8 @@ const translations = {
     'admin.apiKeySaved': 'API key saved in this browser.',
     'admin.syncComplete':
       'Sync complete. Updated {updated} match(es). Skipped {skipped} unmatched fixture(s).',
+    'admin.compactOn': 'Compact Mode: On',
+    'admin.compactOff': 'Compact Mode: Off',
 
     'nickname.prompt': 'Enter your nickname',
     'nickname.empty': 'Nickname cannot be empty.',

@@ -1,5 +1,5 @@
 body {
-  background: radial-gradient(circle at top left, #f2ead5, var(--bg));
+  background:var(--bg);
 }
 
 .container {
@@ -82,7 +82,7 @@ body {
   padding: clamp(8px, 1.6vw, 10px) clamp(10px, 2vw, 16px);
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 1px;
   color: var(--text);
   text-decoration: none;
   font-weight: 600;
@@ -143,8 +143,9 @@ ul li {
 .team-btn {
   border: 0;
   background: transparent;
-  color: var(--text);
+  color: var(--bg);
   text-align: left;
+  font-weight: bold;
   padding: 0;
   transition: color 0.2s;
 }
@@ -164,7 +165,7 @@ ul li {
   justify-self: center;
   margin: 0 0 8px;
   font-size: 13px;
-  color: #666;
+  color: var(--bg);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -179,6 +180,7 @@ ul li {
 }
 
 .group-match-main {
+  color: var(--bg);
   justify-self: center;
   font-size: 13px;
   font-weight: 600;
@@ -195,8 +197,8 @@ ul li {
   display: block;
   width: fit-content;
   margin: 6px auto 0;
-  background: #2f6fed;
-  color: #fff;
+  background: var(--bg);
+  color: var(--text);
   border-radius: 999px;
   padding: 3px 8px;
   font-size: 11px;

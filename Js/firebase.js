@@ -11,6 +11,8 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
   signOut,
   onAuthStateChanged
 } from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js'
@@ -120,6 +122,30 @@ export const logIn = async (email, password) => {
     updatedAt: new Date().toISOString()
   })
   return result.user
+}
+
+export const signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider()
+  provider.setCustomParameters({ prompt: 'select_account' })
+
+  const result = await signInWithPopup(auth, provider)
+  const user = result.user
+  const userRef = ref(db, `users/${user.uid}`)
+  const snapshot = await get(userRef)
+  const profile = snapshot.exists() ? snapshot.val() || {} : {}
+
+  const nickname =
+    String(profile.nickname || '').trim() ||
+    String(user.displayName || '').trim() ||
+    String((user.email || '').split('@')[0] || '').trim()
+
+  await update(userRef, {
+    email: user.email || '',
+    nickname,
+    updatedAt: new Date().toISOString()
+  })
+
+  return user
 }
 
 export const setUserNickname = async (userId, nickname) => {
