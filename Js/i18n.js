@@ -93,7 +93,7 @@ const translations = {
     'landing.howItWorksText': 'Tippa varje match. Varje ratt tips ger 1 poang.',
     'landing.groupOverviewTitle': 'Gruppoversikt',
     'landing.groupOverviewText':
-      'Bladdra bland alla grupper och se gruppmatcher direkt i varje gruppkort.',
+      'Bladdra bland alla grupper och se gruppmatcher direkt i varje gruppkort. När du har lagt ditt bet syns även vilka du har satsat på under matcherna',
     'landing.leaderboardTitle': 'Topplista',
     'landing.leaderboardText':
       'Se vem som leder med poäng baserat på matchresultat.',
@@ -293,7 +293,7 @@ const translations = {
       'Make predictions for each match. Every correct prediction gives 1 point.',
     'landing.groupOverviewTitle': 'Group Overview',
     'landing.groupOverviewText':
-      'Browse all tournament groups and see group matches directly inside each group card.',
+      'Browse all tournament groups and see group matches directly inside each group card. When you have placed a bet you will also the the team that you have bet on under the match!',
     'landing.leaderboardTitle': 'Leaderboard',
     'landing.leaderboardText':
       'Track who is leading with points based on admin-confirmed match results.',
