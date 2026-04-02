@@ -20,6 +20,9 @@ const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
 const matchesNavLink = document.querySelector(
   '.nav-buttons a[href="bets.html"]'
 )
+const winnerNavLink = document.querySelector(
+  '.nav-buttons a[href="winner.html"]'
+)
 
 let allGroups = []
 let allMatches = []
@@ -38,6 +41,10 @@ if (matchesNavLink) {
   matchesNavLink.style.display = 'none'
 }
 
+if (winnerNavLink) {
+  winnerNavLink.style.display = 'none'
+}
+
 const updateAdminTabVisibility = async user => {
   if (!adminNavLink) return
 
@@ -48,6 +55,11 @@ const updateAdminTabVisibility = async user => {
 const updateMatchesTabVisibility = user => {
   if (!matchesNavLink) return
   matchesNavLink.style.display = user ? '' : 'none'
+}
+
+const updateWinnerTabVisibility = user => {
+  if (!winnerNavLink) return
+  winnerNavLink.style.display = user ? '' : 'none'
 }
 
 const attachNicknameEditor = currentNickname => {
@@ -342,6 +354,7 @@ onAuthChange(async user => {
   if (!user) {
     await updateAdminTabVisibility(null)
     updateMatchesTabVisibility(null)
+    updateWinnerTabVisibility(null)
     userEmail.textContent = t('common.guest')
     userEmail.style.cursor = 'default'
     userEmail.title = t('nickname.loginToSet')
@@ -355,6 +368,7 @@ onAuthChange(async user => {
   logoutBtn.style.display = ''
   logoutBtn.textContent = t('common.logout')
   updateMatchesTabVisibility(user)
+  updateWinnerTabVisibility(user)
   await updateAdminTabVisibility(user)
   const profile = await getUserProfile(user.uid)
   userEmail.textContent = profile.nickname || user.email || t('common.user')

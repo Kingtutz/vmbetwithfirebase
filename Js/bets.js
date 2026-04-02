@@ -1,6 +1,7 @@
 import {
   getAllMatchesFlat,
   getAllMatchResults,
+  getBetLocks,
   getUserProfile,
   getUserPredictions,
   isAdminUser,
@@ -23,6 +24,7 @@ let allMatches = []
 let userPredictions = {} // Saved predictions from Firebase
 let tempPredictions = {} // Local predictions awaiting submission
 let allResults = {}
+let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
 let currentUser = null
 let isSubmitting = false
 const COMPACT_MODE_KEY = 'betsCompactMode'
@@ -57,8 +59,20 @@ const updateAdminTabVisibility = async user => {
 
 const isMatchLocked = matchId => Boolean(allResults[matchId]?.winner)
 
+const isMatchBetLockedByAdmin = () => {
+  const lockAt = String(betLocks.matchesLockedAt || '')
+  if (!lockAt) return false
+
+  const lockTime = new Date(lockAt).getTime()
+  if (Number.isNaN(lockTime)) return false
+  return Date.now() >= lockTime
+}
+
+const isBetLockedForMatch = matchId =>
+  isMatchLocked(matchId) || isMatchBetLockedByAdmin()
+
 const getUnlockedMatches = () =>
-  allMatches.filter(match => !isMatchLocked(match.id))
+  allMatches.filter(match => !isBetLockedForMatch(match.id))
 
 const getRequiredPredictionCount = () => getUnlockedMatches().length
 
@@ -109,6 +123,7 @@ const renderPredictionForm = match => {
   const currentPrediction =
     tempPredictions[match.id] || userPredictions[match.id]
   const locked = isMatchLocked(match.id)
+  const adminLocked = isMatchBetLockedByAdmin()
   const winner = allResults[match.id]?.winner
   const winnerLabel =
     winner === 'team1'
@@ -135,21 +150,21 @@ const renderPredictionForm = match => {
           <button class="prediction-btn ${
             currentPrediction === 'team1' ? 'active' : ''
           }" data-match-id="${match.id}" data-prediction="team1" ${
-    locked ? 'disabled' : ''
+    locked || adminLocked ? 'disabled' : ''
   }>
             ${translateTeamName(match.team1)} ${t('common.wins')}
           </button>
           <button class="prediction-btn draw ${
             currentPrediction === 'draw' ? 'active' : ''
           }" data-match-id="${match.id}" data-prediction="draw" ${
-    locked ? 'disabled' : ''
+    locked || adminLocked ? 'disabled' : ''
   }>
             ${t('common.draw')}
           </button>
           <button class="prediction-btn ${
             currentPrediction === 'team2' ? 'active' : ''
           }" data-match-id="${match.id}" data-prediction="team2" ${
-    locked ? 'disabled' : ''
+    locked || adminLocked ? 'disabled' : ''
   }>
             ${translateTeamName(match.team2)} ${t('common.wins')}
           </button>
@@ -159,6 +174,8 @@ const renderPredictionForm = match => {
             ? `<div class="locked-note">${t('bets.lockedResult', {
                 winner: winnerLabel
               })}</div>`
+            : adminLocked
+            ? `<div class="locked-note">${t('bets.lockedByAdmin')}</div>`
             : ''
         }
       </div>
@@ -183,7 +200,7 @@ const renderMatches = matches => {
     btn.addEventListener('click', () => {
       const matchId = btn.dataset.matchId
       const prediction = btn.dataset.prediction
-      if (isMatchLocked(matchId)) return
+      if (isBetLockedForMatch(matchId)) return
 
       // Update only temp predictions
       tempPredictions[matchId] = prediction
@@ -292,6 +309,16 @@ const renderUserPredictions = () => {
 const submitAllPredictions = async () => {
   if (!hasAllPredictions() || isSubmitting) return
 
+  if (isMatchBetLockedByAdmin()) {
+    const messageDiv = document.getElementById('submitMessage')
+    if (messageDiv) {
+      messageDiv.textContent = `✗ ${t('bets.lockedByAdmin')}`
+      messageDiv.className = 'submit-message error'
+      messageDiv.style.display = 'block'
+    }
+    return
+  }
+
   isSubmitting = true
   const submitBtn = document.getElementById('placeBetBtn')
   const messageDiv = document.getElementById('submitMessage')
@@ -300,7 +327,7 @@ const submitAllPredictions = async () => {
     // Combine temp predictions with saved ones for submission
     const allPredictionsToSubmit = Object.fromEntries(
       Object.entries(tempPredictions).filter(
-        ([matchId]) => !isMatchLocked(matchId)
+        ([matchId]) => !isBetLockedForMatch(matchId)
       )
     )
 
@@ -353,14 +380,16 @@ const applyFilter = () => {
 
 const run = async () => {
   try {
-    const [matches, predictions, results] = await Promise.all([
+    const [matches, predictions, results, locks] = await Promise.all([
       getAllMatchesFlat(),
       getUserPredictions(currentUser.uid),
-      getAllMatchResults()
+      getAllMatchResults(),
+      getBetLocks()
     ])
 
     allMatches = matches
     allResults = results || {}
+    betLocks = locks || { matchesLockedAt: '', winnerLockedAt: '' }
     userPredictions = {}
     predictions.forEach(pred => {
       userPredictions[pred.matchId] = pred.prediction

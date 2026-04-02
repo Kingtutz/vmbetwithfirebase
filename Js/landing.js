@@ -15,12 +15,20 @@ const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
 const matchesNavLink = document.querySelector(
   '.nav-buttons a[href="bets.html"]'
 )
+const winnerNavLink = document.querySelector(
+  '.nav-buttons a[href="winner.html"]'
+)
 
 let currentUser = null
 
 const updateMatchesTabVisibility = user => {
   if (!matchesNavLink) return
   matchesNavLink.style.display = user ? '' : 'none'
+}
+
+const updateWinnerTabVisibility = user => {
+  if (!winnerNavLink) return
+  winnerNavLink.style.display = user ? '' : 'none'
 }
 
 const updateAdminTabVisibility = async user => {
@@ -52,6 +60,7 @@ onAuthChange(async user => {
 
   if (!user) {
     updateMatchesTabVisibility(null)
+    updateWinnerTabVisibility(null)
     await updateAdminTabVisibility(null)
     if (userEmail) userEmail.textContent = t('common.guest')
     if (logoutBtn) logoutBtn.textContent = t('common.login')
@@ -59,6 +68,7 @@ onAuthChange(async user => {
   }
 
   updateMatchesTabVisibility(user)
+  updateWinnerTabVisibility(user)
   await updateAdminTabVisibility(user)
 
   const profile = await getUserProfile(user.uid)

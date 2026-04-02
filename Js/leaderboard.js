@@ -7,7 +7,7 @@ import {
   onAuthChange,
   setUserNickname
 } from './firebase.js'
-import { initI18n, onLanguageChange, t } from './i18n.js'
+import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const leaderboardContainer = document.getElementById('leaderboard')
 const payoutBreakdown = document.getElementById('payoutBreakdown')
@@ -17,6 +17,9 @@ const notice = document.getElementById('notice')
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
 const matchesNavLink = document.querySelector(
   '.nav-buttons a[href="bets.html"]'
+)
+const winnerNavLink = document.querySelector(
+  '.nav-buttons a[href="winner.html"]'
 )
 let currentUser = null
 
@@ -30,6 +33,10 @@ if (matchesNavLink) {
   matchesNavLink.style.display = 'none'
 }
 
+if (winnerNavLink) {
+  winnerNavLink.style.display = 'none'
+}
+
 const updateAdminTabVisibility = async user => {
   if (!adminNavLink) return
 
@@ -40,6 +47,11 @@ const updateAdminTabVisibility = async user => {
 const updateMatchesTabVisibility = user => {
   if (!matchesNavLink) return
   matchesNavLink.style.display = user ? '' : 'none'
+}
+
+const updateWinnerTabVisibility = user => {
+  if (!winnerNavLink) return
+  winnerNavLink.style.display = user ? '' : 'none'
 }
 
 const attachNicknameEditor = currentNickname => {
@@ -96,7 +108,16 @@ const renderLeaderboard = rows => {
       return `
         <div class="leaderboard-row">
           <div class="place">#${index + 1}</div>
-          <div class="player">${formatUser(entry)}</div>
+          <div class="player">
+            <div class="player-name">${formatUser(entry)}</div>
+            ${
+              entry.winnerTeam
+                ? `<div class="winner-pick">${t('leaderboard.winnerPick', {
+                    team: translateTeamName(entry.winnerTeam)
+                  })}</div>`
+                : ''
+            }
+          </div>
           <div class="stats">
             <span class="points">${entry.points} ${t(
         'common.pointsShort'
@@ -169,6 +190,7 @@ onAuthChange(async user => {
   if (!user) {
     await updateAdminTabVisibility(null)
     updateMatchesTabVisibility(null)
+    updateWinnerTabVisibility(null)
     userEmail.textContent = t('common.guest')
     userEmail.style.cursor = 'default'
     userEmail.title = t('nickname.loginToSet')
@@ -182,6 +204,7 @@ onAuthChange(async user => {
   logoutBtn.style.display = ''
   logoutBtn.textContent = t('common.logout')
   updateMatchesTabVisibility(user)
+  updateWinnerTabVisibility(user)
   await updateAdminTabVisibility(user)
   const profile = await getUserProfile(user.uid)
   userEmail.textContent = profile.nickname || user.email || t('common.user')

@@ -58,6 +58,68 @@
         <p id="apiSyncStatus" class="api-sync-status"></p>
       </section>
 
+      <section class="api-sync-card">
+        <h2 class="api-sync-title" data-i18n="admin.lockSettingsTitle">
+          Bet lock settings
+        </h2>
+        <p class="api-sync-subtitle" data-i18n="admin.lockSettingsSubtitle">
+          Set when users can no longer place or change bets.
+        </p>
+        <div class="lock-grid">
+          <label class="lock-field">
+            <span data-i18n="admin.matchesLockAt">Lock match bets at</span>
+            <input id="matchesLockAt" type="datetime-local" />
+          </label>
+          <label class="lock-field">
+            <span data-i18n="admin.winnerLockAt">Lock winner bets at</span>
+            <input id="winnerLockAt" type="datetime-local" />
+          </label>
+        </div>
+        <div class="api-sync-row">
+          <button
+            id="saveLocksBtn"
+            class="api-btn"
+            type="button"
+            data-i18n="admin.saveLocks"
+          >
+            Save lock settings
+          </button>
+          <button
+            id="clearLocksBtn"
+            class="api-btn"
+            type="button"
+            data-i18n="admin.clearLocks"
+          >
+            Clear locks
+          </button>
+        </div>
+        <p id="locksStatus" class="api-sync-status"></p>
+      </section>
+
+      <section class="api-sync-card">
+        <h2 class="api-sync-title" data-i18n="admin.winnerResultTitle">
+          Tournament winner result
+        </h2>
+        <p class="api-sync-subtitle" data-i18n="admin.winnerResultSubtitle">
+          Select the final tournament winner and calculate payout for correct
+          winner bets.
+        </p>
+        <div class="api-sync-row">
+          <select id="winnerResultSelect"></select>
+          <button
+            id="saveWinnerResultBtn"
+            class="api-btn"
+            type="button"
+            data-i18n="admin.saveWinnerResult"
+          >
+            Save winner result
+          </button>
+        </div>
+        <p id="winnerResultStatus" class="api-sync-status"></p>
+        <p id="winnerPayoutSummary" class="api-sync-status"></p>
+        <div id="winnerPayoutWinners" class="winner-payout-list"></div>
+      </section>
+
       <nav class="nav-buttons">
         <a href="index.html" class="nav-btn" data-i18n="common.info">Info</a>
         <a href="groups.html" class="nav-btn" data-i18n="common.groups"
@@ -65,6 +127,9 @@
         >
         <a href="bets.html" class="nav-btn" data-i18n="common.matches"
           >Matches</a
+        >
+        <a href="winner.html" class="nav-btn" data-i18n="common.winnerBet"
+          >Winner Bet</a
         >
         <button class="nav-btn active" disabled data-i18n="common.admin">
           Admin
@@ -100,6 +165,7 @@
             >Total bet: 0 kr</span
           >
         </h2>
+        <p id="matchPayoutSummary" class="api-sync-status"></p>
         <div id="usersNotice" class="admin-notice" style="display: none"></div>
         <div id="usersList"></div>
       </section>

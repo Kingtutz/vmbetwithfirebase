@@ -1,14 +1,20 @@
 import {
   getAllMatchesFlat,
   getAllMatchResults,
+  getAllTournamentWinnerBets,
   getAllUsers,
+  getBetLocks,
+  getTournamentWinnerResult,
   getUserProfile,
   isAdminUser,
   logOut,
   onAuthChange,
   setUserNickname,
   setMatchWinner,
-  setUserPaid
+  setBetLocks,
+  setUserPaid,
+  setTournamentWinnerResult,
+  setUserWinnerBetPaid
 } from './firebase.js'
 import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
@@ -19,10 +25,21 @@ const adminNotice = document.getElementById('adminNotice')
 const usersList = document.getElementById('usersList')
 const usersNotice = document.getElementById('usersNotice')
 const usersBetSummary = document.getElementById('usersBetSummary')
+const matchPayoutSummary = document.getElementById('matchPayoutSummary')
 const apiFootballKeyInput = document.getElementById('apiFootballKey')
 const saveApiKeyBtn = document.getElementById('saveApiKeyBtn')
 const syncLiveBtn = document.getElementById('syncLiveBtn')
 const apiSyncStatus = document.getElementById('apiSyncStatus')
+const matchesLockAtInput = document.getElementById('matchesLockAt')
+const winnerLockAtInput = document.getElementById('winnerLockAt')
+const saveLocksBtn = document.getElementById('saveLocksBtn')
+const clearLocksBtn = document.getElementById('clearLocksBtn')
+const locksStatus = document.getElementById('locksStatus')
+const winnerResultSelect = document.getElementById('winnerResultSelect')
+const saveWinnerResultBtn = document.getElementById('saveWinnerResultBtn')
+const winnerResultStatus = document.getElementById('winnerResultStatus')
+const winnerPayoutSummary = document.getElementById('winnerPayoutSummary')
+const winnerPayoutWinners = document.getElementById('winnerPayoutWinners')
 const compactToggle = document.getElementById('compactToggle')
 
 let currentUser = null
@@ -33,8 +50,15 @@ let isSaving = false
 let isTogglingPaid = false
 let roundCollapsed = {}
 let isSyncingLive = false
+let isSavingLocks = false
+let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
+let allWinnerBets = []
+let winnerResult = null
+let isSavingWinnerResult = false
 const COMPACT_MODE_KEY = 'adminCompactMode'
 let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
+
+const WINNER_BET_AMOUNT = 50
 
 initI18n()
 
@@ -142,6 +166,213 @@ const setApiControlsDisabled = disabled => {
   if (saveApiKeyBtn) saveApiKeyBtn.disabled = disabled
   if (syncLiveBtn) syncLiveBtn.disabled = disabled
   if (apiFootballKeyInput) apiFootballKeyInput.disabled = disabled
+}
+
+const setLocksStatus = message => {
+  if (!locksStatus) return
+  locksStatus.textContent = message
+}
+
+const setWinnerResultStatus = message => {
+  if (!winnerResultStatus) return
+  winnerResultStatus.textContent = message
+}
+
+const getAvailableTeams = () =>
+  [...new Set(allMatches.flatMap(match => [match.team1, match.team2]))]
+    .filter(Boolean)
+    .sort((a, b) =>
+      String(a).localeCompare(String(b), undefined, { sensitivity: 'base' })
+    )
+
+const renderWinnerResultPanel = () => {
+  if (!winnerResultSelect) return
+
+  const teams = getAvailableTeams()
+  const selectedWinner = String(winnerResult?.winnerTeam || '')
+
+  winnerResultSelect.innerHTML = [
+    `<option value="">${t('admin.selectWinnerResult')}</option>`,
+    ...teams.map(
+      team =>
+        `<option value="${team}" ${
+          team === selectedWinner ? 'selected' : ''
+        }>${translateTeamName(team)}</option>`
+    )
+  ].join('')
+
+  winnerResultSelect.disabled = isSavingWinnerResult
+  if (saveWinnerResultBtn) saveWinnerResultBtn.disabled = isSavingWinnerResult
+
+  const paidWinnerUsers = allUsers.filter(user => user.hasPaidWinnerBet)
+  const totalWinnerPool = paidWinnerUsers.length * WINNER_BET_AMOUNT
+  const distributablePool = Math.floor(totalWinnerPool * 0.9)
+  const paidWinnerUserIds = new Set(paidWinnerUsers.map(user => user.uid))
+
+  const correctWinnerCount = selectedWinner
+    ? allWinnerBets.filter(
+        bet =>
+          bet.winnerTeam === selectedWinner && paidWinnerUserIds.has(bet.userId)
+      ).length
+    : 0
+
+  const payoutPerWinner =
+    selectedWinner && correctWinnerCount > 0
+      ? Math.floor(distributablePool / correctWinnerCount)
+      : 0
+
+  const correctWinnerRows = selectedWinner
+    ? allWinnerBets.filter(
+        bet =>
+          bet.winnerTeam === selectedWinner && paidWinnerUserIds.has(bet.userId)
+      )
+    : []
+
+  if (winnerPayoutSummary) {
+    winnerPayoutSummary.textContent = t('admin.winnerPayoutSummary', {
+      total: totalWinnerPool,
+      pool90: distributablePool,
+      winners: correctWinnerCount,
+      payout: payoutPerWinner
+    })
+  }
+
+  if (winnerPayoutWinners) {
+    if (!selectedWinner) {
+      winnerPayoutWinners.innerHTML = ''
+    } else if (!correctWinnerRows.length) {
+      winnerPayoutWinners.innerHTML = `<div class="winner-payout-empty">${t(
+        'admin.winnerPayoutNoWinners'
+      )}</div>`
+    } else {
+      const userById = new Map(allUsers.map(user => [user.uid, user]))
+      const rowsHtml = correctWinnerRows
+        .slice()
+        .sort((a, b) => String(a.userId).localeCompare(String(b.userId)))
+        .map(bet => {
+          const user = userById.get(bet.userId)
+          const displayName =
+            user?.nickname || user?.email || bet.userId || t('common.user')
+
+          return `
+            <div class="winner-payout-row">
+              <span class="winner-payout-user">${displayName}</span>
+              <span class="winner-payout-amount">${t('admin.payoutEach', {
+                amount: payoutPerWinner
+              })}</span>
+            </div>
+          `
+        })
+        .join('')
+
+      winnerPayoutWinners.innerHTML = `
+        <div class="winner-payout-title">${t(
+          'admin.winnerPayoutBreakdown'
+        )}</div>
+        ${rowsHtml}
+      `
+    }
+  }
+}
+
+const initializeWinnerResultSettings = () => {
+  if (!saveWinnerResultBtn || !winnerResultSelect) return
+
+  saveWinnerResultBtn.addEventListener('click', async () => {
+    const winnerTeam = String(winnerResultSelect.value || '').trim()
+    if (!winnerTeam) {
+      setWinnerResultStatus(t('admin.selectWinnerResultFirst'))
+      return
+    }
+
+    try {
+      isSavingWinnerResult = true
+      renderWinnerResultPanel()
+      const payload = await setTournamentWinnerResult(currentUser, winnerTeam)
+      winnerResult = payload
+      setWinnerResultStatus(t('admin.winnerResultSaved'))
+      renderWinnerResultPanel()
+    } catch (error) {
+      setWinnerResultStatus(
+        error.message || t('admin.couldNotSaveWinnerResult')
+      )
+    } finally {
+      isSavingWinnerResult = false
+      renderWinnerResultPanel()
+    }
+  })
+}
+
+const toDateTimeLocalValue = isoValue => {
+  if (!isoValue) return ''
+  const parsed = new Date(isoValue)
+  if (Number.isNaN(parsed.getTime())) return ''
+
+  const pad = value => String(value).padStart(2, '0')
+  const year = parsed.getFullYear()
+  const month = pad(parsed.getMonth() + 1)
+  const day = pad(parsed.getDate())
+  const hours = pad(parsed.getHours())
+  const minutes = pad(parsed.getMinutes())
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+const toIsoOrEmpty = localValue => {
+  const clean = String(localValue || '').trim()
+  if (!clean) return ''
+  const parsed = new Date(clean)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toISOString()
+}
+
+const renderLockInputs = () => {
+  if (matchesLockAtInput) {
+    matchesLockAtInput.value = toDateTimeLocalValue(betLocks.matchesLockedAt)
+    matchesLockAtInput.disabled = isSavingLocks
+  }
+
+  if (winnerLockAtInput) {
+    winnerLockAtInput.value = toDateTimeLocalValue(betLocks.winnerLockedAt)
+    winnerLockAtInput.disabled = isSavingLocks
+  }
+
+  if (saveLocksBtn) saveLocksBtn.disabled = isSavingLocks
+  if (clearLocksBtn) clearLocksBtn.disabled = isSavingLocks
+}
+
+const saveLockSettings = async payload => {
+  try {
+    isSavingLocks = true
+    renderLockInputs()
+    const saved = await setBetLocks(currentUser, payload)
+    betLocks = {
+      matchesLockedAt: saved.matchesLockedAt || '',
+      winnerLockedAt: saved.winnerLockedAt || ''
+    }
+    renderLockInputs()
+    setLocksStatus(t('admin.locksSaved'))
+  } catch (error) {
+    setLocksStatus(error.message || t('admin.couldNotSaveLocks'))
+  } finally {
+    isSavingLocks = false
+    renderLockInputs()
+  }
+}
+
+const initializeLockSettings = () => {
+  if (!saveLocksBtn || !clearLocksBtn) return
+
+  saveLocksBtn.addEventListener('click', async () => {
+    await saveLockSettings({
+      matchesLockedAt: toIsoOrEmpty(matchesLockAtInput?.value),
+      winnerLockedAt: toIsoOrEmpty(winnerLockAtInput?.value)
+    })
+  })
+
+  clearLocksBtn.addEventListener('click', async () => {
+    await saveLockSettings({ matchesLockedAt: '', winnerLockedAt: '' })
+    setLocksStatus(t('admin.locksCleared'))
+  })
 }
 
 const fetchWorldCupFixtures = async apiKey => {
@@ -500,9 +731,23 @@ const renderMatches = matches => {
 const renderUsers = () => {
   const paidUsersCount = allUsers.filter(user => user.hasPaid).length
   const totalBet = paidUsersCount * 100
+  const firstPrize = Math.round(totalBet * 0.65)
+  const secondPrize = Math.round(totalBet * 0.15)
+  const thirdPrize = Math.round(totalBet * 0.1)
+  const restPool = totalBet - firstPrize - secondPrize - thirdPrize
 
   if (usersBetSummary) {
     usersBetSummary.textContent = t('admin.totalBet', { amount: totalBet })
+  }
+
+  if (matchPayoutSummary) {
+    matchPayoutSummary.textContent = t('admin.matchPayoutSummary', {
+      total: totalBet,
+      first: firstPrize,
+      second: secondPrize,
+      third: thirdPrize,
+      rest: restPool
+    })
   }
 
   if (!allUsers.length) {
@@ -529,14 +774,34 @@ const renderUsers = () => {
           }
         </div>
         <span class="paid-badge ${u.hasPaid ? 'paid' : 'unpaid'}">
-          ${u.hasPaid ? t('admin.paid') : t('admin.unpaid')}
+          ${t('admin.matchBetLabel')}: ${
+        u.hasPaid ? t('admin.paid') : t('admin.unpaid')
+      }
         </span>
         <button
           class="toggle-paid-btn"
+          data-type="match"
           data-uid="${u.uid}"
           data-paid="${u.hasPaid}"
           ${isTogglingPaid ? 'disabled' : ''}>
           ${u.hasPaid ? t('admin.markUnpaid') : t('admin.markPaid')}
+        </button>
+        <span class="paid-badge ${u.hasPaidWinnerBet ? 'paid' : 'unpaid'}">
+          ${t('admin.winnerBetLabel')}: ${
+        u.hasPaidWinnerBet ? t('admin.paid') : t('admin.unpaid')
+      }
+        </span>
+        <button
+          class="toggle-paid-btn"
+          data-type="winner"
+          data-uid="${u.uid}"
+          data-paid="${u.hasPaidWinnerBet}"
+          ${isTogglingPaid ? 'disabled' : ''}>
+          ${
+            u.hasPaidWinnerBet
+              ? t('admin.markWinnerUnpaid')
+              : t('admin.markWinnerPaid')
+          }
         </button>
       </div>`
     )
@@ -551,14 +816,25 @@ const attachPaymentHandlers = () => {
     btn.addEventListener('click', async () => {
       const uid = btn.dataset.uid
       const currentPaid = btn.dataset.paid === 'true'
+      const paymentType = btn.dataset.type
       if (!uid || isTogglingPaid) return
 
       try {
         isTogglingPaid = true
         renderUsers()
-        await setUserPaid(uid, !currentPaid)
+        if (paymentType === 'winner') {
+          await setUserWinnerBetPaid(uid, !currentPaid)
+        } else {
+          await setUserPaid(uid, !currentPaid)
+        }
         const user = allUsers.find(u => u.uid === uid)
-        if (user) user.hasPaid = !currentPaid
+        if (user) {
+          if (paymentType === 'winner') {
+            user.hasPaidWinnerBet = !currentPaid
+          } else {
+            user.hasPaid = !currentPaid
+          }
+        }
         usersNotice.style.display = 'none'
       } catch (error) {
         usersNotice.style.display = 'block'
@@ -582,15 +858,24 @@ const loadPage = async () => {
     return
   }
 
-  const [matches, results, users] = await Promise.all([
-    getAllMatchesFlat(),
-    getAllMatchResults(),
-    getAllUsers()
-  ])
+  const [matches, results, users, locks, winnerBets, winnerResultPayload] =
+    await Promise.all([
+      getAllMatchesFlat(),
+      getAllMatchResults(),
+      getAllUsers(),
+      getBetLocks(),
+      getAllTournamentWinnerBets(),
+      getTournamentWinnerResult()
+    ])
 
   allMatches = matches
   allResults = results || {}
   allUsers = users || []
+  betLocks = locks || { matchesLockedAt: '', winnerLockedAt: '' }
+  allWinnerBets = winnerBets || []
+  winnerResult = winnerResultPayload || null
+  renderLockInputs()
+  renderWinnerResultPanel()
   const availableRounds = new Set(
     allMatches.map(match => String(match.round || t('common.notSet')))
   )
@@ -613,6 +898,8 @@ const loadPage = async () => {
 }
 
 initializeApiSyncPanel()
+initializeLockSettings()
+initializeWinnerResultSettings()
 
 compactToggle?.addEventListener('click', () => {
   compactMode = !compactMode
@@ -654,6 +941,8 @@ onLanguageChange(() => {
   logoutBtn.textContent = t('common.logout')
   updateCompactToggleLabel()
   attachNicknameEditor(userEmail.textContent)
+  renderLockInputs()
+  renderWinnerResultPanel()
   renderMatches(allMatches)
   renderUsers()
   if (

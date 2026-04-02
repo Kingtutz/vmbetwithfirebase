@@ -128,6 +128,32 @@ body {
   flex-wrap: wrap;
 }
 
+.lock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.lock-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: #666;
+}
+
+.lock-field input {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.lock-field input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 #apiFootballKey {
   min-width: 240px;
   flex: 1;
@@ -136,7 +162,20 @@ body {
   border-radius: 8px;
 }
 
+#winnerResultSelect {
+  min-width: 240px;
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
 #apiFootballKey:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+#winnerResultSelect:focus {
   outline: none;
   border-color: var(--accent);
 }
@@ -166,6 +205,50 @@ body {
   margin: 10px 0 0;
   font-size: 12px;
   color: #666;
+}
+
+.winner-payout-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.winner-payout-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #5a4a3d;
+}
+
+.winner-payout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: #f9f6ef;
+  border: 1px solid #e8decb;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.winner-payout-user {
+  font-weight: 600;
+  color: #5a4a3d;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.winner-payout-amount {
+  font-weight: 700;
+  color: #2f4f2f;
+  white-space: nowrap;
+}
+
+.winner-payout-empty {
+  font-size: 12px;
+  color: #7b7065;
 }
 
 .nav-buttons {
@@ -583,6 +666,10 @@ body {
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.2s, color 0.2s;
+}
+
+.user-row .toggle-paid-btn {
+  flex-shrink: 0;
 }
 
 .toggle-paid-btn:hover:not(:disabled) {

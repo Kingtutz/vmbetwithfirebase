@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title data-i18n="winner.title">World Cup Winner - Place Winner Bet</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="stylesheet" href="Css/shared.css" />
+    <link rel="stylesheet" href="Css/winner.css" />
+  </head>
+  <body>
+    <main class="container">
+      <div class="header">
+        <div>
+          <h1 data-i18n="winner.headerTitle">Bet on the World Cup Winner</h1>
+          <p data-i18n="winner.headerText">
+            Pick the team you believe will win the tournament.
+          </p>
+        </div>
+        <div class="user-info">
+          <span id="userEmail" data-i18n="common.loading">Loading...</span>
+          <button id="logoutBtn" data-i18n="common.logout">Logout</button>
+        </div>
+      </div>
+
+      <nav class="nav-buttons">
+        <a href="index.html" class="nav-btn" data-i18n="common.info">Info</a>
+        <a href="groups.html" class="nav-btn" data-i18n="common.groups"
+          >Groups</a
+        >
+        <a href="bets.html" class="nav-btn" data-i18n="common.matches"
+          >Matches</a
+        >
+        <button class="nav-btn active" disabled data-i18n="common.winnerBet">
+          Winner Bet
+        </button>
+        <a href="admin.html" class="nav-btn" data-i18n="common.admin">Admin</a>
+        <a href="leaderboard.html" class="nav-btn" data-i18n="common.topList"
+          >Top List</a
+        >
+      </nav>
+
+      <section class="winner-card">
+        <h2 class="winner-card-title" data-i18n="winner.chooseWinner">
+          Choose tournament winner
+        </h2>
+        <p
+          id="winnerBetSummary"
+          class="winner-bet-summary"
+          data-i18n="winner.totalBet"
+          data-i18n-vars='{"amount":0,"count":0}'
+        >
+          Total winner bet: 0 kr (0 players)
+        </p>
+        <p id="currentPick" class="current-pick" data-i18n="winner.noPickYet">
+          You haven't picked a winner yet.
+        </p>
+        <div
+          id="statusMessage"
+          class="status-message"
+          style="display: none"
+        ></div>
+        <div id="teamsGrid" class="teams-grid"></div>
+        <button
+          id="saveWinnerBtn"
+          class="save-btn"
+          data-i18n="winner.savePick"
+          disabled
+        >
+          Save winner pick
+        </button>
+      </section>
+    </main>
+
+    <script type="module" src="Js/winner.js"></script>
+  </body>
+</html>

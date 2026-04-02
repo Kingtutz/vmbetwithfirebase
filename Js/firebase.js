@@ -124,6 +124,76 @@ export const logIn = async (email, password) => {
   return result.user
 }
 
+export const getTournamentWinnerBet = async userId => {
+  if (!userId) return null
+
+  const betRef = ref(db, `tournamentWinnerBets/${userId}`)
+  const snapshot = await get(betRef)
+  if (!snapshot.exists()) return null
+
+  return snapshot.val() || null
+}
+
+export const setTournamentWinnerBet = async (userId, winnerTeam) => {
+  if (!userId) {
+    throw new Error('Missing user id')
+  }
+
+  const cleanWinnerTeam = String(winnerTeam || '').trim()
+  if (!cleanWinnerTeam) {
+    throw new Error('Missing winner team')
+  }
+
+  const payload = {
+    winnerTeam: cleanWinnerTeam,
+    madePredictionAt: new Date().toISOString()
+  }
+
+  await set(ref(db, `tournamentWinnerBets/${userId}`), payload)
+  return payload
+}
+
+export const getAllTournamentWinnerBets = async () => {
+  const betsRef = ref(db, 'tournamentWinnerBets')
+  const snapshot = await get(betsRef)
+  if (!snapshot.exists()) return []
+
+  return Object.entries(snapshot.val() || {}).map(([userId, bet]) => ({
+    userId,
+    winnerTeam: String(bet?.winnerTeam || '').trim(),
+    madePredictionAt: bet?.madePredictionAt || ''
+  }))
+}
+
+export const getTournamentWinnerResult = async () => {
+  const resultRef = ref(db, 'settings/tournamentWinnerResult')
+  const snapshot = await get(resultRef)
+  if (!snapshot.exists()) return null
+  return snapshot.val() || null
+}
+
+export const setTournamentWinnerResult = async (user, winnerTeam) => {
+  const admin = await isAdminUser(user)
+  if (!admin) {
+    throw new Error('Only admins can set tournament winner result')
+  }
+
+  const cleanWinnerTeam = String(winnerTeam || '').trim()
+  if (!cleanWinnerTeam) {
+    throw new Error('Missing winner team')
+  }
+
+  const payload = {
+    winnerTeam: cleanWinnerTeam,
+    setAt: new Date().toISOString(),
+    setByUid: user?.uid || '',
+    setByEmail: user?.email || ''
+  }
+
+  await set(ref(db, 'settings/tournamentWinnerResult'), payload)
+  return payload
+}
+
 export const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider()
   provider.setCustomParameters({ prompt: 'select_account' })
@@ -294,12 +364,17 @@ export const getPredictionsForMatch = async matchId => {
 }
 
 export const getLeaderboard = async () => {
-  const [predictionsSnapshot, resultsSnapshot, usersSnapshot] =
-    await Promise.all([
-      get(ref(db, 'predictions')),
-      get(ref(db, 'matchResults')),
-      get(ref(db, 'users'))
-    ])
+  const [
+    predictionsSnapshot,
+    resultsSnapshot,
+    usersSnapshot,
+    winnerBetsSnapshot
+  ] = await Promise.all([
+    get(ref(db, 'predictions')),
+    get(ref(db, 'matchResults')),
+    get(ref(db, 'users')),
+    get(ref(db, 'tournamentWinnerBets'))
+  ])
 
   if (!predictionsSnapshot.exists()) return []
 
@@ -308,6 +383,9 @@ export const getLeaderboard = async () => {
     ? resultsSnapshot.val() || {}
     : {}
   const usersByUid = usersSnapshot.exists() ? usersSnapshot.val() || {} : {}
+  const winnerBetsByUid = winnerBetsSnapshot.exists()
+    ? winnerBetsSnapshot.val() || {}
+    : {}
 
   const entries = Object.entries(predictionsByUser).map(
     ([userId, userPredictions]) => {
@@ -329,11 +407,14 @@ export const getLeaderboard = async () => {
       const email = usersByUid[userId]?.email || ''
       const nickname = usersByUid[userId]?.nickname || ''
       const hasPaid = usersByUid[userId]?.hasPaid === true
+      const winnerTeam =
+        String(winnerBetsByUid[userId]?.winnerTeam || '').trim() || ''
 
       return {
         userId,
         email,
         nickname,
+        winnerTeam,
         hasPaid,
         bettingTotal: hasPaid ? 100 : 0,
         points,
@@ -366,6 +447,7 @@ export const getAllUsers = async () => {
     email: profile.email || '',
     nickname: profile.nickname || '',
     hasPaid: profile.hasPaid === true,
+    hasPaidWinnerBet: profile.hasPaidWinnerBet === true,
     updatedAt: profile.updatedAt || ''
   }))
 }
@@ -373,6 +455,48 @@ export const getAllUsers = async () => {
 export const setUserPaid = async (userId, paid) => {
   if (!userId) throw new Error('Missing user id')
   await update(ref(db, `users/${userId}`), { hasPaid: Boolean(paid) })
+}
+
+export const setUserWinnerBetPaid = async (userId, paid) => {
+  if (!userId) throw new Error('Missing user id')
+  await update(ref(db, `users/${userId}`), {
+    hasPaidWinnerBet: Boolean(paid)
+  })
+}
+
+export const getBetLocks = async () => {
+  const locksRef = ref(db, 'settings/betLocks')
+  const snapshot = await get(locksRef)
+  if (!snapshot.exists()) {
+    return {
+      matchesLockedAt: '',
+      winnerLockedAt: ''
+    }
+  }
+
+  const value = snapshot.val() || {}
+  return {
+    matchesLockedAt: String(value.matchesLockedAt || ''),
+    winnerLockedAt: String(value.winnerLockedAt || '')
+  }
+}
+
+export const setBetLocks = async (user, locks = {}) => {
+  const admin = await isAdminUser(user)
+  if (!admin) {
+    throw new Error('Only admins can update lock settings')
+  }
+
+  const payload = {
+    matchesLockedAt: String(locks.matchesLockedAt || '').trim(),
+    winnerLockedAt: String(locks.winnerLockedAt || '').trim(),
+    updatedAt: new Date().toISOString(),
+    updatedByUid: user?.uid || '',
+    updatedByEmail: user?.email || ''
+  }
+
+  await set(ref(db, 'settings/betLocks'), payload)
+  return payload
 }
 
 export const onAuthChange = callback => {
