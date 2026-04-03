@@ -180,7 +180,7 @@ logoutBtn.addEventListener('click', async () => {
     window.location.href = 'login.html'
   } catch (error) {
     notice.style.display = 'block'
-    notice.textContent = error.message || 'Logout failed.'
+    notice.textContent = error.message || t('common.logoutFailed')
   }
 })
 
