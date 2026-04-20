@@ -364,6 +364,40 @@ export const getPredictionsForMatch = async matchId => {
   return allPredictions
 }
 
+export const getPredictionStatsByMatch = async () => {
+  const allPredictionsRef = ref(db, 'predictions')
+  const snapshot = await get(allPredictionsRef)
+  if (!snapshot.exists()) return {}
+
+  const statsByMatch = {}
+  const predictionsObj = snapshot.val() || {}
+
+  for (const userPredictions of Object.values(predictionsObj)) {
+    if (!userPredictions) continue
+
+    for (const prediction of Object.values(userPredictions)) {
+      const matchId = String(prediction?.matchId || '').trim()
+      const pick = prediction?.prediction
+      if (!matchId) continue
+      if (!['team1', 'team2', 'draw'].includes(pick)) continue
+
+      if (!statsByMatch[matchId]) {
+        statsByMatch[matchId] = {
+          team1: 0,
+          draw: 0,
+          team2: 0,
+          total: 0
+        }
+      }
+
+      statsByMatch[matchId][pick] += 1
+      statsByMatch[matchId].total += 1
+    }
+  }
+
+  return statsByMatch
+}
+
 export const getLeaderboard = async () => {
   const [
     predictionsSnapshot,

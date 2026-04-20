@@ -121,6 +121,19 @@ body {
   gap: 4px;
 }
 
+.compact-mode .pick-percentages {
+  padding: 4px 6px;
+  gap: 3px;
+}
+
+.compact-mode .pick-percentage-label {
+  font-size: 9px;
+}
+
+.compact-mode .pick-percentage-item {
+  font-size: 10px;
+}
+
 .compact-mode .prediction-btn {
   padding: 6px 4px;
   font-size: 10px;
@@ -220,6 +233,37 @@ body {
   font-weight: 600;
   color: #999;
   white-space: nowrap;
+}
+
+.pick-percentages {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 8px;
+  background: #f6f3ea;
+  border: 1px solid #e4dcc7;
+  border-radius: 8px;
+}
+
+.pick-percentage-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #6b5f4b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pick-percentages-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.pick-percentage-item {
+  font-size: 11px;
+  font-weight: 600;
+  color: #3f3a2e;
+  text-align: center;
 }
 
 .prediction-buttons {
@@ -500,6 +544,10 @@ body {
     flex-direction: column;
   }
 
+  .pick-percentages-grid {
+    gap: 4px;
+  }
+
   .prediction-buttons {
     gap: 6px;
   }
@@ -562,6 +610,11 @@ body {
   .prediction-buttons {
     flex-direction: column;
     gap: 4px;
+  }
+
+  .pick-percentages-grid {
+    grid-template-columns: 1fr;
+    gap: 3px;
   }
 
   .prediction-btn {

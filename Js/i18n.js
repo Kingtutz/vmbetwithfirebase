@@ -136,6 +136,7 @@ const translations = {
     'bets.unsaved': 'Inte sparad',
     'bets.collapsePredictions': 'Dolj',
     'bets.expandPredictions': 'Visa',
+    'bets.pickDistribution': 'Val i procent',
     'bets.lockedResult': 'Låst - resultat satt: {winner}',
     'bets.lockedByAdmin': 'Låst av admin - tiden för matchtips har passerat.',
     'bets.compactOn': 'Kompakt läge: På',
@@ -357,6 +358,7 @@ const translations = {
     'bets.unsaved': 'Unsaved',
     'bets.collapsePredictions': 'Collapse',
     'bets.expandPredictions': 'Expand',
+    'bets.pickDistribution': 'Pick distribution',
     'bets.lockedResult': 'Locked - result set: {winner}',
     'bets.lockedByAdmin':
       'Locked by admin - match betting deadline has passed.',

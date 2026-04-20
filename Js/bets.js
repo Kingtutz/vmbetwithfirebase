@@ -2,6 +2,7 @@ import {
   getAllMatchesFlat,
   getAllMatchResults,
   getBetLocks,
+  getPredictionStatsByMatch,
   getUserProfile,
   getUserPredictions,
   isAdminUser,
@@ -23,6 +24,7 @@ let allMatches = []
 let userPredictions = {} // Saved predictions from Firebase
 let tempPredictions = {} // Local predictions awaiting submission
 let allResults = {}
+let predictionStatsByMatch = {}
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
 let currentUser = null
 let isSubmitting = false
@@ -152,9 +154,71 @@ const getTempPredictionCount = () => {
   return getUnlockedMatches().filter(match => tempPredictions[match.id]).length
 }
 
+const isValidPrediction = value => ['team1', 'team2', 'draw'].includes(value)
+
+const ensureMatchStats = matchId => {
+  if (!predictionStatsByMatch[matchId]) {
+    predictionStatsByMatch[matchId] = {
+      team1: 0,
+      draw: 0,
+      team2: 0,
+      total: 0
+    }
+  }
+
+  return predictionStatsByMatch[matchId]
+}
+
+const applyPredictionStatsUpdate = (
+  matchId,
+  previousPrediction,
+  nextPrediction
+) => {
+  const stats = ensureMatchStats(matchId)
+
+  if (isValidPrediction(previousPrediction)) {
+    stats[previousPrediction] = Math.max(0, stats[previousPrediction] - 1)
+    stats.total = Math.max(0, stats.total - 1)
+  }
+
+  if (isValidPrediction(nextPrediction)) {
+    stats[nextPrediction] += 1
+    stats.total += 1
+  }
+}
+
+const getMatchPercentages = matchId => {
+  const stats = predictionStatsByMatch[matchId] || {
+    team1: 0,
+    draw: 0,
+    team2: 0,
+    total: 0
+  }
+
+  const total = Number(stats.total) || 0
+  if (total <= 0) {
+    return {
+      team1: 0,
+      draw: 0,
+      team2: 0,
+      total: 0
+    }
+  }
+
+  const toPercent = count => Math.round((Number(count || 0) / total) * 100)
+
+  return {
+    team1: toPercent(stats.team1),
+    draw: toPercent(stats.draw),
+    team2: toPercent(stats.team2),
+    total
+  }
+}
+
 const renderPredictionForm = match => {
   const currentPrediction =
     tempPredictions[match.id] || userPredictions[match.id]
+  const percentages = getMatchPercentages(match.id)
   const locked = isMatchLocked(match.id)
   const adminLocked = isMatchBetLockedByAdmin()
   const winner = allResults[match.id]?.winner
@@ -201,6 +265,22 @@ const renderPredictionForm = match => {
   }>
             ${translateTeamName(match.team2)} ${t('common.wins')}
           </button>
+        </div>
+        <div class="pick-percentages">
+          <span class="pick-percentage-label">${t(
+            'bets.pickDistribution'
+          )}</span>
+          <div class="pick-percentages-grid">
+            <span class="pick-percentage-item">${translateTeamName(
+              match.team1
+            )}: ${percentages.team1}%</span>
+            <span class="pick-percentage-item">${t('common.draw')}: ${
+    percentages.draw
+  }%</span>
+            <span class="pick-percentage-item">${translateTeamName(
+              match.team2
+            )}: ${percentages.team2}%</span>
+          </div>
         </div>
         ${
           locked
@@ -388,6 +468,13 @@ const submitAllPredictions = async () => {
 
     await makeBatchPredictions(currentUser.uid, allPredictionsToSubmit)
 
+    Object.entries(allPredictionsToSubmit).forEach(
+      ([matchId, nextPrediction]) => {
+        const previousPrediction = userPredictions[matchId]
+        applyPredictionStatsUpdate(matchId, previousPrediction, nextPrediction)
+      }
+    )
+
     // Move temp predictions to saved
     Object.assign(userPredictions, allPredictionsToSubmit)
     tempPredictions = {}
@@ -415,15 +502,18 @@ const submitAllPredictions = async () => {
 
 const run = async () => {
   try {
-    const [matches, predictions, results, locks] = await Promise.all([
-      getAllMatchesFlat(),
-      getUserPredictions(currentUser.uid),
-      getAllMatchResults(),
-      getBetLocks()
-    ])
+    const [matches, predictions, results, locks, statsByMatch] =
+      await Promise.all([
+        getAllMatchesFlat(),
+        getUserPredictions(currentUser.uid),
+        getAllMatchResults(),
+        getBetLocks(),
+        getPredictionStatsByMatch()
+      ])
 
     allMatches = matches
     allResults = results || {}
+    predictionStatsByMatch = statsByMatch || {}
     betLocks = locks || { matchesLockedAt: '', winnerLockedAt: '' }
     userPredictions = {}
     predictions.forEach(pred => {
@@ -471,6 +561,6 @@ onLanguageChange(() => {
   logoutBtn.textContent = t('common.logout')
   updateCompactToggleLabel()
   attachNicknameEditor(userEmail.textContent)
-  applyFilter()
+  renderMatches(allMatches)
   renderUserPredictions()
 })
