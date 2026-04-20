@@ -100,7 +100,7 @@ const translations = {
     'landing.payTitle': 'Hur betalar man?',
     'landing.paySwish':
       'Swisha till 070224490 (skriv din e-post eller användarnamn i meddelandet).',
-    'landing.payCash': 'Eller betala Charlie kontant på jobbet.',
+    'landing.payCash': 'Eller betala Charlie kontant när vi ses.',
     'landing.groupOverviewTitle': 'Gruppöversikt',
     'landing.groupOverviewText':
       'Bläddra bland alla grupper och se gruppmatcher direkt i varje gruppkort. När du har lagt ditt bet syns även vilket lag du har satsat på under matcherna.',
@@ -322,7 +322,7 @@ const translations = {
     'landing.payTitle': 'How to pay',
     'landing.paySwish':
       'Swish to 070224490 (add your email or username in the message).',
-    'landing.payCash': 'Or pay Charlie cash at work.',
+    'landing.payCash': 'Or pay Charlie cash in person.',
     'landing.groupOverviewTitle': 'Group Overview',
     'landing.groupOverviewText':
       'Browse all tournament groups and see group matches directly in each group card. When you place a bet, the team you selected is also shown under the match.',
