@@ -29,6 +29,7 @@ let allResults = {}
 let predictionStatsByMatch = {}
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
 let currentUser = null
+let isAdmin = false
 let isSubmitting = false
 const COMPACT_MODE_KEY = 'betsCompactMode'
 const PREDICTIONS_PANEL_COLLAPSED_KEY = 'betsPredictionsCollapsed'
@@ -88,10 +89,10 @@ if (adminNavLink) {
 }
 
 const updateAdminTabVisibility = async user => {
-  if (!adminNavLink) return
-
   const admin = await isAdminUser(user)
-  adminNavLink.style.display = admin ? '' : 'none'
+  isAdmin = admin
+  document.body.classList.toggle('is-admin', admin)
+  if (adminNavLink) adminNavLink.style.display = admin ? '' : 'none'
 }
 
 const isMatchLocked = matchId => Boolean(allResults[matchId]?.winner)

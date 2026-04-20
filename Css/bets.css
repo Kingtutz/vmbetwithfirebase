@@ -236,13 +236,17 @@ body {
 }
 
 .pick-percentages {
-  display: flex;
+  display: none;
   flex-direction: column;
   gap: 4px;
   padding: 6px 8px;
   background: #f6f3ea;
   border: 1px solid #e4dcc7;
   border-radius: 8px;
+}
+
+body.is-admin .pick-percentages {
+  display: flex;
 }
 
 .pick-percentage-label {
