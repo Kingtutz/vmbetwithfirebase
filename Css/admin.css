@@ -88,20 +88,6 @@ body {
   color: var(--accent);
 }
 
-#roundFilter {
-  width: 100%;
-  max-width: 360px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
-}
-
-#roundFilter:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
 .api-sync-card {
   background: var(--card);
   border: 1px solid var(--border);

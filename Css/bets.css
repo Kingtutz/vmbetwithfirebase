@@ -59,15 +59,6 @@ body {
   flex-wrap: wrap;
 }
 
-#roundFilter {
-  width: 100%;
-  max-width: 360px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
-}
-
 .compact-toggle {
   display: inline-flex;
   align-items: center;
@@ -138,11 +129,6 @@ body {
 .compact-mode .locked-note {
   padding: 5px 6px;
   font-size: 10px;
-}
-
-#roundFilter:focus {
-  outline: none;
-  border-color: var(--accent);
 }
 
 .nav-buttons {

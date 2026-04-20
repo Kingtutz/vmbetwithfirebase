@@ -12,7 +12,6 @@ import {
 import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const groupsContainer = document.getElementById('groups')
-const searchInput = document.getElementById('teamSearch')
 const matchesPanel = document.getElementById('matchesPanel')
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
@@ -285,27 +284,6 @@ const renderGroups = groups => {
   })
 }
 
-const applySearch = () => {
-  const query = searchInput.value.trim().toLowerCase()
-  if (!query) {
-    renderGroups(allGroups)
-    return
-  }
-
-  const filtered = allGroups
-    .map(group => ({
-      ...group,
-      teams: group.teams.filter(team => {
-        const rawName = team.toLowerCase()
-        const translatedName = translateTeamName(team).toLowerCase()
-        return rawName.includes(query) || translatedName.includes(query)
-      })
-    }))
-    .filter(group => group.teams.length > 0)
-
-  renderGroups(filtered)
-}
-
 const run = async () => {
   try {
     const [groups, matches, results, predictions] = await Promise.all([
@@ -331,8 +309,6 @@ const run = async () => {
     console.error(error)
   }
 }
-
-searchInput.addEventListener('input', applySearch)
 
 logoutBtn.addEventListener('click', async () => {
   if (!currentUser) {

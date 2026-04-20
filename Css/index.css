@@ -56,20 +56,6 @@ body {
   margin: 0 0 16px;
 }
 
-#teamSearch {
-  width: 100%;
-  max-width: 360px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: #fff;
-}
-
-#teamSearch:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
 .nav-buttons {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(96px, 100%), 1fr));

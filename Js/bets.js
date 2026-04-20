@@ -13,7 +13,6 @@ import {
 import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
-const roundFilter = document.getElementById('roundFilter')
 const compactToggle = document.getElementById('compactToggle')
 const betsPanel = document.getElementById('betsPanel')
 const userEmail = document.getElementById('userEmail')
@@ -414,19 +413,6 @@ const submitAllPredictions = async () => {
   }
 }
 
-const applyFilter = () => {
-  const query = roundFilter.value.trim().toLowerCase()
-  if (!query) {
-    renderMatches(allMatches)
-    return
-  }
-
-  const filtered = allMatches.filter(match =>
-    (match.round || '').toLowerCase().includes(query)
-  )
-  renderMatches(filtered)
-}
-
 const run = async () => {
   try {
     const [matches, predictions, results, locks] = await Promise.all([
@@ -450,8 +436,6 @@ const run = async () => {
     console.error(error)
   }
 }
-
-roundFilter.addEventListener('input', applyFilter)
 
 compactToggle?.addEventListener('click', () => {
   compactMode = !compactMode
