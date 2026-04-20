@@ -682,3 +682,31 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.remove-user-btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid #f3c2c8;
+  background: #fff5f6;
+  color: #8f1d2c;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.user-row .remove-user-btn {
+  flex-shrink: 0;
+}
+
+.remove-user-btn:hover:not(:disabled) {
+  background: #cf334b;
+  color: #fff;
+  border-color: #cf334b;
+}
+
+.remove-user-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

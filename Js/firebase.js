@@ -5,7 +5,8 @@ import {
   ref,
   push,
   set,
-  update
+  update,
+  remove
 } from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js'
 import {
   getAuth,
@@ -462,6 +463,34 @@ export const setUserWinnerBetPaid = async (userId, paid) => {
   await update(ref(db, `users/${userId}`), {
     hasPaidWinnerBet: Boolean(paid)
   })
+}
+
+export const removeRegisteredUserData = async (user, userId) => {
+  if (!userId) throw new Error('Missing user id')
+
+  const admin = await isAdminUser(user)
+  if (!admin) {
+    throw new Error('Only admins can remove users')
+  }
+
+  if (user?.uid && user.uid === userId) {
+    throw new Error('You cannot remove your own account data')
+  }
+
+  const updates_obj = {
+    [`predictions/${userId}`]: null,
+    [`tournamentWinnerBets/${userId}`]: null,
+    [`users/${userId}`]: null
+  }
+
+  await update(ref(db), updates_obj)
+
+  // Best effort cleanup in case stale child keys remain.
+  await Promise.all([
+    remove(ref(db, `predictions/${userId}`)),
+    remove(ref(db, `tournamentWinnerBets/${userId}`)),
+    remove(ref(db, `users/${userId}`))
+  ])
 }
 
 export const getBetLocks = async () => {

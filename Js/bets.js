@@ -28,7 +28,10 @@ let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
 let currentUser = null
 let isSubmitting = false
 const COMPACT_MODE_KEY = 'betsCompactMode'
+const PREDICTIONS_PANEL_COLLAPSED_KEY = 'betsPredictionsCollapsed'
 let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
+let predictionsPanelCollapsed =
+  window.localStorage.getItem(PREDICTIONS_PANEL_COLLAPSED_KEY) === 'on'
 
 initI18n()
 
@@ -37,6 +40,37 @@ const updateCompactToggleLabel = () => {
   compactToggle.textContent = compactMode
     ? t('bets.compactOn')
     : t('bets.compactOff')
+}
+
+const updatePredictionsPanelToggleLabel = () => {
+  const toggleBtn = document.getElementById('betsPanelToggleBtn')
+  if (!toggleBtn) return
+
+  toggleBtn.textContent = predictionsPanelCollapsed
+    ? t('bets.expandPredictions')
+    : t('bets.collapsePredictions')
+  toggleBtn.setAttribute('aria-expanded', String(!predictionsPanelCollapsed))
+}
+
+const applyPredictionsPanelState = () => {
+  if (!betsPanel) return
+
+  betsPanel.classList.toggle('collapsed', predictionsPanelCollapsed)
+  updatePredictionsPanelToggleLabel()
+}
+
+const attachPredictionsPanelToggle = () => {
+  const toggleBtn = document.getElementById('betsPanelToggleBtn')
+  if (!toggleBtn) return
+
+  toggleBtn.addEventListener('click', () => {
+    predictionsPanelCollapsed = !predictionsPanelCollapsed
+    window.localStorage.setItem(
+      PREDICTIONS_PANEL_COLLAPSED_KEY,
+      predictionsPanelCollapsed ? 'on' : 'off'
+    )
+    applyPredictionsPanelState()
+  })
 }
 
 const applyCompactMode = () => {
@@ -234,7 +268,18 @@ const renderUserPredictions = () => {
     ([, pred]) => pred
   )
 
-  let html = `<h2 class="panel-title">${t('bets.myPredictions')}</h2>`
+  let html = `
+    <div class="panel-header-row">
+      <h2 class="panel-title">${t('bets.myPredictions')}</h2>
+      <button
+        id="betsPanelToggleBtn"
+        type="button"
+        class="panel-collapse-btn"
+        aria-expanded="${String(!predictionsPanelCollapsed)}"
+      ></button>
+    </div>
+    <div class="bets-panel-content">
+  `
 
   if (predictions.length === 0) {
     html += `<p>${t('bets.noPredictionsYet')}</p>`
@@ -274,7 +319,11 @@ const renderUserPredictions = () => {
     html += predictionsHtml
   }
 
+  html += '</div>'
+
   betsPanel.innerHTML = html
+  attachPredictionsPanelToggle()
+  applyPredictionsPanelState()
 
   // Add or update submit button section
   let submitSection = document.getElementById('submitSection')

@@ -297,10 +297,44 @@ body {
   padding: 16px;
 }
 
+.panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .panel-title {
   margin: 0 0 12px;
   color: var(--accent);
   font-size: 18px;
+}
+
+.panel-collapse-btn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.panel-collapse-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.bets-panel-content {
+  margin-top: 4px;
+}
+
+.bets-panel.collapsed .bets-panel-content {
+  display: none;
 }
 
 .bet-item {

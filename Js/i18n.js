@@ -134,6 +134,8 @@ const translations = {
     'bets.saveFailed': 'Det gick inte att spara tipsen. Försök igen.',
     'bets.noPredictionsYet': 'Du har inte gjort några tips än.',
     'bets.unsaved': 'Inte sparad',
+    'bets.collapsePredictions': 'Dolj',
+    'bets.expandPredictions': 'Visa',
     'bets.lockedResult': 'Låst - resultat satt: {winner}',
     'bets.lockedByAdmin': 'Låst av admin - tiden för matchtips har passerat.',
     'bets.compactOn': 'Kompakt läge: På',
@@ -215,6 +217,11 @@ const translations = {
     'admin.winnerBetLabel': 'Vinnarbet',
     'admin.markWinnerPaid': 'Markera vinnarbet som betald',
     'admin.markWinnerUnpaid': 'Markera vinnarbet som obetald',
+    'admin.removeUser': 'Ta bort användare',
+    'admin.confirmRemoveUser':
+      'Ta bort användaren {name}? Detta raderar användarprofil och sparade bets.',
+    'admin.userRemoved': 'Användaren {name} togs bort.',
+    'admin.couldNotRemoveUser': 'Kunde inte ta bort användaren.',
     'admin.matchPayoutSummary':
       'Matchpott: {total} kr, 1:a (65%): {first} kr, 2:a (15%): {second} kr, 3:a (10%): {third} kr, kvar: {rest} kr.',
     'admin.noMatchesFound': 'Inga matcher hittades.',
@@ -348,6 +355,8 @@ const translations = {
     'bets.saveFailed': 'Failed to save predictions. Please try again.',
     'bets.noPredictionsYet': "You haven't made any predictions yet.",
     'bets.unsaved': 'Unsaved',
+    'bets.collapsePredictions': 'Collapse',
+    'bets.expandPredictions': 'Expand',
     'bets.lockedResult': 'Locked - result set: {winner}',
     'bets.lockedByAdmin':
       'Locked by admin - match betting deadline has passed.',
@@ -430,6 +439,11 @@ const translations = {
     'admin.winnerBetLabel': 'Winner bet',
     'admin.markWinnerPaid': 'Mark winner bet as Paid',
     'admin.markWinnerUnpaid': 'Mark winner bet as Unpaid',
+    'admin.removeUser': 'Remove user',
+    'admin.confirmRemoveUser':
+      'Remove user {name}? This deletes the user profile and saved bets.',
+    'admin.userRemoved': 'User {name} was removed.',
+    'admin.couldNotRemoveUser': 'Could not remove user.',
     'admin.matchPayoutSummary':
       'Match pool: {total} kr, 1st (65%): {first} kr, 2nd (15%): {second} kr, 3rd (10%): {third} kr, remaining: {rest} kr.',
     'admin.noMatchesFound': 'No matches found.',

@@ -14,7 +14,8 @@ import {
   setBetLocks,
   setUserPaid,
   setTournamentWinnerResult,
-  setUserWinnerBetPaid
+  setUserWinnerBetPaid,
+  removeRegisteredUserData
 } from './firebase.js'
 import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
@@ -48,6 +49,7 @@ let allResults = {}
 let allUsers = []
 let isSaving = false
 let isTogglingPaid = false
+let isRemovingUser = false
 let roundCollapsed = {}
 let isSyncingLive = false
 let isSavingLocks = false
@@ -783,7 +785,7 @@ const renderUsers = () => {
           data-type="match"
           data-uid="${u.uid}"
           data-paid="${u.hasPaid}"
-          ${isTogglingPaid ? 'disabled' : ''}>
+          ${isTogglingPaid || isRemovingUser ? 'disabled' : ''}>
           ${u.hasPaid ? t('admin.markUnpaid') : t('admin.markPaid')}
         </button>
         <span class="paid-badge ${u.hasPaidWinnerBet ? 'paid' : 'unpaid'}">
@@ -796,12 +798,18 @@ const renderUsers = () => {
           data-type="winner"
           data-uid="${u.uid}"
           data-paid="${u.hasPaidWinnerBet}"
-          ${isTogglingPaid ? 'disabled' : ''}>
+          ${isTogglingPaid || isRemovingUser ? 'disabled' : ''}>
           ${
             u.hasPaidWinnerBet
               ? t('admin.markWinnerUnpaid')
               : t('admin.markWinnerPaid')
           }
+        </button>
+        <button
+          class="remove-user-btn"
+          data-uid="${u.uid}"
+          ${isTogglingPaid || isRemovingUser ? 'disabled' : ''}>
+          ${t('admin.removeUser')}
         </button>
       </div>`
     )
@@ -809,6 +817,7 @@ const renderUsers = () => {
 
   usersList.innerHTML = rows
   attachPaymentHandlers()
+  attachRemoveUserHandlers()
 }
 
 const attachPaymentHandlers = () => {
@@ -842,6 +851,46 @@ const attachPaymentHandlers = () => {
           error.message || t('admin.couldNotUpdatePayment')
       } finally {
         isTogglingPaid = false
+        renderUsers()
+      }
+    })
+  })
+}
+
+const attachRemoveUserHandlers = () => {
+  usersList.querySelectorAll('.remove-user-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const uid = btn.dataset.uid
+      if (!uid || isRemovingUser || isTogglingPaid) return
+
+      const userToRemove = allUsers.find(user => user.uid === uid)
+      const displayName =
+        userToRemove?.nickname ||
+        userToRemove?.email ||
+        userToRemove?.uid ||
+        uid
+
+      const confirmed = window.confirm(
+        t('admin.confirmRemoveUser', { name: displayName })
+      )
+      if (!confirmed) return
+
+      try {
+        isRemovingUser = true
+        renderUsers()
+
+        await removeRegisteredUserData(currentUser, uid)
+
+        allUsers = allUsers.filter(user => user.uid !== uid)
+        allWinnerBets = allWinnerBets.filter(bet => bet.userId !== uid)
+        usersNotice.style.display = 'block'
+        usersNotice.textContent = t('admin.userRemoved', { name: displayName })
+        renderWinnerResultPanel()
+      } catch (error) {
+        usersNotice.style.display = 'block'
+        usersNotice.textContent = error.message || t('admin.couldNotRemoveUser')
+      } finally {
+        isRemovingUser = false
         renderUsers()
       }
     })
