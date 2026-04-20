@@ -81,6 +81,11 @@ const translations = {
     'common.pointsShort': 'poäng',
     'common.predictionsLabel': 'tips',
     'common.scoredLabel': 'avgjorda',
+    'common.cancel': 'X',
+
+    'account.settings': 'Kontoinställningar',
+    'account.updateSuccess': 'Uppdateringar sparades!',
+    'account.updateError': 'Kunde inte uppdatera konto. Försök igen senare.',
 
     'landing.title': 'VM 2026 Tippning',
     'landing.heroTitle': 'VM 2026 Tippning',
@@ -302,6 +307,11 @@ const translations = {
     'common.pointsShort': 'pts',
     'common.predictionsLabel': 'predictions',
     'common.scoredLabel': 'scored',
+    'common.cancel': 'X',
+
+    'account.settings': 'Account Settings',
+    'account.updateSuccess': 'Updates saved!',
+    'account.updateError': 'Could not update account. Please try again.',
 
     'landing.title': 'World Cup 2026 Betting',
     'landing.heroTitle': 'World Cup 2026 Betting',

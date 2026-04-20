@@ -6,6 +6,7 @@
     <title data-i18n="admin.title">Admin - Set Match Winners</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="Css/shared.css" />
+    <link rel="stylesheet" href="Css/account-modal.css" />
     <link rel="stylesheet" href="Css/admin.css" />
   </head>
   <body>
@@ -169,6 +170,60 @@
         <div id="usersList"></div>
       </section>
     </main>
+
+    <div id="accountSettingsModal" class="account-modal" style="display: none">
+      <div class="account-modal-content">
+        <button class="account-modal-close" type="button" aria-label="Close">
+          x
+        </button>
+        <h2 data-i18n="account.settings">Account Settings</h2>
+        <form id="accountForm" class="account-form">
+          <div class="form-group">
+            <label for="accountNickname" data-i18n="common.nickname"
+              >Nickname</label
+            >
+            <input type="text" id="accountNickname" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="accountEmail" data-i18n="common.email">Email</label>
+            <input type="email" id="accountEmail" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="accountPassword" data-i18n="common.password"
+              >New Password</label
+            >
+            <input
+              type="password"
+              id="accountPassword"
+              class="form-input"
+              placeholder="Leave blank to keep current"
+            />
+          </div>
+          <div
+            id="accountMessage"
+            class="account-message"
+            style="display: none"
+          ></div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary" data-i18n="common.save">
+              Save
+            </button>
+            <button
+              type="button"
+              class="btn-secondary account-modal-close"
+              data-i18n="common.cancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div
+      id="accountModalBackdrop"
+      class="account-modal-backdrop"
+      style="display: none"
+    ></div>
 
     <script type="module" src="Js/admin.js"></script>
   </body>

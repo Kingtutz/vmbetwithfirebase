@@ -15,7 +15,9 @@ import {
   setUserPaid,
   setTournamentWinnerResult,
   setUserWinnerBetPaid,
-  removeRegisteredUserData
+  removeRegisteredUserData,
+  updateUserEmail,
+  updateUserPassword
 } from './firebase.js'
 import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
@@ -513,35 +515,113 @@ const initializeApiSyncPanel = () => {
   })
 }
 
-const attachNicknameEditor = currentNickname => {
-  userEmail.style.cursor = 'pointer'
-  userEmail.title = t('nickname.clickToChange')
+const attachAccountSettingsModal = async profile => {
+  const modal = document.getElementById('accountSettingsModal')
+  const backdrop = document.getElementById('accountModalBackdrop')
+  const form = document.getElementById('accountForm')
+  const closeButtons = document.querySelectorAll('.account-modal-close')
+  const messageDiv = document.getElementById('accountMessage')
+  const nicknameInput = document.getElementById('accountNickname')
+  const emailInput = document.getElementById('accountEmail')
+  const passwordInput = document.getElementById('accountPassword')
 
-  userEmail.onclick = async () => {
+  if (!modal || !form) return
+
+  const showMessage = (text, type = 'success') => {
+    messageDiv.textContent = text
+    messageDiv.className = `account-message ${type}`
+    messageDiv.style.display = 'block'
+  }
+
+  const hideMessage = () => {
+    messageDiv.style.display = 'none'
+  }
+
+  const closeModal = () => {
+    modal.style.display = 'none'
+    backdrop.style.display = 'none'
+    hideMessage()
+  }
+
+  const openModal = async () => {
     if (!currentUser) return
 
-    const nextNickname = window.prompt(
-      t('nickname.prompt'),
-      currentNickname || userEmail.textContent || ''
-    )
+    const userProfile = await getUserProfile(currentUser.uid)
+    nicknameInput.value = userProfile?.nickname || ''
+    emailInput.value = currentUser.email || ''
+    passwordInput.value = ''
 
-    if (nextNickname == null) return
+    modal.style.display = 'block'
+    backdrop.style.display = 'block'
+    hideMessage()
+  }
 
-    const cleanNickname = nextNickname.trim()
-    if (!cleanNickname) {
-      window.alert(t('nickname.empty'))
+  userEmail.style.cursor = 'pointer'
+  userEmail.title = t('nickname.clickToChange')
+  userEmail.onclick = openModal
+
+  closeButtons.forEach(btn => {
+    btn.onclick = closeModal
+  })
+
+  backdrop.onclick = closeModal
+
+  form.onsubmit = async e => {
+    e.preventDefault()
+
+    if (!currentUser) {
+      showMessage(t('common.logoutFailed'), 'error')
+      return
+    }
+
+    const nickname = nicknameInput.value.trim()
+    const email = emailInput.value.trim()
+    const password = passwordInput.value.trim()
+
+    if (!nickname) {
+      showMessage(t('nickname.empty'), 'error')
       return
     }
 
     try {
-      const savedNickname = await setUserNickname(
-        currentUser.uid,
-        cleanNickname
-      )
-      userEmail.textContent = savedNickname
+      let errorOccurred = false
+
+      // Update nickname
+      try {
+        await setUserNickname(currentUser.uid, nickname)
+      } catch (err) {
+        console.error('Nickname update failed:', err)
+        errorOccurred = true
+      }
+
+      // Update email if changed
+      if (email && email !== currentUser.email) {
+        try {
+          await updateUserEmail(currentUser, email)
+        } catch (err) {
+          console.error('Email update failed:', err)
+          showMessage(err.message || t('account.updateError'), 'error')
+          return
+        }
+      }
+
+      // Update password if provided
+      if (password) {
+        try {
+          await updateUserPassword(currentUser, password)
+        } catch (err) {
+          console.error('Password update failed:', err)
+          showMessage(err.message || t('account.updateError'), 'error')
+          return
+        }
+      }
+
+      showMessage(t('account.updateSuccess'), 'success')
+      userEmail.textContent = nickname
+      setTimeout(closeModal, 1500)
     } catch (error) {
-      console.error('Nickname update failed:', error)
-      window.alert(error.message || t('nickname.updateFailed'))
+      console.error('Account update failed:', error)
+      showMessage(error.message || t('account.updateError'), 'error')
     }
   }
 }
@@ -976,7 +1056,7 @@ onAuthChange(async user => {
   const profile = await getUserProfile(user.uid)
   userEmail.textContent = profile.nickname || user.email || t('common.user')
   logoutBtn.textContent = t('common.logout')
-  attachNicknameEditor(profile.nickname || '')
+  attachAccountSettingsModal(profile)
 
   try {
     await loadPage()
@@ -989,7 +1069,7 @@ onAuthChange(async user => {
 onLanguageChange(() => {
   logoutBtn.textContent = t('common.logout')
   updateCompactToggleLabel()
-  attachNicknameEditor(userEmail.textContent)
+  userEmail.title = t('nickname.clickToChange')
   renderLockInputs()
   renderWinnerResultPanel()
   renderMatches(allMatches)

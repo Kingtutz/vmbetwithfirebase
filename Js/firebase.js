@@ -12,6 +12,8 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  updateEmail,
+  updatePassword,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
@@ -235,6 +237,33 @@ export const setUserNickname = async (userId, nickname) => {
   })
 
   return cleanNickname
+}
+
+export const updateUserEmail = async (user, newEmail) => {
+  if (!user) throw new Error('User not authenticated')
+
+  const cleanEmail = String(newEmail || '').trim()
+  if (!cleanEmail) throw new Error('Email cannot be empty')
+
+  await updateEmail(user, cleanEmail)
+  await update(ref(db, `users/${user.uid}`), {
+    email: cleanEmail,
+    updatedAt: new Date().toISOString()
+  })
+
+  return cleanEmail
+}
+
+export const updateUserPassword = async (user, newPassword) => {
+  if (!user) throw new Error('User not authenticated')
+
+  const cleanPassword = String(newPassword || '').trim()
+  if (!cleanPassword) throw new Error('Password cannot be empty')
+  if (cleanPassword.length < 6)
+    throw new Error('Password must be at least 6 characters')
+
+  await updatePassword(user, cleanPassword)
+  return true
 }
 
 export const getUserProfile = async userId => {
