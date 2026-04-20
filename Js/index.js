@@ -334,8 +334,7 @@ const renderGroups = groups => {
     const title = document.createElement('h2')
     title.className = 'group-title'
     title.textContent = t('groups.groupLabel', { group: group.groupName })
-    const groupetitel = document.createElement('h3')
-    groupetitel.innerText = 'Teams:'
+
     const list = document.createElement('ul')
     list.className = 'group-team-list'
     group.teams.forEach(team => {
