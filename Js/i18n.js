@@ -104,7 +104,7 @@ const translations = {
       'För att vara med i potten kostar det 100 kr för matchtips och 50 kr för vinnartips. Du kan ha flera konton, så meddela vilken e-postadress eller vilket smeknamn du använde när du betalade.',
     'landing.payTitle': 'Hur betalar man?',
     'landing.paySwish':
-      'Swisha till 070224490 (skriv din e-post eller användarnamn i meddelandet).',
+      'Swisha till 0702244390 (skriv din e-post eller användarnamn i meddelandet).',
     'landing.payCash': 'Eller betala Charlie kontant när vi ses.',
     'landing.groupOverviewTitle': 'Gruppöversikt',
     'landing.groupOverviewText':
@@ -331,7 +331,7 @@ const translations = {
       'To join the pool it costs 100 kr for the match bet and 50 kr for the tournament winner bet. You can have multiple accounts, so share the email or nickname you used when paying.',
     'landing.payTitle': 'How to pay',
     'landing.paySwish':
-      'Swish to 070224490 (add your email or username in the message).',
+      'Swish to 0702244390 (add your email or username in the message).',
     'landing.payCash': 'Or pay Charlie cash in person.',
     'landing.groupOverviewTitle': 'Group Overview',
     'landing.groupOverviewText':
