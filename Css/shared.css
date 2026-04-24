@@ -248,7 +248,8 @@ button {
 
   .nav-btn {
     font-size: 11px;
-    padding: 15px 4px !important;
+    padding: 18px 4px !important;
+    min-height: 56px;
     height: auto;
   }
 
@@ -264,12 +265,12 @@ button {
 
   /* Ensure body doesn't hide behind nav */
   body {
-    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: calc(102px + env(safe-area-inset-bottom, 0px)) !important;
   }
 
   @supports (padding: max(0px)) {
     body {
-      padding-bottom: max(90px, calc(90px + env(safe-area-inset-bottom, 0px))) !important;
+      padding-bottom: max(102px, calc(102px + env(safe-area-inset-bottom, 0px))) !important;
     }
   }
 }
