@@ -100,3 +100,13 @@ body {
   color: #555;
   font-size: 14px;
 }
+
+.install-platform {
+  margin: 12px 0 6px;
+  font-size: 15px;
+  color: var(--accent);
+}
+
+.info-card p + p {
+  margin-top: 6px;
+}

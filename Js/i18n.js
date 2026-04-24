@@ -112,6 +112,20 @@ const translations = {
     'landing.leaderboardTitle': 'Topplista',
     'landing.leaderboardText':
       'Se vem som leder med poäng baserat på matchresultat.',
+    'landing.installGuideTitle': 'Lägg till på hemskärmen',
+    'landing.installGuideIntro':
+      'Spara sidan på telefonens hemskärm så öppnas den som en app.',
+    'landing.installIosTitle': 'iPhone (Safari)',
+    'landing.installIosStep1': '1. Öppna sidan i Safari.',
+    'landing.installIosStep2': '2. Tryck på Dela-knappen längst ner.',
+    'landing.installIosStep3':
+      '3. Välj "Lägg till på hemskärmen" och tryck på Lägg till.',
+    'landing.installAndroidTitle': 'Android (Chrome)',
+    'landing.installAndroidStep1': '1. Öppna sidan i Chrome.',
+    'landing.installAndroidStep2':
+      '2. Tryck på menyn med tre prickar uppe till höger.',
+    'landing.installAndroidStep3':
+      '3. Välj "Lägg till på startskärmen" eller "Installera app".',
 
     'groups.title': 'VM Grupper',
     'groups.headerTitle': 'VM Grupper',
@@ -339,6 +353,19 @@ const translations = {
     'landing.leaderboardTitle': 'Leaderboard',
     'landing.leaderboardText':
       'Track who is leading with points based on admin-confirmed match results.',
+    'landing.installGuideTitle': 'Add to Home Screen',
+    'landing.installGuideIntro':
+      'Save this site to your phone home screen so it opens like an app.',
+    'landing.installIosTitle': 'iPhone (Safari)',
+    'landing.installIosStep1': '1. Open this site in Safari.',
+    'landing.installIosStep2': '2. Tap the Share button at the bottom.',
+    'landing.installIosStep3': '3. Choose "Add to Home Screen" and tap Add.',
+    'landing.installAndroidTitle': 'Android (Chrome)',
+    'landing.installAndroidStep1': '1. Open this site in Chrome.',
+    'landing.installAndroidStep2':
+      '2. Tap the three-dot menu in the top-right corner.',
+    'landing.installAndroidStep3':
+      '3. Choose "Add to Home screen" or "Install app".',
 
     'groups.title': 'World Cup Groups',
     'groups.headerTitle': 'World Cup Groups',
