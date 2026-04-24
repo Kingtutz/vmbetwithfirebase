@@ -13,12 +13,23 @@
 
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
 }
 
 body {
   margin: 0;
   font-family: "Trebuchet MS", "Segoe UI", sans-serif;
   color: var(--text);
+  overscroll-behavior-y: contain; /* Prevent pull-to-refresh on mobile */
+  user-select: none; /* Disable selection for a more app-like feel */
+  -webkit-user-select: none;
+  background: var(--bg);
+}
+
+/* Re-enable selection for inputs and meaningful text */
+input, textarea, [data-selectable] {
+  user-select: auto;
+  -webkit-user-select: auto;
 }
 
 h1,
@@ -33,6 +44,31 @@ p {
 button {
   font: inherit;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(80px, 100%), 1fr));
+  gap: 10px;
+  margin: 0 0 16px;
+}
+
+.nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(8px, 1.6vw, 10px) clamp(10px, 2vw, 16px);
+  background: var(--bg);
+  border: 1px solid var(--text);
+  border-radius: 4px;
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+  font-size: clamp(12px, 1.8vw, 14px);
+  text-align: center;
 }
 
 input,
@@ -90,9 +126,9 @@ button {
 .toggle-paid-btn,
 .prediction-btn,
 .winner-btn {
-  background: var(--bg) !important;
-  border: 1px solid var(--text) !important;
-  color: var(--text) !important;
+  background: var(--bg);
+  border: 1px solid var(--text);
+  color: var(--text);
   box-shadow: inset 0 0 0 1px rgba(216, 207, 192, 0.25);
   position: relative;
   overflow: hidden;
@@ -135,9 +171,9 @@ button {
 .toggle-paid-btn:hover:not(:disabled),
 .prediction-btn:hover,
 .winner-btn:hover {
-  background: var(--bg) !important;
-  border-color: var(--text) !important;
-  color: var(--bg) !important;
+  background: var(--bg);
+  border-color: var(--text);
+  color: var(--bg);
 }
 
 #logoutBtn:hover::after,
@@ -157,9 +193,9 @@ button {
 
 .prediction-btn.active,
 .winner-btn.active {
-  background: var(--text) !important;
-  border-color: var(--text) !important;
-  color: var(--bg) !important;
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
   box-shadow: inset 0 0 0 1px rgba(240, 199, 170, 0.35);
 }
 
@@ -175,7 +211,48 @@ button {
 .toggle-paid-btn:disabled,
 .prediction-btn:disabled,
 .winner-btn:disabled {
-  background: var(--text) !important;
-  color: var(--bg) !important;
-  border-color: var(--text) !important;
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+/* --- Mobile "App" Navigation --- */
+@media (max-width: 600px) {
+  .nav-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto; /* Ensure it's not sticking to top */
+    z-index: 2000;
+    background: var(--bg);
+    margin: 0 !important;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom)) !important;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .nav-btn {
+    font-size: 11px;
+    padding: 8px 4px !important;
+    height: auto;
+  }
+
+  .nav-btn::after {
+    display: block; /* Keep the hover/active animation effect */
+  }
+
+  .nav-btn.active, .nav-btn:disabled {
+    color: var(--bg) !important;
+    background: var(--text) !important;
+    border-radius: 4px !important;
+  }
+
+  /* Ensure body doesn't hide behind nav */
+  body {
+    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+  }
 }

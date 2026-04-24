@@ -1,0 +1,17 @@
+{
+  "name": "World Cup 2026 Betting",
+  "short_name": "WC Betting",
+  "description": "Predict match outcomes and compete with friends for World Cup 2026.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a1a1a",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -51,41 +51,7 @@ body {
   background: #225d1a;
 }
 
-.nav-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(96px, 100%), 1fr));
-  gap: 10px;
-  margin: 0 0 20px;
-}
-
-.nav-btn {
-  min-width: 0;
-  padding: clamp(8px, 1.6vw, 10px) clamp(10px, 2vw, 16px);
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 1px;
-  color: var(--text);
-  text-decoration: none;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: clamp(12px, 1.8vw, 14px);
-  text-align: center;
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-.nav-btn.active,
-.nav-btn:disabled {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-  cursor: not-allowed;
-}
+/* Nav buttons now in shared.css */
 
 .notice {
   background: #fff3cd;
@@ -210,10 +176,6 @@ body {
   .user-info {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .nav-buttons {
-    flex-wrap: wrap;
   }
 
   .leaderboard-row {
