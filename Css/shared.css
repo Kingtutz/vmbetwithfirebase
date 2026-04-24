@@ -227,7 +227,10 @@ button {
     z-index: 2000;
     background: var(--bg);
     margin: 0 !important;
-    padding: 8px 6px calc(8px + env(safe-area-inset-bottom)) !important;
+    /* Keep nav clear of curved corners and gesture areas */
+    padding: 8px 10px calc(22px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-left: calc(10px + env(safe-area-inset-left, 0px)) !important;
+    padding-right: calc(10px + env(safe-area-inset-right, 0px)) !important;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 4px;
@@ -235,9 +238,17 @@ button {
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
   }
 
+  @supports (padding: max(0px)) {
+    .nav-buttons {
+      padding-bottom: max(22px, calc(22px + env(safe-area-inset-bottom, 0px))) !important;
+      padding-left: max(10px, calc(10px + env(safe-area-inset-left, 0px))) !important;
+      padding-right: max(10px, calc(10px + env(safe-area-inset-right, 0px))) !important;
+    }
+  }
+
   .nav-btn {
     font-size: 11px;
-    padding: 8px 4px !important;
+    padding: 15px 4px !important;
     height: auto;
   }
 
@@ -253,6 +264,12 @@ button {
 
   /* Ensure body doesn't hide behind nav */
   body {
-    padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  @supports (padding: max(0px)) {
+    body {
+      padding-bottom: max(90px, calc(90px + env(safe-area-inset-bottom, 0px))) !important;
+    }
   }
 }
