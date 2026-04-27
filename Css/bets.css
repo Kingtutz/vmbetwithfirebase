@@ -229,6 +229,25 @@ body {
   background: #2f9e44;
 }
 
+.round-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+}
+
+.round-collapse-btn {
+  border-radius: 50% !important;
+  width: 32px;
+  height: 32px;
+  padding: 0 !important;
+}
+
+.round-chevron-up {
+  transform: rotate(180deg);
+  display: inline-block;
+}
+
 .round-section.collapsed .round-chevron,
 .round-chevron.collapsed {
   transform: rotate(-90deg);

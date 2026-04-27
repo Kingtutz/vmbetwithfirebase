@@ -412,7 +412,9 @@ const renderRoundSection = (roundName, roundMatches) => {
         <span class="round-meta">${t('common.matchesCount', {
           count: roundMatches.length
         })}</span>
-        <span class="round-progress ${allPicked ? 'complete' : ''}">${pickedCount}/${total}</span>
+        <span class="round-progress ${
+          allPicked ? 'complete' : ''
+        }">${pickedCount}/${total}</span>
         <button
           class="round-toggle-btn"
           type="button"
@@ -424,40 +426,59 @@ const renderRoundSection = (roundName, roundMatches) => {
       </div>
       <div class="round-matches-grid ${isCollapsed ? 'collapsed' : ''}">
         ${roundMatches.map(renderPredictionForm).join('')}
+        <div class="round-footer">
+          <button
+            class="round-toggle-btn round-collapse-btn"
+            type="button"
+            data-round="${roundName}"
+            aria-label="Collapse"
+          >
+            <span class="round-chevron round-chevron-up">▾</span>
+          </button>
+        </div>
       </div>
     </section>
   `
 }
 
-const toggleRoundSection = section => {
-  if (!section) return
+const toggleRoundSection = (section, roundName) => {
+  if (!section || !roundName) return
 
-  const btn = section.querySelector('.round-toggle-btn')
   const grid = section.querySelector('.round-matches-grid')
-  const roundName = btn?.dataset.round
-  if (!roundName) return
-
   const nextCollapsed = !Boolean(roundCollapsed[roundName])
   roundCollapsed[roundName] = nextCollapsed
 
   section.classList.toggle('collapsed', nextCollapsed)
   if (grid) grid.classList.toggle('collapsed', nextCollapsed)
-  btn.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true')
 
-  const chevron = btn.querySelector('.round-chevron')
-  if (chevron) chevron.classList.toggle('collapsed', nextCollapsed)
+  section.querySelectorAll('.round-toggle-btn').forEach(btn => {
+    btn.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true')
+    const chevron = btn.querySelector('.round-chevron')
+    if (chevron) chevron.classList.toggle('collapsed', nextCollapsed)
+  })
 }
 
 const attachRoundToggleHandlers = () => {
+  document.querySelectorAll('.round-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', event => {
+      event.stopPropagation()
+      const roundName = btn.dataset.round
+      const section = btn.closest('.round-section')
+      toggleRoundSection(section, roundName)
+    })
+  })
+
   document.querySelectorAll('.round-header').forEach(header => {
     header.addEventListener('click', event => {
       if (
         event.target instanceof HTMLElement &&
-        event.target.closest('.prediction-btn')
+        (event.target.closest('.prediction-btn') ||
+          event.target.closest('.round-toggle-btn'))
       )
         return
       const section = header.closest('.round-section')
-      toggleRoundSection(section)
+      const roundName = header.querySelector('.round-toggle-btn')?.dataset.round
+      toggleRoundSection(section, roundName)
     })
   })
 }
