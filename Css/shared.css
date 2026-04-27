@@ -216,6 +216,25 @@ button {
   border-color: var(--text);
 }
 
+.info-strip {
+  background: #fff6e8;
+  border: 1px solid #f1dcb6;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 0 0 14px;
+}
+
+.info-strip-title {
+  font-size: 14px;
+  margin: 0 0 6px;
+  color: #7a5d2a;
+}
+
+.info-strip-text {
+  font-size: 13px;
+  color: #6c5121;
+}
+
 /* --- Mobile "App" Navigation --- */
 @media (max-width: 600px) {
   .nav-buttons {

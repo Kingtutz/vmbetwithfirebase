@@ -2,6 +2,9 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.11.0/fireba
 import {
   getDatabase,
   get,
+  query,
+  orderByChild,
+  limitToLast,
   ref,
   push,
   set,
@@ -194,7 +197,75 @@ export const setTournamentWinnerResult = async (user, winnerTeam) => {
   }
 
   await set(ref(db, 'settings/tournamentWinnerResult'), payload)
+  await createAdminNotification(user, {
+    type: 'winner_result_set',
+    titleSv: 'Turneringsvinnare uppdaterad',
+    titleEn: 'Tournament winner updated',
+    messageSv: `Admin satte turneringsvinnaren till ${cleanWinnerTeam}.`,
+    messageEn: `Admin set the tournament winner to ${cleanWinnerTeam}.`,
+    link: 'winner.html'
+  })
   return payload
+}
+
+export const createAdminNotification = async (user, notification = {}) => {
+  const admin = await isAdminUser(user)
+  if (!admin) {
+    throw new Error('Only admins can create notifications')
+  }
+
+  const titleSv = String(notification.titleSv || '').trim()
+  const titleEn = String(notification.titleEn || titleSv).trim()
+  const messageSv = String(notification.messageSv || '').trim()
+  const messageEn = String(notification.messageEn || messageSv).trim()
+  const link = String(notification.link || '').trim()
+
+  if (!titleSv || !messageSv) {
+    throw new Error('Notification title and message are required')
+  }
+
+  const createdAt = new Date().toISOString()
+  const createdAtMs = Date.now()
+  const payload = {
+    type: String(notification.type || 'general').trim(),
+    titleSv,
+    titleEn,
+    messageSv,
+    messageEn,
+    link,
+    createdAt,
+    createdAtMs,
+    createdByUid: user?.uid || '',
+    createdByEmail: user?.email || ''
+  }
+
+  const notificationRef = push(ref(db, 'notifications'))
+  await set(notificationRef, payload)
+
+  return {
+    id: notificationRef.key,
+    ...payload
+  }
+}
+
+export const getRecentNotifications = async (maxItems = 25) => {
+  const safeMaxItems = Math.max(1, Math.min(100, Number(maxItems) || 25))
+  const notificationsQuery = query(
+    ref(db, 'notifications'),
+    orderByChild('createdAtMs'),
+    limitToLast(safeMaxItems)
+  )
+  const snapshot = await get(notificationsQuery)
+  if (!snapshot.exists()) return []
+
+  const rows = Object.entries(snapshot.val() || {}).map(([id, row]) => ({
+    id,
+    ...row
+  }))
+
+  return rows.sort(
+    (a, b) => Number(b.createdAtMs || 0) - Number(a.createdAtMs || 0)
+  )
 }
 
 export const signInWithGoogle = async () => {
@@ -370,6 +441,14 @@ export const setMatchWinner = async (user, matchId, winner) => {
   }
 
   await set(resultRef, payload)
+  await createAdminNotification(user, {
+    type: 'match_result_set',
+    titleSv: 'Matchresultat uppdaterat',
+    titleEn: 'Match result updated',
+    messageSv: `Admin satte match ${matchId} till ${winner}.`,
+    messageEn: `Admin set match ${matchId} to ${winner}.`,
+    link: 'bets.html'
+  })
   return payload
 }
 
@@ -588,6 +667,15 @@ export const setBetLocks = async (user, locks = {}) => {
   }
 
   await set(ref(db, 'settings/betLocks'), payload)
+  await createAdminNotification(user, {
+    type: 'bet_locks_updated',
+    titleSv: 'Låsningstider uppdaterade',
+    titleEn: 'Bet lock times updated',
+    messageSv:
+      'Admin uppdaterade låsningstiderna för matchtips och vinnartips.',
+    messageEn: 'Admin updated lock times for match bets and winner bets.',
+    link: 'bets.html'
+  })
   return payload
 }
 

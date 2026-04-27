@@ -13,7 +13,13 @@ import {
   updateUserEmail,
   updateUserPassword
 } from './firebase.js'
-import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
+import {
+  getLanguage,
+  initI18n,
+  onLanguageChange,
+  t,
+  translateTeamName
+} from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
 const compactToggle = document.getElementById('compactToggle')
@@ -21,6 +27,8 @@ const betsPanel = document.getElementById('betsPanel')
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
+const lockCountdownCard = document.getElementById('lockCountdownCard')
+const lockCountdownText = document.getElementById('lockCountdownText')
 
 let allMatches = []
 let userPredictions = {} // Saved predictions from Firebase
@@ -37,6 +45,7 @@ const PREDICTIONS_PANEL_COLLAPSED_KEY = 'betsPredictionsCollapsed'
 let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
 let predictionsPanelCollapsed =
   window.localStorage.getItem(PREDICTIONS_PANEL_COLLAPSED_KEY) === 'on'
+let lockCountdownInterval = null
 
 initI18n()
 
@@ -114,6 +123,79 @@ const getUnlockedMatches = () =>
   allMatches.filter(match => !isBetLockedForMatch(match.id))
 
 const getRequiredPredictionCount = () => getUnlockedMatches().length
+
+const formatLockTime = isoValue => {
+  const parsed = new Date(String(isoValue || ''))
+  if (Number.isNaN(parsed.getTime())) return ''
+
+  const language = getLanguage()
+  return parsed.toLocaleString(language === 'en' ? 'en-GB' : 'sv-SE', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const formatRemainingShort = totalMs => {
+  const remainingMs = Math.max(0, Number(totalMs) || 0)
+  const totalMinutes = Math.floor(remainingMs / 60000)
+  const days = Math.floor(totalMinutes / (60 * 24))
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60)
+  const minutes = totalMinutes % 60
+
+  const parts = []
+  if (days > 0) parts.push(`${days}d`)
+  if (hours > 0 || days > 0) parts.push(`${hours}h`)
+  parts.push(`${minutes}m`)
+  return parts.join(' ')
+}
+
+const renderMatchLockCountdown = () => {
+  if (!lockCountdownCard || !lockCountdownText) return
+
+  const lockAt = String(betLocks.matchesLockedAt || '')
+  if (!lockAt) {
+    lockCountdownCard.style.display = 'none'
+    lockCountdownText.textContent = ''
+    return
+  }
+
+  const lockTs = new Date(lockAt).getTime()
+  if (Number.isNaN(lockTs)) {
+    lockCountdownCard.style.display = 'none'
+    lockCountdownText.textContent = ''
+    return
+  }
+
+  lockCountdownCard.style.display = 'block'
+  const lockTimeLabel = formatLockTime(lockAt)
+
+  if (Date.now() >= lockTs) {
+    lockCountdownText.textContent = t('bets.lockCountdownLocked', {
+      lockTime: lockTimeLabel
+    })
+    return
+  }
+
+  const remaining = formatRemainingShort(lockTs - Date.now())
+  lockCountdownText.textContent = t('bets.lockCountdownOpen', {
+    remaining,
+    lockTime: lockTimeLabel
+  })
+}
+
+const startLockCountdownTicker = () => {
+  if (lockCountdownInterval) {
+    window.clearInterval(lockCountdownInterval)
+  }
+
+  renderMatchLockCountdown()
+  lockCountdownInterval = window.setInterval(() => {
+    renderMatchLockCountdown()
+  }, 30000)
+}
 
 const attachAccountSettingsModal = async profile => {
   const modal = document.getElementById('accountSettingsModal')
@@ -726,6 +808,7 @@ const run = async () => {
 
     renderMatches(allMatches)
     renderUserPredictions()
+    renderMatchLockCountdown()
   } catch (error) {
     matchesContainer.innerHTML = `<p>${t('bets.couldNotLoad')}</p>`
     console.error(error)
@@ -759,6 +842,7 @@ onAuthChange(async user => {
   userEmail.textContent = profile.nickname || user.email || t('common.user')
   logoutBtn.textContent = t('common.logout')
   attachAccountSettingsModal(profile)
+  startLockCountdownTicker()
   run()
 })
 
@@ -768,4 +852,5 @@ onLanguageChange(() => {
   userEmail.title = t('nickname.clickToChange')
   renderMatches(allMatches)
   renderUserPredictions()
+  renderMatchLockCountdown()
 })

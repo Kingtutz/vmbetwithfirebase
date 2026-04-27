@@ -11,7 +11,13 @@ import {
   updateUserEmail,
   updateUserPassword
 } from './firebase.js'
-import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
+import {
+  getLanguage,
+  initI18n,
+  onLanguageChange,
+  t,
+  translateTeamName
+} from './i18n.js'
 
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
@@ -20,6 +26,12 @@ const currentPick = document.getElementById('currentPick')
 const statusMessage = document.getElementById('statusMessage')
 const saveWinnerBtn = document.getElementById('saveWinnerBtn')
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
+const winnerLockCountdownCard = document.getElementById(
+  'winnerLockCountdownCard'
+)
+const winnerLockCountdownText = document.getElementById(
+  'winnerLockCountdownText'
+)
 
 let currentUser = null
 let allTeams = []
@@ -27,6 +39,7 @@ let savedWinner = ''
 let selectedWinner = ''
 let isSaving = false
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
+let winnerLockCountdownInterval = null
 
 initI18n()
 
@@ -65,6 +78,79 @@ const isWinnerBetLockedByAdmin = () => {
   const lockTime = new Date(lockAt).getTime()
   if (Number.isNaN(lockTime)) return false
   return Date.now() >= lockTime
+}
+
+const formatLockTime = isoValue => {
+  const parsed = new Date(String(isoValue || ''))
+  if (Number.isNaN(parsed.getTime())) return ''
+
+  const language = getLanguage()
+  return parsed.toLocaleString(language === 'en' ? 'en-GB' : 'sv-SE', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const formatRemainingShort = totalMs => {
+  const remainingMs = Math.max(0, Number(totalMs) || 0)
+  const totalMinutes = Math.floor(remainingMs / 60000)
+  const days = Math.floor(totalMinutes / (60 * 24))
+  const hours = Math.floor((totalMinutes % (60 * 24)) / 60)
+  const minutes = totalMinutes % 60
+
+  const parts = []
+  if (days > 0) parts.push(`${days}d`)
+  if (hours > 0 || days > 0) parts.push(`${hours}h`)
+  parts.push(`${minutes}m`)
+  return parts.join(' ')
+}
+
+const renderWinnerLockCountdown = () => {
+  if (!winnerLockCountdownCard || !winnerLockCountdownText) return
+
+  const lockAt = String(betLocks.winnerLockedAt || '')
+  if (!lockAt) {
+    winnerLockCountdownCard.style.display = 'none'
+    winnerLockCountdownText.textContent = ''
+    return
+  }
+
+  const lockTs = new Date(lockAt).getTime()
+  if (Number.isNaN(lockTs)) {
+    winnerLockCountdownCard.style.display = 'none'
+    winnerLockCountdownText.textContent = ''
+    return
+  }
+
+  winnerLockCountdownCard.style.display = 'block'
+  const lockTimeLabel = formatLockTime(lockAt)
+
+  if (Date.now() >= lockTs) {
+    winnerLockCountdownText.textContent = t('winner.lockCountdownLocked', {
+      lockTime: lockTimeLabel
+    })
+    return
+  }
+
+  const remaining = formatRemainingShort(lockTs - Date.now())
+  winnerLockCountdownText.textContent = t('winner.lockCountdownOpen', {
+    remaining,
+    lockTime: lockTimeLabel
+  })
+}
+
+const startWinnerLockCountdownTicker = () => {
+  if (winnerLockCountdownInterval) {
+    window.clearInterval(winnerLockCountdownInterval)
+  }
+
+  renderWinnerLockCountdown()
+  winnerLockCountdownInterval = window.setInterval(() => {
+    renderWinnerLockCountdown()
+  }, 30000)
 }
 
 const updateCurrentPick = () => {
@@ -245,6 +331,7 @@ const run = async () => {
     renderTeams()
     updateCurrentPick()
     updateSaveButton()
+    renderWinnerLockCountdown()
   } catch (error) {
     setStatus('error', error.message || t('winner.couldNotLoad'))
   }
@@ -294,6 +381,7 @@ onAuthChange(async user => {
   userEmail.textContent = profile.nickname || user.email || t('common.user')
   logoutBtn.textContent = t('common.logout')
   attachAccountSettingsModal(profile)
+  startWinnerLockCountdownTicker()
 
   const admin = await isAdminUser(user)
   if (adminNavLink) {
@@ -309,4 +397,5 @@ onLanguageChange(() => {
   updateCurrentPick()
   updateSaveButton()
   renderTeams()
+  renderWinnerLockCountdown()
 })

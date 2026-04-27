@@ -82,6 +82,11 @@ const translations = {
     'common.predictionsLabel': 'tips',
     'common.scoredLabel': 'avgjorda',
     'common.cancel': 'X',
+    'common.betCountdownTitle': 'Nedrakning till låsning',
+    'common.notifications': 'Notiser',
+    'common.markAsRead': 'Markera som låst',
+    'common.noNotifications': 'Inga notiser än.',
+    'common.open': 'öppna',
 
     'account.settings': 'Kontoinställningar',
     'account.updateSuccess': 'Uppdateringar sparades!',
@@ -158,6 +163,8 @@ const translations = {
     'bets.pickDistribution': 'Val i procent',
     'bets.lockedResult': 'Låst - resultat satt: {winner}',
     'bets.lockedByAdmin': 'Låst av admin - tiden för matchtips har passerat.',
+    'bets.lockCountdownOpen': 'Matchtips låses om {remaining} ({lockTime}).',
+    'bets.lockCountdownLocked': 'Matchtips är låsta sedan {lockTime}.',
     'bets.compactOn': 'Kompakt läge: På',
     'bets.compactOff': 'Kompakt läge: Av',
     'bets.couldNotLoad': 'Kunde inte ladda matcher från Firebase.',
@@ -177,6 +184,8 @@ const translations = {
     'winner.couldNotLoad': 'Kunde inte ladda lag och ditt vinnartips.',
     'winner.lockedByAdmin':
       'Låst av admin - tiden för vinnartips har passerat.',
+    'winner.lockCountdownOpen': 'Vinnartips låses om {remaining} ({lockTime}).',
+    'winner.lockCountdownLocked': 'Vinnartips är låsta sedan {lockTime}.',
 
     'leaderboard.title': 'Topplista - Tippningspoäng',
     'leaderboard.headerTitle': 'Topplista',
@@ -322,6 +331,11 @@ const translations = {
     'common.predictionsLabel': 'predictions',
     'common.scoredLabel': 'scored',
     'common.cancel': 'X',
+    'common.betCountdownTitle': 'Bet lock countdown',
+    'common.notifications': 'Notifications',
+    'common.markAsRead': 'Mark as read',
+    'common.noNotifications': 'No notifications yet.',
+    'common.open': 'Open',
 
     'account.settings': 'Account Settings',
     'account.updateSuccess': 'Updates saved!',
@@ -399,6 +413,10 @@ const translations = {
     'bets.lockedResult': 'Locked - result set: {winner}',
     'bets.lockedByAdmin':
       'Locked by admin - match betting deadline has passed.',
+    'bets.lockCountdownOpen':
+      'Match betting locks in {remaining} ({lockTime}).',
+    'bets.lockCountdownLocked':
+      'Match betting has been locked since {lockTime}.',
     'bets.compactOn': 'Compact Mode: On',
     'bets.compactOff': 'Compact Mode: Off',
     'bets.couldNotLoad': 'Could not load matches from Firebase.',
@@ -418,6 +436,10 @@ const translations = {
     'winner.couldNotLoad': 'Could not load teams and your pick.',
     'winner.lockedByAdmin':
       'Locked by admin - winner betting deadline has passed.',
+    'winner.lockCountdownOpen':
+      'Winner betting locks in {remaining} ({lockTime}).',
+    'winner.lockCountdownLocked':
+      'Winner betting has been locked since {lockTime}.',
 
     'leaderboard.title': 'Top List - Prediction Scores',
     'leaderboard.headerTitle': 'Top List',
