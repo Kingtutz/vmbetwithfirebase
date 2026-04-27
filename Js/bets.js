@@ -31,6 +31,7 @@ let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
 let currentUser = null
 let isAdmin = false
 let isSubmitting = false
+let roundCollapsed = {}
 const COMPACT_MODE_KEY = 'betsCompactMode'
 const PREDICTIONS_PANEL_COLLAPSED_KEY = 'betsPredictionsCollapsed'
 let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
@@ -377,18 +378,108 @@ const renderPredictionForm = match => {
   `
 }
 
+const getGroupedMatches = matches => {
+  const grouped = {}
+
+  matches.forEach(match => {
+    const roundName = String(match.round || t('common.notSet'))
+    if (!grouped[roundName]) {
+      grouped[roundName] = []
+    }
+    grouped[roundName].push(match)
+  })
+
+  return Object.entries(grouped).sort(([a], [b]) =>
+    a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+  )
+}
+
+const renderRoundSection = (roundName, roundMatches) => {
+  const isCollapsed = Boolean(roundCollapsed[roundName])
+
+  const pickedCount = roundMatches.filter(
+    match => tempPredictions[match.id] || userPredictions[match.id]
+  ).length
+  const total = roundMatches.length
+  const allPicked = pickedCount === total
+
+  return `
+    <section class="round-section ${
+      isCollapsed ? 'collapsed' : ''
+    }" data-round-section="${roundName}">
+      <div class="round-header">
+        <span class="round-title">${roundName}</span>
+        <span class="round-meta">${t('common.matchesCount', {
+          count: roundMatches.length
+        })}</span>
+        <span class="round-progress ${allPicked ? 'complete' : ''}">${pickedCount}/${total}</span>
+        <button
+          class="round-toggle-btn"
+          type="button"
+          data-round="${roundName}"
+          aria-expanded="${isCollapsed ? 'false' : 'true'}"
+        >
+          <span class="round-chevron ${isCollapsed ? 'collapsed' : ''}">▾</span>
+        </button>
+      </div>
+      <div class="round-matches-grid ${isCollapsed ? 'collapsed' : ''}">
+        ${roundMatches.map(renderPredictionForm).join('')}
+      </div>
+    </section>
+  `
+}
+
+const toggleRoundSection = section => {
+  if (!section) return
+
+  const btn = section.querySelector('.round-toggle-btn')
+  const grid = section.querySelector('.round-matches-grid')
+  const roundName = btn?.dataset.round
+  if (!roundName) return
+
+  const nextCollapsed = !Boolean(roundCollapsed[roundName])
+  roundCollapsed[roundName] = nextCollapsed
+
+  section.classList.toggle('collapsed', nextCollapsed)
+  if (grid) grid.classList.toggle('collapsed', nextCollapsed)
+  btn.setAttribute('aria-expanded', nextCollapsed ? 'false' : 'true')
+
+  const chevron = btn.querySelector('.round-chevron')
+  if (chevron) chevron.classList.toggle('collapsed', nextCollapsed)
+}
+
+const attachRoundToggleHandlers = () => {
+  document.querySelectorAll('.round-header').forEach(header => {
+    header.addEventListener('click', event => {
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.closest('.prediction-btn')
+      )
+        return
+      const section = header.closest('.round-section')
+      toggleRoundSection(section)
+    })
+  })
+}
+
 const renderMatches = matches => {
   matchesContainer.innerHTML = ''
 
   if (matches.length === 0) {
-    matchesContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 20px;">${t(
+    matchesContainer.innerHTML = `<p style="text-align: center; padding: 20px;">${t(
       'bets.noMatchesFound'
     )}</p>`
     return
   }
 
-  const matchesHtml = matches.map(match => renderPredictionForm(match)).join('')
-  matchesContainer.innerHTML = matchesHtml
+  const groupedMatches = getGroupedMatches(matches)
+  matchesContainer.innerHTML = groupedMatches
+    .map(([roundName, roundMatches]) =>
+      renderRoundSection(roundName, roundMatches)
+    )
+    .join('')
+
+  attachRoundToggleHandlers()
 
   document.querySelectorAll('.prediction-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -600,6 +691,18 @@ const run = async () => {
     predictions.forEach(pred => {
       userPredictions[pred.matchId] = pred.prediction
     })
+
+    // Initialise collapsed state — new rounds start collapsed, removed ones are cleaned up
+    const availableRounds = new Set(
+      allMatches.map(match => String(match.round || t('common.notSet')))
+    )
+    Object.keys(roundCollapsed).forEach(roundName => {
+      if (!availableRounds.has(roundName)) delete roundCollapsed[roundName]
+    })
+    availableRounds.forEach(roundName => {
+      if (!(roundName in roundCollapsed)) roundCollapsed[roundName] = true
+    })
+
     renderMatches(allMatches)
     renderUserPredictions()
   } catch (error) {
