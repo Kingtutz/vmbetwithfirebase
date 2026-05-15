@@ -46,6 +46,41 @@ let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
 let predictionsPanelCollapsed =
   window.localStorage.getItem(PREDICTIONS_PANEL_COLLAPSED_KEY) === 'on'
 let lockCountdownInterval = null
+let notificationTimeout = null
+
+const ensureNotificationContainer = () => {
+  let container = document.getElementById('betsNotificationContainer')
+  if (container) return container
+
+  container = document.createElement('div')
+  container.id = 'betsNotificationContainer'
+  container.className = 'bets-notification-container'
+  container.setAttribute('aria-live', 'polite')
+  container.setAttribute('aria-atomic', 'true')
+  document.body.appendChild(container)
+  return container
+}
+
+const showBetNotification = (message, type = 'success') => {
+  const container = ensureNotificationContainer()
+  container.innerHTML = ''
+
+  const toast = document.createElement('div')
+  toast.className = `bets-notification ${type}`
+  toast.textContent = message
+  container.appendChild(toast)
+
+  if (notificationTimeout) {
+    window.clearTimeout(notificationTimeout)
+  }
+
+  notificationTimeout = window.setTimeout(() => {
+    toast.classList.add('hide')
+    window.setTimeout(() => {
+      if (toast.parentElement) toast.remove()
+    }, 220)
+  }, 3200)
+}
 
 initI18n()
 
@@ -719,6 +754,7 @@ const submitAllPredictions = async () => {
       messageDiv.className = 'submit-message error'
       messageDiv.style.display = 'block'
     }
+    showBetNotification(t('bets.lockedByAdmin'), 'error')
     return
   }
 
@@ -738,6 +774,7 @@ const submitAllPredictions = async () => {
       messageDiv.textContent = t('bets.noUnlockedToSave')
       messageDiv.className = 'submit-message error'
       messageDiv.style.display = 'block'
+      showBetNotification(t('bets.noUnlockedToSave'), 'error')
       return
     }
 
@@ -757,6 +794,7 @@ const submitAllPredictions = async () => {
     messageDiv.textContent = `✓ ${t('bets.saveSuccess')}`
     messageDiv.className = 'submit-message success'
     messageDiv.style.display = 'block'
+    showBetNotification(t('bets.saveSuccess'), 'success')
 
     renderMatches(allMatches)
     renderUserPredictions()
@@ -769,6 +807,7 @@ const submitAllPredictions = async () => {
     messageDiv.textContent = `✗ ${t('bets.saveFailed')}`
     messageDiv.className = 'submit-message error'
     messageDiv.style.display = 'block'
+    showBetNotification(t('bets.saveFailed'), 'error')
   } finally {
     isSubmitting = false
     updateSubmitButton()

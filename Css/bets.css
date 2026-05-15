@@ -4,6 +4,59 @@ body {
   background:var(--bg);
 }
 
+.bets-notification-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1200;
+  pointer-events: none;
+}
+
+.bets-notification {
+  min-width: 240px;
+  max-width: min(420px, calc(100vw - 32px));
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.bets-notification.success {
+  background: #1f8f3e;
+  border-color: #1a7b35;
+}
+
+.bets-notification.error {
+  background: #c43c3c;
+  border-color: #a93333;
+}
+
+.bets-notification.hide {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+@media (max-width: 640px) {
+  .bets-notification-container {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+  }
+
+  .bets-notification {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    font-size: 13px;
+  }
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
