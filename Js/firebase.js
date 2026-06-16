@@ -506,6 +506,59 @@ export const getPredictionStatsByMatch = async () => {
   return statsByMatch
 }
 
+export const getPickDistributionVisibility = async () => {
+  const visibilityRef = ref(db, 'settings/pickDistributionVisibility')
+  const snapshot = await get(visibilityRef)
+  if (!snapshot.exists()) {
+    return {
+      audience: 'admin'
+    }
+  }
+
+  const value = snapshot.val() || {}
+  const audience = String(value.audience || 'admin').toLowerCase()
+  return {
+    audience: audience === 'everyone' ? 'everyone' : 'admin'
+  }
+}
+
+export const setPickDistributionVisibility = async (user, audience) => {
+  const admin = await isAdminUser(user)
+  if (!admin) {
+    throw new Error('Only admins can update pick distribution visibility')
+  }
+
+  const cleanAudience = String(audience || '').toLowerCase()
+  if (!['admin', 'everyone'].includes(cleanAudience)) {
+    throw new Error('Invalid pick distribution visibility')
+  }
+
+  const payload = {
+    audience: cleanAudience,
+    updatedAt: new Date().toISOString(),
+    updatedByUid: user?.uid || '',
+    updatedByEmail: user?.email || ''
+  }
+
+  await set(ref(db, 'settings/pickDistributionVisibility'), payload)
+  await createAdminNotification(user, {
+    type: 'pick_distribution_visibility_updated',
+    titleSv: 'Synlighet för val i procent uppdaterad',
+    titleEn: 'Pick distribution visibility updated',
+    messageSv:
+      cleanAudience === 'everyone'
+        ? 'Admin gjorde val i procent synligt för alla användare.'
+        : 'Admin gjorde val i procent synligt endast för admin.',
+    messageEn:
+      cleanAudience === 'everyone'
+        ? 'Admin made pick distribution visible to all users.'
+        : 'Admin made pick distribution visible only to admins.',
+    link: 'bets.html'
+  })
+
+  return payload
+}
+
 export const getLeaderboard = async () => {
   const [
     predictionsSnapshot,

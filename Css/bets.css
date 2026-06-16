@@ -402,6 +402,10 @@ body.is-admin .pick-percentages {
   display: flex;
 }
 
+body.show-pick-percentages .pick-percentages {
+  display: flex;
+}
+
 .pick-percentage-label {
   font-size: 10px;
   font-weight: 700;

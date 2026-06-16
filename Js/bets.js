@@ -2,6 +2,7 @@ import {
   getAllMatchesFlat,
   getAllMatchResults,
   getBetLocks,
+  getPickDistributionVisibility,
   getPredictionStatsByMatch,
   getUserProfile,
   getUserPredictions,
@@ -36,6 +37,7 @@ let tempPredictions = {} // Local predictions awaiting submission
 let allResults = {}
 let predictionStatsByMatch = {}
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
+let pickDistributionVisibility = { audience: 'admin' }
 let currentUser = null
 let isAdmin = false
 let isSubmitting = false
@@ -138,6 +140,12 @@ const updateAdminTabVisibility = async user => {
   isAdmin = admin
   document.body.classList.toggle('is-admin', admin)
   if (adminNavLink) adminNavLink.style.display = admin ? '' : 'none'
+}
+
+const applyPickDistributionVisibility = () => {
+  const visibleToEveryone = pickDistributionVisibility.audience === 'everyone'
+  const canSee = isAdmin || visibleToEveryone
+  document.body.classList.toggle('show-pick-percentages', canSee)
 }
 
 const isMatchLocked = matchId => Boolean(allResults[matchId]?.winner)
@@ -825,6 +833,10 @@ const run = async () => {
         getPredictionStatsByMatch()
       ])
 
+    pickDistributionVisibility = (await getPickDistributionVisibility()) || {
+      audience: 'admin'
+    }
+
     allMatches = matches
     allResults = results || {}
     predictionStatsByMatch = statsByMatch || {}
@@ -848,6 +860,7 @@ const run = async () => {
     renderMatches(allMatches)
     renderUserPredictions()
     renderMatchLockCountdown()
+    applyPickDistributionVisibility()
   } catch (error) {
     matchesContainer.innerHTML = `<p>${t('bets.couldNotLoad')}</p>`
     console.error(error)
@@ -877,6 +890,7 @@ onAuthChange(async user => {
 
   currentUser = user
   await updateAdminTabVisibility(user)
+  applyPickDistributionVisibility()
   const profile = await getUserProfile(user.uid)
   userEmail.textContent = profile.nickname || user.email || t('common.user')
   logoutBtn.textContent = t('common.logout')
@@ -892,4 +906,5 @@ onLanguageChange(() => {
   renderMatches(allMatches)
   renderUserPredictions()
   renderMatchLockCountdown()
+  applyPickDistributionVisibility()
 })

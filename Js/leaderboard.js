@@ -1,6 +1,8 @@
 import {
+  getAllMatchesFlat,
   getAllUsers,
   getLeaderboard,
+  getUserPredictions,
   getUserProfile,
   isAdminUser,
   logOut,
@@ -24,6 +26,16 @@ const winnerNavLink = document.querySelector(
   '.nav-buttons a[href="winner.html"]'
 )
 let currentUser = null
+let leaderboardRows = []
+let allMatches = []
+const picksStateByUser = {}
+let picksModal = null
+let picksModalBackdrop = null
+let picksModalTitle = null
+let picksModalBody = null
+let picksModalCloseBtn = null
+let currentPicksUserId = ''
+let currentUserPredictionMap = {}
 
 initI18n()
 
@@ -177,6 +189,234 @@ const formatUser = entry => {
   return `${t('common.user')} ${shortId}`
 }
 
+const getPredictionLabel = (match, prediction) => {
+  if (!match) return t('common.notSet')
+  if (prediction === 'team1') return translateTeamName(match.team1)
+  if (prediction === 'team2') return translateTeamName(match.team2)
+  if (prediction === 'draw') return t('common.draw')
+  return t('common.notSet')
+}
+
+const isValidPrediction = value => ['team1', 'team2', 'draw'].includes(value)
+
+const toPredictionMap = predictionRows => {
+  const map = {}
+  ;(predictionRows || []).forEach(row => {
+    const matchId = String(row?.matchId || '')
+    const prediction = String(row?.prediction || '')
+    if (!matchId || !isValidPrediction(prediction)) return
+    map[matchId] = prediction
+  })
+  return map
+}
+
+const ensurePicksModal = () => {
+  if (picksModal && picksModalBackdrop) return
+
+  picksModalBackdrop = document.createElement('div')
+  picksModalBackdrop.className = 'leaderboard-picks-backdrop'
+  picksModalBackdrop.style.display = 'none'
+
+  picksModal = document.createElement('section')
+  picksModal.className = 'leaderboard-picks-modal'
+  picksModal.style.display = 'none'
+  picksModal.setAttribute('role', 'dialog')
+  picksModal.setAttribute('aria-modal', 'true')
+
+  picksModal.innerHTML = `
+    <div class="leaderboard-picks-modal-header">
+      <h3 class="leaderboard-picks-modal-title"></h3>
+      <button type="button" class="leaderboard-picks-close-btn" aria-label="Close">×</button>
+    </div>
+    <div class="leaderboard-picks-modal-body"></div>
+  `
+
+  document.body.appendChild(picksModalBackdrop)
+  document.body.appendChild(picksModal)
+
+  picksModalTitle = picksModal.querySelector('.leaderboard-picks-modal-title')
+  picksModalBody = picksModal.querySelector('.leaderboard-picks-modal-body')
+  picksModalCloseBtn = picksModal.querySelector('.leaderboard-picks-close-btn')
+
+  picksModalBackdrop.addEventListener('click', () => {
+    closePicksModal()
+  })
+
+  picksModalCloseBtn?.addEventListener('click', () => {
+    closePicksModal()
+  })
+}
+
+const closePicksModal = () => {
+  if (!picksModal || !picksModalBackdrop) return
+  picksModal.style.display = 'none'
+  picksModalBackdrop.style.display = 'none'
+  document.body.classList.remove('leaderboard-modal-open')
+  currentPicksUserId = ''
+}
+
+const renderPicksListHtml = picks => {
+  const orderByMatchId = new Map(
+    allMatches.map((match, index) => [String(match.id), index])
+  )
+  const matchById = new Map(allMatches.map(match => [String(match.id), match]))
+
+  const sortedPicks = (picks || []).slice().sort((a, b) => {
+    const aIdx = orderByMatchId.get(String(a.matchId))
+    const bIdx = orderByMatchId.get(String(b.matchId))
+    if (aIdx == null && bIdx == null) {
+      return String(a.matchId).localeCompare(String(b.matchId))
+    }
+    if (aIdx == null) return 1
+    if (bIdx == null) return -1
+    return aIdx - bIdx
+  })
+
+  if (!sortedPicks.length) {
+    return `<div class="player-picks-empty">${t(
+      'leaderboard.noPicksForPlayer'
+    )}</div>`
+  }
+
+  const picksHtml = sortedPicks
+    .map(pick => {
+      const match = matchById.get(String(pick.matchId))
+      const myPrediction = currentUserPredictionMap[String(pick.matchId)]
+      const hasComparison = isValidPrediction(myPrediction)
+      const samePick = hasComparison && myPrediction === pick.prediction
+      const matchLabel = match
+        ? `${translateTeamName(match.team1)} vs ${translateTeamName(match.team2)}`
+        : `${t('common.matches')} #${pick.matchId}`
+      const roundLabel = match?.round
+        ? `<span class="player-pick-round">${match.round}</span>`
+        : ''
+      const compareHtml = hasComparison
+        ? `
+          <div class="player-pick-compare">
+            <span class="player-pick-your-choice">${t(
+              'leaderboard.yourPickLabel',
+              {
+                pick: getPredictionLabel(match, myPrediction)
+              }
+            )}</span>
+            <span class="player-pick-compare-badge ${
+              samePick ? 'same' : 'different'
+            }">${
+            samePick
+              ? t('leaderboard.samePick')
+              : t('leaderboard.differentPick')
+          }</span>
+          </div>
+        `
+        : ''
+
+      return `
+        <div class="player-pick-item">
+          <div class="player-pick-main">
+            <div class="player-pick-match">
+              <span>${matchLabel}</span>
+              ${roundLabel}
+            </div>
+            ${compareHtml}
+          </div>
+          <div class="player-pick-choice">${t('leaderboard.pickLabel', {
+            pick: getPredictionLabel(match, pick.prediction)
+          })}</div>
+        </div>
+      `
+    })
+    .join('')
+
+  return `<div class="player-picks-list">${picksHtml}</div>`
+}
+
+const renderPicksModalForUser = userId => {
+  if (!userId || !picksModalTitle || !picksModalBody) return
+
+  const entry = leaderboardRows.find(row => row.userId === userId)
+  if (!entry) {
+    picksModalBody.innerHTML = `<div class="player-picks-empty">${t(
+      'leaderboard.couldNotLoadPicks'
+    )}</div>`
+    return
+  }
+
+  picksModalTitle.textContent = t('leaderboard.picksFor', {
+    user: formatUser(entry)
+  })
+
+  const state = picksStateByUser[userId] || { status: 'idle', picks: [] }
+  if (state.status === 'loading' || state.status === 'idle') {
+    picksModalBody.innerHTML = `<div class="player-picks-empty">${t(
+      'leaderboard.loadingPicks'
+    )}</div>`
+    return
+  }
+
+  if (state.status === 'error') {
+    picksModalBody.innerHTML = `<div class="player-picks-empty">${t(
+      'leaderboard.couldNotLoadPicks'
+    )}</div>`
+    return
+  }
+
+  picksModalBody.innerHTML = renderPicksListHtml(state.picks)
+}
+
+const openPicksModal = userId => {
+  const previousUserId = currentPicksUserId
+  ensurePicksModal()
+  currentPicksUserId = userId
+
+  if (previousUserId && previousUserId !== userId && picksModal) {
+    picksModal.scrollTop = 0
+  }
+
+  renderPicksModalForUser(userId)
+
+  if (!picksModal || !picksModalBackdrop) return
+  picksModal.style.display = 'block'
+  picksModalBackdrop.style.display = 'block'
+  document.body.classList.add('leaderboard-modal-open')
+}
+
+const loadUserPicks = async userId => {
+  picksStateByUser[userId] = { status: 'loading', picks: [] }
+  if (currentPicksUserId === userId) {
+    renderPicksModalForUser(userId)
+  }
+
+  try {
+    const picks = await getUserPredictions(userId)
+    picksStateByUser[userId] = {
+      status: 'ready',
+      picks: Array.isArray(picks) ? picks : []
+    }
+  } catch (error) {
+    picksStateByUser[userId] = { status: 'error', picks: [] }
+  }
+
+  if (currentPicksUserId === userId) {
+    renderPicksModalForUser(userId)
+  }
+}
+
+const attachPlayerRowHandlers = () => {
+  leaderboardContainer.querySelectorAll('.player-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const userId = String(btn.dataset.userId || '')
+      if (!userId) return
+
+      openPicksModal(userId)
+
+      const state = picksStateByUser[userId]
+      if (!state || state.status === 'idle' || state.status === 'error') {
+        await loadUserPicks(userId)
+      }
+    })
+  })
+}
+
 const renderLeaderboard = rows => {
   if (!rows.length) {
     leaderboardContainer.innerHTML = `<p>${t(
@@ -191,7 +431,17 @@ const renderLeaderboard = rows => {
         <div class="leaderboard-row">
           <div class="place">#${index + 1}</div>
           <div class="player">
-            <div class="player-name">${formatUser(entry)}</div>
+            <button
+              type="button"
+              class="player-toggle-btn"
+              data-user-id="${entry.userId}"
+              aria-haspopup="dialog"
+            >
+              <span class="player-name">${formatUser(entry)}</span>
+              <span class="player-toggle-hint">${t(
+                'leaderboard.showPicks'
+              )}</span>
+            </button>
             ${
               entry.winnerTeam
                 ? `<div class="winner-pick">${t('leaderboard.winnerPick', {
@@ -217,11 +467,24 @@ const renderLeaderboard = rows => {
     .join('')
 
   leaderboardContainer.innerHTML = listHtml
+  attachPlayerRowHandlers()
 }
 
 const run = async () => {
   try {
-    const [rows, users] = await Promise.all([getLeaderboard(), getAllUsers()])
+    const ownPredictionsPromise = currentUser
+      ? getUserPredictions(currentUser.uid).catch(() => [])
+      : Promise.resolve([])
+
+    const [rows, users, matches, ownPredictions] = await Promise.all([
+      getLeaderboard(),
+      getAllUsers(),
+      getAllMatchesFlat(),
+      ownPredictionsPromise
+    ])
+    leaderboardRows = rows || []
+    allMatches = Array.isArray(matches) ? matches : []
+    currentUserPredictionMap = toPredictionMap(ownPredictions)
     const paidUsers = users.filter(user => user.hasPaid)
     const totalPool = paidUsers.length * 100
     const firstPrize = Math.round(totalPool * 0.65)
@@ -243,7 +506,7 @@ const run = async () => {
     }
 
     notice.style.display = 'none'
-    renderLeaderboard(rows)
+    renderLeaderboard(leaderboardRows)
   } catch (error) {
     notice.style.display = 'block'
     notice.textContent = error.message || t('leaderboard.couldNotLoad')
@@ -303,5 +566,10 @@ onLanguageChange(() => {
     logoutBtn.textContent = t('common.logout')
     userEmail.title = t('nickname.clickToChange')
   }
+
+  if (currentPicksUserId) {
+    renderPicksModalForUser(currentPicksUserId)
+  }
+
   run()
 })

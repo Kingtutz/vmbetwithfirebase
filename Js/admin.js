@@ -4,6 +4,7 @@ import {
   getAllTournamentWinnerBets,
   getAllUsers,
   getBetLocks,
+  getPickDistributionVisibility,
   getTournamentWinnerResult,
   getUserProfile,
   isAdminUser,
@@ -12,6 +13,7 @@ import {
   setUserNickname,
   setMatchWinner,
   setBetLocks,
+  setPickDistributionVisibility,
   setUserPaid,
   setTournamentWinnerResult,
   setUserWinnerBetPaid,
@@ -38,6 +40,10 @@ const winnerLockAtInput = document.getElementById('winnerLockAt')
 const saveLocksBtn = document.getElementById('saveLocksBtn')
 const clearLocksBtn = document.getElementById('clearLocksBtn')
 const locksStatus = document.getElementById('locksStatus')
+const togglePickVisibilityBtn = document.getElementById(
+  'togglePickVisibilityBtn'
+)
+const pickVisibilityStatus = document.getElementById('pickVisibilityStatus')
 const winnerResultSelect = document.getElementById('winnerResultSelect')
 const saveWinnerResultBtn = document.getElementById('saveWinnerResultBtn')
 const winnerResultStatus = document.getElementById('winnerResultStatus')
@@ -56,9 +62,11 @@ let roundCollapsed = {}
 let isSyncingLive = false
 let isSavingLocks = false
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
+let pickDistributionVisibility = { audience: 'admin' }
 let allWinnerBets = []
 let winnerResult = null
 let isSavingWinnerResult = false
+let isSavingPickVisibility = false
 const COMPACT_MODE_KEY = 'adminCompactMode'
 let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
 
@@ -175,6 +183,52 @@ const setApiControlsDisabled = disabled => {
 const setLocksStatus = message => {
   if (!locksStatus) return
   locksStatus.textContent = message
+}
+
+const setPickVisibilityStatus = message => {
+  if (!pickVisibilityStatus) return
+  pickVisibilityStatus.textContent = message
+}
+
+const renderPickVisibilityControls = () => {
+  if (!togglePickVisibilityBtn) return
+
+  const isEveryone = pickDistributionVisibility.audience === 'everyone'
+  togglePickVisibilityBtn.textContent = isEveryone
+    ? t('admin.pickVisibilityEveryone')
+    : t('admin.pickVisibilityAdminsOnly')
+  togglePickVisibilityBtn.disabled = isSavingPickVisibility
+}
+
+const initializePickVisibilitySettings = () => {
+  if (!togglePickVisibilityBtn) return
+
+  togglePickVisibilityBtn.addEventListener('click', async () => {
+    if (!currentUser || isSavingPickVisibility) return
+
+    const nextAudience =
+      pickDistributionVisibility.audience === 'everyone' ? 'admin' : 'everyone'
+
+    try {
+      isSavingPickVisibility = true
+      renderPickVisibilityControls()
+      const payload = await setPickDistributionVisibility(
+        currentUser,
+        nextAudience
+      )
+      pickDistributionVisibility = {
+        audience: String(payload.audience || 'admin')
+      }
+      setPickVisibilityStatus(t('admin.pickVisibilitySaved'))
+    } catch (error) {
+      setPickVisibilityStatus(
+        error.message || t('admin.couldNotSavePickVisibility')
+      )
+    } finally {
+      isSavingPickVisibility = false
+      renderPickVisibilityControls()
+    }
+  })
 }
 
 const setWinnerResultStatus = message => {
@@ -987,15 +1041,23 @@ const loadPage = async () => {
     return
   }
 
-  const [matches, results, users, locks, winnerBets, winnerResultPayload] =
-    await Promise.all([
-      getAllMatchesFlat(),
-      getAllMatchResults(),
-      getAllUsers(),
-      getBetLocks(),
-      getAllTournamentWinnerBets(),
-      getTournamentWinnerResult()
-    ])
+  const [
+    matches,
+    results,
+    users,
+    locks,
+    winnerBets,
+    winnerResultPayload,
+    pickVisibility
+  ] = await Promise.all([
+    getAllMatchesFlat(),
+    getAllMatchResults(),
+    getAllUsers(),
+    getBetLocks(),
+    getAllTournamentWinnerBets(),
+    getTournamentWinnerResult(),
+    getPickDistributionVisibility()
+  ])
 
   allMatches = matches
   allResults = results || {}
@@ -1003,7 +1065,9 @@ const loadPage = async () => {
   betLocks = locks || { matchesLockedAt: '', winnerLockedAt: '' }
   allWinnerBets = winnerBets || []
   winnerResult = winnerResultPayload || null
+  pickDistributionVisibility = pickVisibility || { audience: 'admin' }
   renderLockInputs()
+  renderPickVisibilityControls()
   renderWinnerResultPanel()
   const availableRounds = new Set(
     allMatches.map(match => String(match.round || t('common.notSet')))
@@ -1028,6 +1092,7 @@ const loadPage = async () => {
 
 initializeApiSyncPanel()
 initializeLockSettings()
+initializePickVisibilitySettings()
 initializeWinnerResultSettings()
 
 compactToggle?.addEventListener('click', () => {
@@ -1071,6 +1136,7 @@ onLanguageChange(() => {
   updateCompactToggleLabel()
   userEmail.title = t('nickname.clickToChange')
   renderLockInputs()
+  renderPickVisibilityControls()
   renderWinnerResultPanel()
   renderMatches(allMatches)
   renderUsers()
