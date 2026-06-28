@@ -4,6 +4,7 @@ import {
   getAllTournamentWinnerBets,
   getAllUsers,
   getBetLocks,
+  getKnockoutToplistInteractionVisibility,
   getPickDistributionVisibility,
   getTournamentWinnerResult,
   getUserProfile,
@@ -13,6 +14,7 @@ import {
   setUserNickname,
   setMatchWinner,
   setBetLocks,
+  setKnockoutToplistInteractionVisibility,
   setPickDistributionVisibility,
   setUserPaid,
   setTournamentWinnerResult,
@@ -48,6 +50,12 @@ const togglePickVisibilityBtn = document.getElementById(
   'togglePickVisibilityBtn'
 )
 const pickVisibilityStatus = document.getElementById('pickVisibilityStatus')
+const toggleKnockoutToplistInteractionBtn = document.getElementById(
+  'toggleKnockoutToplistInteractionBtn'
+)
+const knockoutToplistInteractionStatus = document.getElementById(
+  'knockoutToplistInteractionStatus'
+)
 const winnerResultSelect = document.getElementById('winnerResultSelect')
 const saveWinnerResultBtn = document.getElementById('saveWinnerResultBtn')
 const winnerResultStatus = document.getElementById('winnerResultStatus')
@@ -74,11 +82,13 @@ let betLocks = {
   knockoutRestLockedAt: ''
 }
 let pickDistributionVisibility = { audience: 'admin' }
+let knockoutToplistInteractionVisibility = { audience: 'admin' }
 let allWinnerBets = []
 let allKnockoutResults = {}
 let winnerResult = null
 let isSavingWinnerResult = false
 let isSavingPickVisibility = false
+let isSavingKnockoutToplistInteractionVisibility = false
 let isSavingKnockoutResult = false
 const COMPACT_MODE_KEY = 'adminCompactMode'
 let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
@@ -261,6 +271,58 @@ const renderPickVisibilityControls = () => {
     ? t('admin.pickVisibilityEveryone')
     : t('admin.pickVisibilityAdminsOnly')
   togglePickVisibilityBtn.disabled = isSavingPickVisibility
+}
+
+const setKnockoutToplistInteractionStatus = message => {
+  if (!knockoutToplistInteractionStatus) return
+  knockoutToplistInteractionStatus.textContent = message
+}
+
+const renderKnockoutToplistInteractionControls = () => {
+  if (!toggleKnockoutToplistInteractionBtn) return
+
+  const isEveryone = knockoutToplistInteractionVisibility.audience === 'everyone'
+  toggleKnockoutToplistInteractionBtn.textContent = isEveryone
+    ? 'Interaction: Everyone'
+    : 'Interaction: Admin only'
+  toggleKnockoutToplistInteractionBtn.disabled =
+    isSavingKnockoutToplistInteractionVisibility
+}
+
+const initializeKnockoutToplistInteractionSettings = () => {
+  if (!toggleKnockoutToplistInteractionBtn) return
+
+  toggleKnockoutToplistInteractionBtn.addEventListener('click', async () => {
+    if (!currentUser || isSavingKnockoutToplistInteractionVisibility) return
+
+    const nextAudience =
+      knockoutToplistInteractionVisibility.audience === 'everyone'
+        ? 'admin'
+        : 'everyone'
+
+    try {
+      isSavingKnockoutToplistInteractionVisibility = true
+      renderKnockoutToplistInteractionControls()
+
+      const payload = await setKnockoutToplistInteractionVisibility(
+        currentUser,
+        nextAudience
+      )
+
+      knockoutToplistInteractionVisibility = {
+        audience: String(payload.audience || 'admin')
+      }
+
+      setKnockoutToplistInteractionStatus('Knockout Top List interaction saved.')
+    } catch (error) {
+      setKnockoutToplistInteractionStatus(
+        error.message || 'Could not save Knockout Top List interaction setting.'
+      )
+    } finally {
+      isSavingKnockoutToplistInteractionVisibility = false
+      renderKnockoutToplistInteractionControls()
+    }
+  })
 }
 
 const initializePickVisibilitySettings = () => {
@@ -1329,7 +1391,8 @@ const loadPage = async () => {
     locks,
     winnerBets,
     winnerResultPayload,
-    pickVisibility
+    pickVisibility,
+    knockoutToplistInteraction
   ] = await Promise.all([
     getAllMatchesFlat(),
     getAllMatchResults(),
@@ -1337,7 +1400,8 @@ const loadPage = async () => {
     getBetLocks(),
     getAllTournamentWinnerBets(),
     getTournamentWinnerResult(),
-    getPickDistributionVisibility()
+    getPickDistributionVisibility(),
+    getKnockoutToplistInteractionVisibility()
   ])
 
   allMatches = matches
@@ -1363,8 +1427,12 @@ const loadPage = async () => {
   allWinnerBets = winnerBets || []
   winnerResult = winnerResultPayload || null
   pickDistributionVisibility = pickVisibility || { audience: 'admin' }
+  knockoutToplistInteractionVisibility = knockoutToplistInteraction || {
+    audience: 'admin'
+  }
   renderLockInputs()
   renderPickVisibilityControls()
+  renderKnockoutToplistInteractionControls()
   renderWinnerResultPanel()
   const availableRounds = new Set(
     allMatches.map(match => String(match.round || t('common.notSet')))
@@ -1391,6 +1459,7 @@ const loadPage = async () => {
 initializeApiSyncPanel()
 initializeLockSettings()
 initializePickVisibilitySettings()
+initializeKnockoutToplistInteractionSettings()
 initializeWinnerResultSettings()
 
 compactToggle?.addEventListener('click', () => {

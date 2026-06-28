@@ -560,6 +560,62 @@ export const setPickDistributionVisibility = async (user, audience) => {
   return payload
 }
 
+export const getKnockoutToplistInteractionVisibility = async () => {
+  const visibilityRef = ref(db, 'settings/knockoutToplistInteractionVisibility')
+  const snapshot = await get(visibilityRef)
+  if (!snapshot.exists()) {
+    return {
+      audience: 'admin'
+    }
+  }
+
+  const value = snapshot.val() || {}
+  const audience = String(value.audience || 'admin').toLowerCase()
+  return {
+    audience: audience === 'everyone' ? 'everyone' : 'admin'
+  }
+}
+
+export const setKnockoutToplistInteractionVisibility = async (
+  user,
+  audience
+) => {
+  const admin = await isAdminUser(user)
+  if (!admin) {
+    throw new Error('Only admins can update knockout toplist interaction')
+  }
+
+  const cleanAudience = String(audience || '').toLowerCase()
+  if (!['admin', 'everyone'].includes(cleanAudience)) {
+    throw new Error('Invalid knockout toplist interaction visibility')
+  }
+
+  const payload = {
+    audience: cleanAudience,
+    updatedAt: new Date().toISOString(),
+    updatedByUid: user?.uid || '',
+    updatedByEmail: user?.email || ''
+  }
+
+  await set(ref(db, 'settings/knockoutToplistInteractionVisibility'), payload)
+  await createAdminNotification(user, {
+    type: 'knockout_toplist_interaction_visibility_updated',
+    titleSv: 'Interaktion i slutspels-topplistan uppdaterad',
+    titleEn: 'Knockout toplist interaction updated',
+    messageSv:
+      cleanAudience === 'everyone'
+        ? 'Admin gjorde användarinteraktion i slutspels-topplistan tillgänglig för alla.'
+        : 'Admin gjorde användarinteraktion i slutspels-topplistan tillgänglig endast för admin.',
+    messageEn:
+      cleanAudience === 'everyone'
+        ? 'Admin made knockout toplist interaction available to all users.'
+        : 'Admin made knockout toplist interaction available only to admins.',
+    link: 'knockout-leaderboard.html'
+  })
+
+  return payload
+}
+
 export const getLeaderboard = async () => {
   const [
     predictionsSnapshot,

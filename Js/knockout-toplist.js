@@ -1,6 +1,7 @@
 import {
   db,
   getKnockoutToplist,
+  getKnockoutToplistInteractionVisibility,
   getUserProfile,
   isAdminUser,
   logOut,
@@ -23,6 +24,8 @@ const bracketModalClose = document.getElementById('bracketModalClose')
 const bracketModalTitle = document.getElementById('bracketModalTitle')
 const bracketModalBody = document.getElementById('bracketModalBody')
 let currentUser = null
+let currentUserIsAdmin = false
+let interactionAudience = 'admin'
 
 const knockoutData = {
   'round32-left': sharedKnockoutData.round32.slice(0, 8),
@@ -436,6 +439,7 @@ if (adminNavLink) {
 const updateAdminTabVisibility = async user => {
   if (!adminNavLink) return
   const admin = await isAdminUser(user)
+  currentUserIsAdmin = admin
   adminNavLink.style.display = admin ? '' : 'none'
 }
 
@@ -446,6 +450,9 @@ const formatUser = entry => {
 }
 
 const renderLeaderboard = rows => {
+  const interactionEnabled =
+    currentUserIsAdmin || interactionAudience === 'everyone'
+
   if (!rows.length) {
     leaderboardContainer.innerHTML = '<p>No knockout predictions yet.</p>'
     return
@@ -456,7 +463,13 @@ const renderLeaderboard = rows => {
       return `
         <div class="leaderboard-row" data-uid="${
           entry.userId
-        }" data-name="${formatUser(entry)}" style="cursor:pointer" title="Click to view bracket">
+        }" data-name="${formatUser(entry)}" style="cursor:${
+          interactionEnabled ? 'pointer' : 'default'
+        }" title="${
+          interactionEnabled
+            ? 'Click to view bracket'
+            : 'Only admins can open bracket details'
+        }">
           <div class="place">#${index + 1}</div>
           <div class="player">
             <span class="player-name">${formatUser(entry)}</span>
@@ -476,6 +489,7 @@ const renderLeaderboard = rows => {
     .join('')
 
   leaderboardContainer.querySelectorAll('.leaderboard-row').forEach(row => {
+    if (!interactionEnabled) return
     row.addEventListener('click', () => {
       openBracketModal(row.dataset.uid, row.dataset.name)
     })
@@ -490,7 +504,16 @@ document.addEventListener('keydown', e => {
 
 const run = async () => {
   try {
-    const rows = await getKnockoutToplist()
+    const [rows, visibility] = await Promise.all([
+      getKnockoutToplist(),
+      getKnockoutToplistInteractionVisibility()
+    ])
+
+    interactionAudience =
+      String(visibility?.audience || 'admin').toLowerCase() === 'everyone'
+        ? 'everyone'
+        : 'admin'
+
     notice.style.display = 'none'
     renderLeaderboard(rows)
   } catch (error) {
@@ -517,6 +540,7 @@ logoutBtn.addEventListener('click', async () => {
 
 onAuthChange(async user => {
   currentUser = user || null
+  currentUserIsAdmin = false
 
   if (!user) {
     await updateAdminTabVisibility(null)
