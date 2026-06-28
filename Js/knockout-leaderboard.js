@@ -97,7 +97,7 @@ const knockoutData = {
   thirdPlace: [{ team1: 'RU101', team2: 'RU102' }]
 }
 
-const openBracketModal = async (userId, displayName) => {
+const openBracketModal = async (userId, displayName, stats = {}) => {
   bracketModalTitle.textContent = `${displayName}'s Bracket`
   bracketModalBody.innerHTML =
     '<p style="padding:8px 0;color:#888">Loading…</p>'
@@ -108,7 +108,7 @@ const openBracketModal = async (userId, displayName) => {
   try {
     const snapshot = await get(ref(db, `knockout_predictions/${userId}`))
     const predictions = snapshot.exists() ? snapshot.val() : {}
-    renderBracketModal(predictions)
+    renderBracketModal(predictions, stats)
   } catch {
     bracketModalBody.innerHTML =
       '<p style="color:#c00">Could not load predictions.</p>'
@@ -193,7 +193,7 @@ const nextRoundInfo = (roundId, matchIndex) => {
   return map[roundId] || null
 }
 
-const renderBracketModal = predictions => {
+const renderBracketModal = (predictions, stats = {}) => {
   const rounds = {
     'round32-left': knockoutData['round32-left'].map(m => ({ ...m })),
     'round16-left': knockoutData['round16-left'].map(m => ({ ...m })),
@@ -287,6 +287,12 @@ const renderBracketModal = predictions => {
   `
 
   bracketModalBody.innerHTML = `
+    <div class="ko-v-summary">
+      <span class="pick-right">Right winner: ${stats.winnerPoints ?? 0}</span>
+      <span class="pick-right">Right score: ${stats.goalPoints ?? 0}</span>
+      <span class="pick-wrong">Wrong: ${stats.wrongPoints ?? 0}</span>
+    </div>
+
     <div class="ko-v-bracket">
       <div class="ko-v-side ko-v-left">
         ${renderRoundColumn('round32-left', 'Round of 32')}
@@ -345,13 +351,16 @@ const renderLeaderboard = rows => {
           entry.userId
         }" data-name="${formatUser(
         entry
-      )}" style="cursor:pointer" title="Click to view bracket">
+      )}" data-winner-points="${entry.winnerPoints}" data-goal-points="${
+        entry.goalPoints
+      }" data-wrong-points="${entry.wrongPoints ?? 0}" style="cursor:pointer" title="Click to view bracket">
           <div class="place">#${index + 1}</div>
           <div class="player">
             <span class="player-name">${formatUser(entry)}</span>
-            <div class="winner-pick">${entry.winnerPoints} winner points, ${
-        entry.goalPoints
-      } goal points</div>
+            <div class="pick-balance">
+              <span class="pick-right">Right winner: ${entry.winnerPoints}</span>
+              <span class="pick-right">Right score: ${entry.goalPoints}</span>
+            </div>
           </div>
           <div class="stats">
             <span class="points">${entry.points} pts</span>
@@ -365,7 +374,11 @@ const renderLeaderboard = rows => {
 
   leaderboardContainer.querySelectorAll('.leaderboard-row').forEach(row => {
     row.addEventListener('click', () => {
-      openBracketModal(row.dataset.uid, row.dataset.name)
+      openBracketModal(row.dataset.uid, row.dataset.name, {
+        winnerPoints: Number.parseInt(row.dataset.winnerPoints || '0', 10) || 0,
+        goalPoints: Number.parseInt(row.dataset.goalPoints || '0', 10) || 0,
+        wrongPoints: Number.parseInt(row.dataset.wrongPoints || '0', 10) || 0
+      })
     })
   })
 }

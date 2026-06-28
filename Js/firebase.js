@@ -651,10 +651,53 @@ export const getKnockoutLeaderboard = async () => {
     : {}
   const usersByUid = usersSnapshot.exists() ? usersSnapshot.val() || {} : {}
 
+  // Compatibility mapping between historical knockout id orderings used by
+  // betting page and admin result page. Keeps old saved predictions scorable.
+  const knockoutMatchIdCompatibilityMap = {
+    'round32-left_0': 'round32-left_1',
+    'round32-left_1': 'round32-left_4',
+    'round32-left_2': 'round32-left_0',
+    'round32-left_3': 'round32-left_2',
+    'round32-left_4': 'round32-right_3',
+    'round32-left_5': 'round32-right_2',
+    'round32-left_6': 'round32-right_1',
+    'round32-left_7': 'round32-right_0',
+    'round32-right_0': 'round32-left_3',
+    'round32-right_1': 'round32-left_5',
+    'round32-right_2': 'round32-left_6',
+    'round32-right_3': 'round32-left_7',
+    'round32-right_4': 'round32-right_6',
+    'round32-right_5': 'round32-right_5',
+    'round32-right_6': 'round32-right_4',
+    'round32-right_7': 'round32-right_7',
+
+    'round16-left_0': 'round16-left_1',
+    'round16-left_1': 'round16-left_0',
+    'round16-left_2': 'round16-right_0',
+    'round16-left_3': 'round16-right_1',
+    'round16-right_0': 'round16-left_2',
+    'round16-right_1': 'round16-left_3',
+    'round16-right_2': 'round16-right_2',
+    'round16-right_3': 'round16-right_3'
+  }
+
   const resultForMatch = matchId => {
     const directResult = resultsByMatch[`knockout-${matchId}`]
     if (directResult) return directResult
-    return resultsByMatch[matchId] || null
+
+    const directUnprefixed = resultsByMatch[matchId]
+    if (directUnprefixed) return directUnprefixed
+
+    const compatibleId = knockoutMatchIdCompatibilityMap[matchId]
+    if (compatibleId) {
+      const compatiblePrefixed = resultsByMatch[`knockout-${compatibleId}`]
+      if (compatiblePrefixed) return compatiblePrefixed
+
+      const compatibleUnprefixed = resultsByMatch[compatibleId]
+      if (compatibleUnprefixed) return compatibleUnprefixed
+    }
+
+    return null
   }
 
   const toNumber = (value, defaultVal = null) => {
@@ -691,6 +734,7 @@ export const getKnockoutLeaderboard = async () => {
       let points = 0
       let winnerPoints = 0
       let goalPoints = 0
+      let totalScorablePoints = 0
 
       predictionList.forEach(prediction => {
         const matchId = String(prediction?.matchId || '').trim()
@@ -699,19 +743,41 @@ export const getKnockoutLeaderboard = async () => {
         const result = resultForMatch(matchId)
         if (!result) return
 
-        const predictedScore1 = toNumber(prediction.score1, 0)
-        const predictedScore2 = toNumber(prediction.score2, 0)
-        const resultScore1 = toNumber(result.score1, 0)
-        const resultScore2 = toNumber(result.score2, 0)
+        const predictedScore1Raw = toNumber(prediction.score1, null)
+        const predictedScore2Raw = toNumber(prediction.score2, null)
+        const resultScore1Raw = toNumber(result.score1, null)
+        const resultScore2Raw = toNumber(result.score2, null)
+
+        const predictedScore1 = predictedScore1Raw ?? 0
+        const predictedScore2 = predictedScore2Raw ?? 0
+        const resultScore1 = resultScore1Raw ?? 0
+        const resultScore2 = resultScore2Raw ?? 0
+
+        const predictedWinnerFromScore = deriveWinnerFromScores(
+          predictedScore1Raw,
+          predictedScore2Raw
+        )
+        const officialWinnerFromScore = deriveWinnerFromScores(
+          resultScore1Raw,
+          resultScore2Raw
+        )
+
+        const predictedWinnerFromField = normalizeWinnerValue(prediction.winner)
+        const officialWinnerFromField = normalizeWinnerValue(result.winner)
 
         const predictedWinner =
-          normalizeWinnerValue(prediction.winner) ||
-          deriveWinnerFromScores(predictedScore1, predictedScore2)
+          (predictedWinnerFromScore && predictedWinnerFromScore !== 'draw'
+            ? predictedWinnerFromScore
+            : '') || predictedWinnerFromField
         const officialWinner =
-          normalizeWinnerValue(result.winner) ||
-          deriveWinnerFromScores(resultScore1, resultScore2)
+          (officialWinnerFromScore && officialWinnerFromScore !== 'draw'
+            ? officialWinnerFromScore
+            : '') || officialWinnerFromField
 
         if (!officialWinner) return
+
+        // 1 point for correct winner and 1 point for each correct goal value.
+        totalScorablePoints += 3
 
         if (
           predictedWinner &&
@@ -735,18 +801,34 @@ export const getKnockoutLeaderboard = async () => {
 
       const email = usersByUid[userId]?.email || ''
       const nickname = usersByUid[userId]?.nickname || ''
+      const rightPoints = points
+      const wrongPoints = Math.max(0, totalScorablePoints - points)
 
       return {
         userId,
         email,
         nickname,
         points,
+        rightPoints,
+        wrongPoints,
         winnerPoints,
         goalPoints,
         predictionsCount: predictionList.length,
         resolvedMatchesCount: predictionList.filter(prediction => {
           const matchId = String(prediction?.matchId || '').trim()
-          return Boolean(matchId && resultForMatch(matchId)?.winner)
+          if (!matchId) return false
+          const result = resultForMatch(matchId)
+          if (!result) return false
+
+          const winnerFromField = normalizeWinnerValue(result.winner)
+          const winnerFromScore = deriveWinnerFromScores(
+            toNumber(result.score1, null),
+            toNumber(result.score2, null)
+          )
+
+          return Boolean(
+            winnerFromField || (winnerFromScore && winnerFromScore !== 'draw')
+          )
         }).length
       }
     }
