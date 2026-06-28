@@ -2,8 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
     <title>World Cup 2026 - Knockout Predictions</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="Css/shared.css" />
     <link rel="stylesheet" href="Css/account-modal.css" />
     <link rel="stylesheet" href="Css/knockout.css" />
@@ -24,10 +28,36 @@
           <p>Make your predictions for the knockout stages winner takes all!</p>
         </div>
         <div class="user-info">
-          <span id="userEmail">Loading...</span>
-          <button id="logoutBtn">Logout</button>
+          <span id="userEmail" data-i18n="common.loading">Loading...</span>
+          <button id="logoutBtn" data-i18n="common.logout">Logout</button>
         </div>
       </div>
+
+      <nav class="nav-buttons">
+        <a href="index.html" class="nav-btn" data-i18n="common.info">Info</a>
+        <a href="groups.html" class="nav-btn" data-i18n="common.groups"
+          >Groups</a
+        >
+        <a href="bets.html" class="nav-btn" data-i18n="common.matches"
+          >Matches</a
+        >
+        <a href="winner.html" class="nav-btn" data-i18n="common.winnerBet"
+          >Winner Bet</a
+        >
+        <button class="nav-btn active" disabled data-i18n="common.knockout">
+          Knockout
+        </button>
+        <a
+          href="knockout-leaderboard.html"
+          class="nav-btn"
+          data-i18n="common.knockoutTopList"
+          >Knockout Top List</a
+        >
+        <a href="admin.html" class="nav-btn" data-i18n="common.admin">Admin</a>
+        <a href="leaderboard.html" class="nav-btn" data-i18n="common.topList"
+          >Top List</a
+        >
+      </nav>
 
       <div class="bracket-controls">
         <button id="clearBtn" class="btn-clear">Clear All Predictions</button>
@@ -60,19 +90,6 @@
           </div>
         </div>
       </div>
-
-      <nav class="nav-buttons">
-        <a href="index.html" class="nav-btn">Info</a>
-        <a href="groups.html" class="nav-btn">Groups</a>
-        <a href="bets.html" class="nav-btn">Matches</a>
-        <a href="winner.html" class="nav-btn">Winner Bet</a>
-        <button class="nav-btn active" disabled>Knockout</button>
-        <a href="admin.html" class="nav-btn">Admin</a>
-        <a href="leaderboard.html" class="nav-btn">Top List</a>
-        <a href="knockout-leaderboard.html" class="nav-btn"
-          >Knockout Top List</a
-        >
-      </nav>
     </main>
 
     <script type="module" src="Js/knockout-demo.js"></script>

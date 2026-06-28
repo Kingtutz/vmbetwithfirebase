@@ -192,8 +192,9 @@ function isKnockoutMatchLockedByAdmin (matchId) {
 
 function isAnyKnockoutLockedByAdmin () {
   return (
-    isLockActive(betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt) ||
-    isLockActive(betLocks.knockoutRestLockedAt)
+    isLockActive(
+      betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt
+    ) || isLockActive(betLocks.knockoutRestLockedAt)
   )
 }
 
@@ -218,7 +219,11 @@ function renderLockState () {
     lockStatus.style.display = anyLocked ? 'block' : 'none'
 
     const messages = []
-    if (isLockActive(betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt)) {
+    if (
+      isLockActive(
+        betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt
+      )
+    ) {
       messages.push('Round of 32 knockout bets are locked by admin.')
     }
     if (isLockActive(betLocks.knockoutRestLockedAt)) {
@@ -371,6 +376,7 @@ function renderRound (containerId, matches, roundPrefix, roundName) {
   }
 
   container.innerHTML = `<h3>${roundName}</h3>`
+  const heading = container.querySelector('h3')
 
   // Calculate spacing multiplier based on round size (adjusted for split rounds)
   let spacingMultiplier = 1
@@ -392,15 +398,46 @@ function renderRound (containerId, matches, roundPrefix, roundName) {
       break // Semifinals (left or right) / Final
   }
 
+  // Actual R32 step = matchHeight(82) + inlineMarginBottom(8) + cssGap(8) = 98px
+  // Each subsequent round's step = 2^n * 98, so every match stays centered between feeders.
+  // firstMatchOffset places the first match at the vertical center of its two R32 feeders:
+  //   R16 offset = 98/2 - matchHeight/2 = 49 - 41 = (centered between R32 pair 0&1)
+  //   QF offset  = R16_offset + R16_step/2 = 49 + 98 = 147
+  //   SF offset  = QF_offset  + QF_step/2  = 147 + 196 = 343
+  //   Final      = raised so semis sit midpoint between Final and 3rd-place = 230
+  const FIRST_MATCH_OFFSET = {
+    'round16-left': 49,
+    'round16-right': 49,
+    'quarterfinals-left': 147,
+    'quarterfinals-right': 147,
+    'semifinals-left': 343,
+    'semifinals-right': 343,
+    final: 230
+  }
+  const firstMatchOffset = FIRST_MATCH_OFFSET[roundPrefix] || 0
+
+  if (heading && firstMatchOffset > 0) {
+    heading.style.marginTop = `${firstMatchOffset}px`
+  }
+
   matches.forEach((match, index) => {
     try {
       const matchId = `${roundPrefix}_${index}`
       const matchDiv = createMatchElement(match, matchId)
 
-      // Add margin bottom for bracket alignment
-      const gap = 80 * spacingMultiplier // Base gap in pixels
+      // marginBottom formula: step - matchHeight - cssGap
+      // step = 98 * spacingMultiplier, cssGap = 8 (from .round { gap: 0.5rem })
+      const baseMatchStep = 98
+      const cssGap = 8
+      const matchHeight = 82
+      const step = baseMatchStep * spacingMultiplier
+      // heading already carries the offset; first match needs no extra top margin
+      if (index === 0) {
+        matchDiv.style.marginTop = '0px'
+      }
       if (index < matches.length - 1) {
-        matchDiv.style.marginBottom = gap - 90 + 'px'
+        matchDiv.style.marginBottom =
+          Math.max(0, step - matchHeight - cssGap) + 'px'
       }
 
       container.appendChild(matchDiv)
