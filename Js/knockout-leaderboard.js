@@ -142,8 +142,9 @@ const renderBracketModal = predictions => {
         return matches.map((match, idx) => {
           const matchPrefix = roundKey === 'thirdPlace' ? 'third-place' : roundKey
           const matchId = `${matchPrefix}_${idx}`
-          const pred = predictions[matchId] || {}
-          const winner = pred.winner // 1 or 2
+          const fallbackMatchId = `${roundKey}_${idx}`
+          const pred = predictions[matchId] || predictions[fallbackMatchId] || {}
+          const winner = Number.parseInt(String(pred.winner ?? ''), 10) || null
           const score1 = pred.score1 != null ? pred.score1 : 0
           const score2 = pred.score2 != null ? pred.score2 : 0
 
@@ -153,7 +154,7 @@ const renderBracketModal = predictions => {
             winner === 2 ? 'ko-bracket-team winner-pick' : 'ko-bracket-team'
 
           const scoreHtml =
-            winner != null
+            winner != null || pred.score1 != null || pred.score2 != null
               ? `<span class="ko-bracket-score">
                <span class="ko-bracket-score-val">${score1}</span>
                –
