@@ -465,11 +465,26 @@ function applyWinnerFromScores (matchId, matchDiv) {
   const score1 = Number.parseInt(String(prediction.score1 ?? ''), 10)
   const score2 = Number.parseInt(String(prediction.score2 ?? ''), 10)
 
-  if (
-    !Number.isFinite(score1) ||
-    !Number.isFinite(score2) ||
-    score1 === score2
-  ) {
+  if (!Number.isFinite(score1) || !Number.isFinite(score2)) {
+    return
+  }
+
+  if (score1 === score2) {
+    prediction.winner = null
+    userPredictions[matchId] = prediction
+
+    const buttons = matchDiv.querySelectorAll('.team-selector')
+    buttons.forEach(btn => {
+      btn.classList.remove('selected')
+    })
+
+    const teamRows = matchDiv.querySelectorAll('.team-box')
+    teamRows.forEach(row => {
+      row.classList.remove('selected')
+    })
+
+    updateThirdPlaceMatch()
+    scheduleBracketConnections()
     return
   }
 

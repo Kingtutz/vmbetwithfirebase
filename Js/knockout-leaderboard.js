@@ -228,16 +228,14 @@ const renderBracketModal = (predictions, stats = {}) => {
     rounds[roundId].forEach((match, index) => {
       const prediction = getPredictionForRoundMatch(predictions, roundId, index)
       const winner = deriveWinner(prediction)
+      const parsedScore1 = Number.parseInt(String(prediction.score1 ?? ''), 10)
+      const parsedScore2 = Number.parseInt(String(prediction.score2 ?? ''), 10)
+      const hasScore1 = Number.isFinite(parsedScore1)
+      const hasScore2 = Number.isFinite(parsedScore2)
 
-      match.score1 =
-        prediction.score1 != null
-          ? Number.parseInt(String(prediction.score1), 10) || 0
-          : 0
-      match.score2 =
-        prediction.score2 != null
-          ? Number.parseInt(String(prediction.score2), 10) || 0
-          : 0
-      match.hasScore = prediction.score1 != null || prediction.score2 != null
+      match.score1 = hasScore1 ? parsedScore1 : 0
+      match.score2 = hasScore2 ? parsedScore2 : 0
+      match.hasScore = hasScore1 || hasScore2
       match.winner = winner
 
       if (winner !== 1 && winner !== 2) return
@@ -349,16 +347,18 @@ const renderLeaderboard = rows => {
       return `
         <div class="leaderboard-row" data-uid="${
           entry.userId
-        }" data-name="${formatUser(
-        entry
-      )}" data-winner-points="${entry.winnerPoints}" data-goal-points="${
-        entry.goalPoints
-      }" data-wrong-points="${entry.wrongPoints ?? 0}" style="cursor:pointer" title="Click to view bracket">
+        }" data-name="${formatUser(entry)}" data-winner-points="${
+        entry.winnerPoints
+      }" data-goal-points="${entry.goalPoints}" data-wrong-points="${
+        entry.wrongPoints ?? 0
+      }" style="cursor:pointer" title="Click to view bracket">
           <div class="place">#${index + 1}</div>
           <div class="player">
             <span class="player-name">${formatUser(entry)}</span>
             <div class="pick-balance">
-              <span class="pick-right">Right winner: ${entry.winnerPoints}</span>
+              <span class="pick-right">Right winner: ${
+                entry.winnerPoints
+              }</span>
               <span class="pick-right">Right score: ${entry.goalPoints}</span>
             </div>
           </div>

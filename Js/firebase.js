@@ -747,7 +747,6 @@ export const getKnockoutLeaderboard = async () => {
         const predictedScore2Raw = toNumber(prediction.score2, null)
         const resultScore1Raw = toNumber(result.score1, null)
         const resultScore2Raw = toNumber(result.score2, null)
-
         const predictedScore1 = predictedScore1Raw ?? 0
         const predictedScore2 = predictedScore2Raw ?? 0
         const resultScore1 = resultScore1Raw ?? 0
@@ -766,34 +765,40 @@ export const getKnockoutLeaderboard = async () => {
         const officialWinnerFromField = normalizeWinnerValue(result.winner)
 
         const predictedWinner =
-          (predictedWinnerFromScore && predictedWinnerFromScore !== 'draw'
-            ? predictedWinnerFromScore
-            : '') || predictedWinnerFromField
+          predictedWinnerFromScore || predictedWinnerFromField
         const officialWinner =
-          (officialWinnerFromScore && officialWinnerFromScore !== 'draw'
-            ? officialWinnerFromScore
-            : '') || officialWinnerFromField
+          officialWinnerFromScore || officialWinnerFromField
 
         if (!officialWinner) return
 
         // 1 point for correct winner and 1 point for each correct goal value.
         totalScorablePoints += 3
 
-        if (
+        const hasCorrectWinner =
           predictedWinner &&
           officialWinner &&
           predictedWinner === officialWinner
-        ) {
+
+        if (hasCorrectWinner) {
           points += 1
           winnerPoints += 1
         }
 
-        if (predictedScore1 === resultScore1) {
+        const predictedScore1ForPoints = predictedScore1Raw ?? 0
+        const predictedScore2ForPoints = predictedScore2Raw ?? 0
+
+        if (
+          resultScore1Raw !== null &&
+          predictedScore1ForPoints === resultScore1Raw
+        ) {
           points += 1
           goalPoints += 1
         }
 
-        if (predictedScore2 === resultScore2) {
+        if (
+          resultScore2Raw !== null &&
+          predictedScore2ForPoints === resultScore2Raw
+        ) {
           points += 1
           goalPoints += 1
         }
@@ -826,9 +831,7 @@ export const getKnockoutLeaderboard = async () => {
             toNumber(result.score2, null)
           )
 
-          return Boolean(
-            winnerFromField || (winnerFromScore && winnerFromScore !== 'draw')
-          )
+          return Boolean(winnerFromField || winnerFromScore)
         }).length
       }
     }
