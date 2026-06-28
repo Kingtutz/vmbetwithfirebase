@@ -25,8 +25,8 @@
         <div>
           <h1>Knockout Top List</h1>
           <p>
-            1 point for correct winner and 1 point for each correct goal value.
-            Example: exact 1-0 gives 3 points.
+            1 point for right team and 1 point per team score value (max 3
+            points per match).
           </p>
         </div>
         <div class="user-info">
@@ -54,7 +54,6 @@
       </section>
     </main>
 
-    <!-- Bracket prediction modal -->
     <div
       id="bracketModalBackdrop"
       class="leaderboard-picks-backdrop"
@@ -84,7 +83,7 @@
       <div class="leaderboard-picks-modal-body" id="bracketModalBody"></div>
     </div>
 
-    <script type="module" src="Js/knockout-leaderboard.js"></script>
+    <script type="module" src="Js/knockout-toplist.js"></script>
     <script>
       if (
         "serviceWorker" in navigator &&

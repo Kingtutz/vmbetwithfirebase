@@ -635,7 +635,7 @@ export const getLeaderboard = async () => {
   })
 }
 
-export const getKnockoutLeaderboard = async () => {
+export const getKnockoutToplist = async () => {
   const [predictionsSnapshot, resultsSnapshot, usersSnapshot] =
     await Promise.all([
       get(ref(db, 'knockout_predictions')),
@@ -651,9 +651,7 @@ export const getKnockoutLeaderboard = async () => {
     : {}
   const usersByUid = usersSnapshot.exists() ? usersSnapshot.val() || {} : {}
 
-  // Compatibility mapping between historical knockout id orderings used by
-  // betting page and admin result page. Keeps old saved predictions scorable.
-  const knockoutMatchIdCompatibilityMap = {
+  const compatibilityMap = {
     'round32-left_0': 'round32-left_1',
     'round32-left_1': 'round32-left_4',
     'round32-left_2': 'round32-left_0',
@@ -670,7 +668,6 @@ export const getKnockoutLeaderboard = async () => {
     'round32-right_5': 'round32-right_5',
     'round32-right_6': 'round32-right_4',
     'round32-right_7': 'round32-right_7',
-
     'round16-left_0': 'round16-left_1',
     'round16-left_1': 'round16-left_0',
     'round16-left_2': 'round16-right_0',
@@ -682,41 +679,38 @@ export const getKnockoutLeaderboard = async () => {
   }
 
   const resultForMatch = matchId => {
-    const directResult = resultsByMatch[`knockout-${matchId}`]
-    if (directResult) {
-      return { result: directResult, resultKey: `knockout-${matchId}` }
+    const directPrefixed = resultsByMatch[`knockout-${matchId}`]
+    if (directPrefixed) {
+      return { result: directPrefixed, resultKey: `knockout-${matchId}` }
     }
 
-    const directUnprefixed = resultsByMatch[matchId]
-    if (directUnprefixed) {
-      return { result: directUnprefixed, resultKey: matchId }
+    const direct = resultsByMatch[matchId]
+    if (direct) {
+      return { result: direct, resultKey: matchId }
     }
 
-    const compatibleId = knockoutMatchIdCompatibilityMap[matchId]
-    if (compatibleId) {
-      const compatiblePrefixed = resultsByMatch[`knockout-${compatibleId}`]
-      if (compatiblePrefixed) {
-        return {
-          result: compatiblePrefixed,
-          resultKey: `knockout-${compatibleId}`
-        }
-      }
+    const mapped = compatibilityMap[matchId]
+    if (!mapped) return null
 
-      const compatibleUnprefixed = resultsByMatch[compatibleId]
-      if (compatibleUnprefixed) {
-        return { result: compatibleUnprefixed, resultKey: compatibleId }
-      }
+    const mappedPrefixed = resultsByMatch[`knockout-${mapped}`]
+    if (mappedPrefixed) {
+      return { result: mappedPrefixed, resultKey: `knockout-${mapped}` }
+    }
+
+    const mappedDirect = resultsByMatch[mapped]
+    if (mappedDirect) {
+      return { result: mappedDirect, resultKey: mapped }
     }
 
     return null
   }
 
-  const toNumber = (value, defaultVal = null) => {
+  const toNumber = value => {
     const parsed = Number.parseInt(String(value ?? '').trim(), 10)
-    return Number.isFinite(parsed) ? parsed : defaultVal
+    return Number.isFinite(parsed) ? parsed : null
   }
 
-  const normalizeWinnerValue = value => {
+  const normalizeWinner = value => {
     const clean = String(value ?? '')
       .trim()
       .toLowerCase()
@@ -727,30 +721,33 @@ export const getKnockoutLeaderboard = async () => {
     return clean
   }
 
-  const deriveWinnerFromScores = (score1, score2) => {
+  const winnerFromScores = (score1, score2) => {
     if (score1 === null || score2 === null) return ''
     if (score1 > score2) return 'team1'
     if (score2 > score1) return 'team2'
     return 'draw'
   }
 
+  const resolveWinner = (scoreWinner, fieldWinner) => {
+    if (scoreWinner === 'draw') {
+      if (fieldWinner === 'team1' || fieldWinner === 'team2') return fieldWinner
+      return 'draw'
+    }
+    return scoreWinner || fieldWinner
+  }
+
   const entries = Object.entries(predictionsByUser).map(
     ([userId, userPredictions]) => {
-      const predictionList = Object.entries(userPredictions || {}).map(
+      const predictions = Object.entries(userPredictions || {}).map(
         ([matchId, prediction]) => ({
-          // Prefer the prediction object key since it is the persisted bracket slot.
-          // Some historical records contain stale embedded matchId values.
           matchId: String(matchId || prediction?.matchId || '').trim(),
           ...prediction
         })
       )
-      let points = 0
-      let winnerPoints = 0
-      let goalPoints = 0
-      let totalScorablePoints = 0
+
       const bestByResultKey = new Map()
 
-      predictionList.forEach(prediction => {
+      predictions.forEach(prediction => {
         const matchId = String(prediction?.matchId || '').trim()
         if (!matchId) return
 
@@ -760,139 +757,62 @@ export const getKnockoutLeaderboard = async () => {
         const { result, resultKey } = resolved
         if (!result || !resultKey) return
 
-        const predictedScore1Raw = toNumber(prediction.score1, null)
-        const predictedScore2Raw = toNumber(prediction.score2, null)
-        const resultScore1Raw = toNumber(result.score1, null)
-        const resultScore2Raw = toNumber(result.score2, null)
-        const predictedScore1 = predictedScore1Raw ?? 0
-        const predictedScore2 = predictedScore2Raw ?? 0
-        const resultScore1 = resultScore1Raw ?? 0
-        const resultScore2 = resultScore2Raw ?? 0
+        const p1 = toNumber(prediction.score1)
+        const p2 = toNumber(prediction.score2)
+        const r1 = toNumber(result.score1)
+        const r2 = toNumber(result.score2)
 
-        const predictedWinnerFromScore = deriveWinnerFromScores(
-          predictedScore1Raw,
-          predictedScore2Raw
-        )
-        const officialWinnerFromScore = deriveWinnerFromScores(
-          resultScore1Raw,
-          resultScore2Raw
-        )
-
-        const predictedWinnerFromField = normalizeWinnerValue(prediction.winner)
-        const officialWinnerFromField = normalizeWinnerValue(result.winner)
-
-        const resolveWinner = (winnerFromScore, winnerFromField) => {
-          // In knockout, drawn scores can still have a winner (penalties).
-          if (winnerFromScore === 'draw') {
-            if (winnerFromField === 'team1' || winnerFromField === 'team2') {
-              return winnerFromField
-            }
-            return 'draw'
-          }
-
-          return winnerFromScore || winnerFromField
-        }
-
-        const predictedWinner = resolveWinner(
-          predictedWinnerFromScore,
-          predictedWinnerFromField
+        const predWinner = resolveWinner(
+          winnerFromScores(p1, p2),
+          normalizeWinner(prediction.winner)
         )
         const officialWinner = resolveWinner(
-          officialWinnerFromScore,
-          officialWinnerFromField
+          winnerFromScores(r1, r2),
+          normalizeWinner(result.winner)
         )
 
         if (!officialWinner) return
 
-        const hasCorrectWinner =
-          predictedWinner &&
-          officialWinner &&
-          predictedWinner === officialWinner
-
-        let winnerPoint = 0
+        let winnerPoints = 0
         let scorePoints = 0
-        let candidatePoints = 0
 
-        if (hasCorrectWinner) {
-          winnerPoint = 1
-          candidatePoints += 1
+        if (predWinner && predWinner === officialWinner) {
+          winnerPoints = 1
         }
 
-        const predictedScore1ForPoints = predictedScore1Raw ?? 0
-        const predictedScore2ForPoints = predictedScore2Raw ?? 0
+        if (r1 !== null && p1 !== null && p1 === r1) scorePoints += 1
+        if (r2 !== null && p2 !== null && p2 === r2) scorePoints += 1
 
-        if (
-          resultScore1Raw !== null &&
-          predictedScore1ForPoints === resultScore1Raw
-        ) {
-          scorePoints += 1
-          candidatePoints += 1
-        }
-
-        if (
-          resultScore2Raw !== null &&
-          predictedScore2ForPoints === resultScore2Raw
-        ) {
-          scorePoints += 1
-          candidatePoints += 1
-        }
-
+        const total = winnerPoints + scorePoints
         const prevBest = bestByResultKey.get(resultKey)
-        if (!prevBest || candidatePoints > prevBest.points) {
+        if (!prevBest || total > prevBest.points) {
           bestByResultKey.set(resultKey, {
-            points: candidatePoints,
-            winnerPoints: winnerPoint,
-            goalPoints: scorePoints
+            points: total,
+            winnerPoints,
+            scorePoints
           })
         }
       })
 
-      totalScorablePoints = bestByResultKey.size * 3
-      bestByResultKey.forEach(score => {
-        points += score.points
-        winnerPoints += score.winnerPoints
-        goalPoints += score.goalPoints
-      })
+      let points = 0
+      let winnerPoints = 0
+      let scorePoints = 0
 
-      const email = usersByUid[userId]?.email || ''
-      const nickname = usersByUid[userId]?.nickname || ''
-      const rightPoints = points
-      const wrongPoints = Math.max(0, totalScorablePoints - points)
+      bestByResultKey.forEach(item => {
+        points += item.points
+        winnerPoints += item.winnerPoints
+        scorePoints += item.scorePoints
+      })
 
       return {
         userId,
-        email,
-        nickname,
+        email: usersByUid[userId]?.email || '',
+        nickname: usersByUid[userId]?.nickname || '',
         points,
-        rightPoints,
-        wrongPoints,
         winnerPoints,
-        goalPoints,
-        predictionsCount: predictionList.length,
-        resolvedMatchesCount: (() => {
-          const uniqueResolvedKeys = new Set()
-
-          predictionList.forEach(prediction => {
-            const matchId = String(prediction?.matchId || '').trim()
-            if (!matchId) return
-
-            const resolved = resultForMatch(matchId)
-            if (!resolved || !resolved.result || !resolved.resultKey) return
-
-            const result = resolved.result
-            const winnerFromField = normalizeWinnerValue(result.winner)
-            const winnerFromScore = deriveWinnerFromScores(
-              toNumber(result.score1, null),
-              toNumber(result.score2, null)
-            )
-
-            if (winnerFromField || winnerFromScore) {
-              uniqueResolvedKeys.add(resolved.resultKey)
-            }
-          })
-
-          return uniqueResolvedKeys.size
-        })()
+        scorePoints,
+        resolvedMatchesCount: bestByResultKey.size,
+        predictionsCount: predictions.length
       }
     }
   )
@@ -901,7 +821,7 @@ export const getKnockoutLeaderboard = async () => {
     if (b.points !== a.points) return b.points - a.points
     if (b.winnerPoints !== a.winnerPoints)
       return b.winnerPoints - a.winnerPoints
-    if (b.goalPoints !== a.goalPoints) return b.goalPoints - a.goalPoints
+    if (b.scorePoints !== a.scorePoints) return b.scorePoints - a.scorePoints
     return String(a.email || a.userId).localeCompare(
       String(b.email || b.userId)
     )

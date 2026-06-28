@@ -11,16 +11,22 @@ import {
 const knockoutData = {
   round32: [
     {
-      team1: 'South Africa',
-      team2: 'Canada',
-      date: 'June 28',
-      location: 'Inglewood'
-    },
-    {
       team1: 'Germany',
       team2: 'Paraguay',
       date: 'June 29',
       location: 'Houston'
+    },
+    {
+      team1: 'France',
+      team2: 'Sweden',
+      date: 'June 30',
+      location: 'Arlington'
+    },
+    {
+      team1: 'South Africa',
+      team2: 'Canada',
+      date: 'June 28',
+      location: 'Inglewood'
     },
     {
       team1: 'Netherlands',
@@ -28,13 +34,26 @@ const knockoutData = {
       date: 'June 29',
       location: 'Guadalupe'
     },
-    { team1: 'Brazil', team2: 'Japan', date: 'June 29', location: 'Houston' },
     {
-      team1: 'France',
-      team2: 'Sweden',
-      date: 'June 30',
-      location: 'Arlington'
+      team1: 'Portugal',
+      team2: 'Croatia',
+      date: 'July 2',
+      location: 'Inglewood'
     },
+    {
+      team1: 'Spain',
+      team2: 'Austria',
+      date: 'July 2',
+      location: 'Santa Clara'
+    },
+    {
+      team1: 'United States',
+      team2: 'Bosnia and Herzegovina',
+      date: 'July 1',
+      location: 'Seattle'
+    },
+    { team1: 'Belgium', team2: 'Senegal', date: 'July 1', location: 'Seattle' },
+    { team1: 'Brazil', team2: 'Japan', date: 'June 29', location: 'Houston' },
     {
       team1: 'Ivory Coast',
       team2: 'Norway',
@@ -53,30 +72,11 @@ const knockoutData = {
       date: 'July 1',
       location: 'Atlanta'
     },
-    { team1: 'Belgium', team2: 'Senegal', date: 'July 1', location: 'Seattle' },
     {
-      team1: 'United States',
-      team2: 'Bosnia and Herzegovina',
-      date: 'July 1',
-      location: 'Seattle'
-    },
-    {
-      team1: 'Spain',
-      team2: 'Austria',
-      date: 'July 2',
-      location: 'Santa Clara'
-    },
-    {
-      team1: 'Portugal',
-      team2: 'Croatia',
-      date: 'July 2',
-      location: 'Inglewood'
-    },
-    {
-      team1: 'Switzerland',
-      team2: 'Algeria',
-      date: 'July 2',
-      location: 'Vancouver'
+      team1: 'Argentina',
+      team2: 'Cape Verde',
+      date: 'July 3',
+      location: 'Arlington'
     },
     {
       team1: 'Australia',
@@ -85,10 +85,10 @@ const knockoutData = {
       location: 'Vancouver'
     },
     {
-      team1: 'Argentina',
-      team2: 'Cape Verde',
-      date: 'July 3',
-      location: 'Arlington'
+      team1: 'Switzerland',
+      team2: 'Algeria',
+      date: 'July 2',
+      location: 'Vancouver'
     },
     {
       team1: 'Colombia',
@@ -98,12 +98,12 @@ const knockoutData = {
     }
   ],
   round16: [
-    { team1: 'W73', team2: 'W75', date: 'July 4', location: 'Houston' },
     { team1: 'W74', team2: 'W77', date: 'July 4', location: 'Philadelphia' },
-    { team1: 'W76', team2: 'W78', date: 'July 5', location: 'East Rutherford' },
-    { team1: 'W79', team2: 'W80', date: 'July 5', location: 'Mexico City' },
+    { team1: 'W73', team2: 'W75', date: 'July 4', location: 'Houston' },
     { team1: 'W83', team2: 'W84', date: 'July 6', location: 'Mexico City' },
     { team1: 'W81', team2: 'W82', date: 'July 6', location: 'Seattle' },
+    { team1: 'W76', team2: 'W78', date: 'July 5', location: 'East Rutherford' },
+    { team1: 'W79', team2: 'W80', date: 'July 5', location: 'Mexico City' },
     { team1: 'W86', team2: 'W88', date: 'July 7', location: 'Atlanta' },
     { team1: 'W85', team2: 'W87', date: 'July 7', location: 'Vancouver' }
   ],
