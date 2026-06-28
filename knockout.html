@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>World Cup 2026 - Knockout Predictions</title>
+    <link rel="stylesheet" href="Css/shared.css" />
+    <link rel="stylesheet" href="Css/account-modal.css" />
+    <link rel="stylesheet" href="Css/knockout.css" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+  </head>
+  <body>
+    <main class="container">
+      <div class="header">
+        <div>
+          <h1>World Cup 2026 Knockout Predictions</h1>
+          <p>Make your predictions for the knockout stages</p>
+        </div>
+        <div class="user-info">
+          <span id="userEmail">Loading...</span>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+      <div class="bracket-controls">
+        <button id="clearBtn" class="btn-clear">Clear All Predictions</button>
+        <button id="saveBtn" class="btn-save">Save Predictions</button>
+      </div>
+      <p id="lockStatus" class="lock-status" style="display: none"></p>
+
+      <div class="bracket-wrapper">
+        <div class="bracket-container">
+          <!-- LEFT SIDE BRACKET -->
+          <div class="bracket-side bracket-left">
+            <div class="round" id="round32-left"></div>
+            <div class="round" id="round16-left"></div>
+            <div class="round" id="quarterfinals-left"></div>
+            <div class="round" id="semifinals-left"></div>
+          </div>
+
+          <!-- CENTER - FINALS -->
+          <div class="bracket-center">
+            <div class="round" id="final"></div>
+          </div>
+
+          <!-- RIGHT SIDE BRACKET -->
+          <div class="bracket-side bracket-right">
+            <div class="round" id="round32-right"></div>
+            <div class="round" id="round16-right"></div>
+            <div class="round" id="quarterfinals-right"></div>
+            <div class="round" id="semifinals-right"></div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="nav-buttons">
+        <a href="index.html" class="nav-btn">Info</a>
+        <a href="groups.html" class="nav-btn">Groups</a>
+        <a href="bets.html" class="nav-btn">Matches</a>
+        <a href="winner.html" class="nav-btn">Winner Bet</a>
+        <button class="nav-btn active" disabled>Knockout</button>
+        <a href="admin.html" class="nav-btn">Admin</a>
+        <a href="leaderboard.html" class="nav-btn">Top List</a>
+        <a href="knockout-leaderboard.html" class="nav-btn"
+          >Knockout Top List</a
+        >
+      </nav>
+    </main>
+
+    <script type="module" src="Js/knockout-demo.js"></script>
+  </body>
+</html>

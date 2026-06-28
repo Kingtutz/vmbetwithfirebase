@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Knockout Top List</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#1a1a1a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="apple-touch-icon" href="favicon.svg" />
+    <link rel="stylesheet" href="Css/shared.css" />
+    <link rel="stylesheet" href="Css/leaderboard.css" />
+  </head>
+  <body>
+    <main class="container">
+      <div class="header">
+        <div>
+          <h1>Knockout Top List</h1>
+          <p>
+            1 point for correct winner and 1 point for each correct goal value.
+            Example: exact 1-0 gives 3 points.
+          </p>
+        </div>
+        <div class="user-info">
+          <p id="userEmail">Guest</p>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+
+      <nav class="nav-buttons">
+        <a href="index.html" class="nav-btn">Info</a>
+        <a href="groups.html" class="nav-btn">Groups</a>
+        <a href="bets.html" class="nav-btn">Matches</a>
+        <a href="winner.html" class="nav-btn">Winner Bet</a>
+        <a href="knockout.html" class="nav-btn">Knockout</a>
+        <a href="leaderboard.html" class="nav-btn">Main Top List</a>
+        <a href="admin.html" class="nav-btn">Admin</a>
+        <button class="nav-btn active" disabled>Knockout Top List</button>
+      </nav>
+
+      <section id="notice" class="notice" style="display: none"></section>
+
+      <section class="leaderboard-card">
+        <h2 class="leaderboard-title">Ranking</h2>
+        <div id="leaderboard"></div>
+      </section>
+    </main>
+
+    <script type="module" src="Js/knockout-leaderboard.js"></script>
+    <script>
+      if (
+        "serviceWorker" in navigator &&
+        window.location.protocol !== "file:"
+      ) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>

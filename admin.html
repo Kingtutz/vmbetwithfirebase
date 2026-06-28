@@ -45,6 +45,9 @@
         <a href="winner.html" class="nav-btn" data-i18n="common.winnerBet"
           >Winner Bet</a
         >
+        <a href="knockout.html" class="nav-btn" data-i18n="common.knockout"
+          >Knockout</a
+        >
         <button class="nav-btn active" disabled data-i18n="common.admin">
           Admin
         </button>
@@ -103,6 +106,10 @@
           <label class="lock-field">
             <span data-i18n="admin.winnerLockAt">Lock winner bets at</span>
             <input id="winnerLockAt" type="datetime-local" />
+          </label>
+          <label class="lock-field">
+            <span>Lock knockout bets at</span>
+            <input id="knockoutLockAt" type="datetime-local" />
           </label>
         </div>
         <div class="api-sync-row">
@@ -168,6 +175,15 @@
         <p id="winnerResultStatus" class="api-sync-status"></p>
         <p id="winnerPayoutSummary" class="api-sync-status"></p>
         <div id="winnerPayoutWinners" class="winner-payout-list"></div>
+      </section>
+
+      <section class="api-sync-card">
+        <h2 class="api-sync-title">Knockout match results</h2>
+        <p class="api-sync-subtitle">
+          Set the official winner for each knockout match.
+        </p>
+        <div id="knockoutResults" class="matches-grid"></div>
+        <p id="knockoutResultsStatus" class="api-sync-status"></p>
       </section>
 
       <section

@@ -417,7 +417,7 @@ export const getAllMatchResults = async () => {
   return snapshot.val() || {}
 }
 
-export const setMatchWinner = async (user, matchId, winner) => {
+export const setMatchWinner = async (user, matchId, winner, extraData = {}) => {
   if (!matchId) {
     throw new Error('Missing match id')
   }
@@ -435,6 +435,7 @@ export const setMatchWinner = async (user, matchId, winner) => {
   const payload = {
     matchId,
     winner,
+    ...extraData,
     setAt: new Date().toISOString(),
     setByUid: user.uid,
     setByEmail: user.email || ''
@@ -634,6 +635,140 @@ export const getLeaderboard = async () => {
   })
 }
 
+export const getKnockoutLeaderboard = async () => {
+  const [predictionsSnapshot, resultsSnapshot, usersSnapshot] =
+    await Promise.all([
+      get(ref(db, 'knockout_predictions')),
+      get(ref(db, 'matchResults')),
+      get(ref(db, 'users'))
+    ])
+
+  if (!predictionsSnapshot.exists()) return []
+
+  const predictionsByUser = predictionsSnapshot.val() || {}
+  const resultsByMatch = resultsSnapshot.exists()
+    ? resultsSnapshot.val() || {}
+    : {}
+  const usersByUid = usersSnapshot.exists() ? usersSnapshot.val() || {} : {}
+
+  const resultForMatch = matchId => {
+    const directResult = resultsByMatch[`knockout-${matchId}`]
+    if (directResult) return directResult
+    return resultsByMatch[matchId] || null
+  }
+
+  const toNumber = value => {
+    const parsed = Number.parseInt(String(value ?? '').trim(), 10)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+
+  const normalizeWinnerValue = value => {
+    const clean = String(value ?? '')
+      .trim()
+      .toLowerCase()
+
+    if (clean === '1' || clean === 'team1' || clean === 'home') return 'team1'
+    if (clean === '2' || clean === 'team2' || clean === 'away') return 'team2'
+    if (clean === 'draw' || clean === 'x') return 'draw'
+    return clean
+  }
+
+  const deriveWinnerFromScores = (score1, score2) => {
+    if (score1 === null || score2 === null) return ''
+    if (score1 > score2) return 'team1'
+    if (score2 > score1) return 'team2'
+    return 'draw'
+  }
+
+  const entries = Object.entries(predictionsByUser).map(
+    ([userId, userPredictions]) => {
+      const predictionList = Object.entries(userPredictions || {}).map(
+        ([matchId, prediction]) => ({
+          matchId: String(prediction?.matchId || matchId || '').trim(),
+          ...prediction
+        })
+      )
+      let points = 0
+      let winnerPoints = 0
+      let goalPoints = 0
+
+      predictionList.forEach(prediction => {
+        const matchId = String(prediction?.matchId || '').trim()
+        if (!matchId) return
+
+        const result = resultForMatch(matchId)
+        if (!result || !result.winner) return
+
+        const predictedScore1 = toNumber(prediction.score1)
+        const predictedScore2 = toNumber(prediction.score2)
+        const resultScore1 = toNumber(result.score1)
+        const resultScore2 = toNumber(result.score2)
+
+        const predictedWinner =
+          normalizeWinnerValue(prediction.winner) ||
+          deriveWinnerFromScores(predictedScore1, predictedScore2)
+        const officialWinner =
+          normalizeWinnerValue(result.winner) ||
+          deriveWinnerFromScores(resultScore1, resultScore2)
+
+        if (
+          predictedWinner &&
+          officialWinner &&
+          predictedWinner === officialWinner
+        ) {
+          points += 1
+          winnerPoints += 1
+        }
+
+        if (
+          predictedScore1 !== null &&
+          resultScore1 !== null &&
+          predictedScore1 === resultScore1
+        ) {
+          points += 1
+          goalPoints += 1
+        }
+
+        if (
+          predictedScore2 !== null &&
+          resultScore2 !== null &&
+          predictedScore2 === resultScore2
+        ) {
+          points += 1
+          goalPoints += 1
+        }
+      })
+
+      const email = usersByUid[userId]?.email || ''
+      const nickname = usersByUid[userId]?.nickname || ''
+
+      return {
+        userId,
+        email,
+        nickname,
+        points,
+        winnerPoints,
+        goalPoints,
+        predictionsCount: predictionList.length,
+        resolvedMatchesCount: predictionList.filter(prediction => {
+          const matchId = String(prediction?.matchId || '').trim()
+          return Boolean(matchId && resultForMatch(matchId)?.winner)
+        }).length
+      }
+    }
+  )
+
+  return entries.sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points
+    if (b.winnerPoints !== a.winnerPoints)
+      return b.winnerPoints - a.winnerPoints
+    if (b.goalPoints !== a.goalPoints) return b.goalPoints - a.goalPoints
+    return String(a.email || a.userId).localeCompare(
+      String(b.email || b.userId)
+    )
+  })
+}
+
 export const getAllUsers = async () => {
   const usersSnapshot = await get(ref(db, 'users'))
   if (!usersSnapshot.exists()) return []
@@ -674,6 +809,7 @@ export const removeRegisteredUserData = async (user, userId) => {
 
   const updates_obj = {
     [`predictions/${userId}`]: null,
+    [`knockout_predictions/${userId}`]: null,
     [`tournamentWinnerBets/${userId}`]: null,
     [`users/${userId}`]: null
   }
@@ -683,6 +819,7 @@ export const removeRegisteredUserData = async (user, userId) => {
   // Best effort cleanup in case stale child keys remain.
   await Promise.all([
     remove(ref(db, `predictions/${userId}`)),
+    remove(ref(db, `knockout_predictions/${userId}`)),
     remove(ref(db, `tournamentWinnerBets/${userId}`)),
     remove(ref(db, `users/${userId}`))
   ])
@@ -694,14 +831,16 @@ export const getBetLocks = async () => {
   if (!snapshot.exists()) {
     return {
       matchesLockedAt: '',
-      winnerLockedAt: ''
+      winnerLockedAt: '',
+      knockoutLockedAt: ''
     }
   }
 
   const value = snapshot.val() || {}
   return {
     matchesLockedAt: String(value.matchesLockedAt || ''),
-    winnerLockedAt: String(value.winnerLockedAt || '')
+    winnerLockedAt: String(value.winnerLockedAt || ''),
+    knockoutLockedAt: String(value.knockoutLockedAt || '')
   }
 }
 
@@ -714,6 +853,7 @@ export const setBetLocks = async (user, locks = {}) => {
   const payload = {
     matchesLockedAt: String(locks.matchesLockedAt || '').trim(),
     winnerLockedAt: String(locks.winnerLockedAt || '').trim(),
+    knockoutLockedAt: String(locks.knockoutLockedAt || '').trim(),
     updatedAt: new Date().toISOString(),
     updatedByUid: user?.uid || '',
     updatedByEmail: user?.email || ''
@@ -725,8 +865,8 @@ export const setBetLocks = async (user, locks = {}) => {
     titleSv: 'Låsningstider uppdaterade',
     titleEn: 'Bet lock times updated',
     messageSv:
-      'Admin uppdaterade låsningstiderna för matchtips och vinnartips.',
-    messageEn: 'Admin updated lock times for match bets and winner bets.',
+      'Admin uppdaterade låsningstiderna för matchtips, vinnartips och slutspelstips.',
+    messageEn: 'Admin updated lock times for match, winner, and knockout bets.',
     link: 'bets.html'
   })
   return payload

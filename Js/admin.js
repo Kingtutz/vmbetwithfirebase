@@ -21,9 +21,11 @@ import {
   updateUserEmail,
   updateUserPassword
 } from './firebase.js'
+import { knockoutData } from './knockout-data.js'
 import { initI18n, onLanguageChange, t, translateTeamName } from './i18n.js'
 
 const matchesContainer = document.getElementById('matches')
+const knockoutResultsContainer = document.getElementById('knockoutResults')
 const userEmail = document.getElementById('userEmail')
 const logoutBtn = document.getElementById('logoutBtn')
 const adminNotice = document.getElementById('adminNotice')
@@ -37,6 +39,7 @@ const syncLiveBtn = document.getElementById('syncLiveBtn')
 const apiSyncStatus = document.getElementById('apiSyncStatus')
 const matchesLockAtInput = document.getElementById('matchesLockAt')
 const winnerLockAtInput = document.getElementById('winnerLockAt')
+const knockoutLockAtInput = document.getElementById('knockoutLockAt')
 const saveLocksBtn = document.getElementById('saveLocksBtn')
 const clearLocksBtn = document.getElementById('clearLocksBtn')
 const locksStatus = document.getElementById('locksStatus')
@@ -49,6 +52,7 @@ const saveWinnerResultBtn = document.getElementById('saveWinnerResultBtn')
 const winnerResultStatus = document.getElementById('winnerResultStatus')
 const winnerPayoutSummary = document.getElementById('winnerPayoutSummary')
 const winnerPayoutWinners = document.getElementById('winnerPayoutWinners')
+const knockoutResultsStatus = document.getElementById('knockoutResultsStatus')
 const compactToggle = document.getElementById('compactToggle')
 
 let currentUser = null
@@ -61,16 +65,68 @@ let isRemovingUser = false
 let roundCollapsed = {}
 let isSyncingLive = false
 let isSavingLocks = false
-let betLocks = { matchesLockedAt: '', winnerLockedAt: '' }
+let betLocks = { matchesLockedAt: '', winnerLockedAt: '', knockoutLockedAt: '' }
 let pickDistributionVisibility = { audience: 'admin' }
 let allWinnerBets = []
+let allKnockoutResults = {}
 let winnerResult = null
 let isSavingWinnerResult = false
 let isSavingPickVisibility = false
+let isSavingKnockoutResult = false
 const COMPACT_MODE_KEY = 'adminCompactMode'
 let compactMode = window.localStorage.getItem(COMPACT_MODE_KEY) !== 'off'
 
 const WINNER_BET_AMOUNT = 50
+
+const buildKnockoutMatches = () => [
+  ...knockoutData.round32.slice(0, 8).map((match, index) => ({
+    id: `round32-left_${index}`,
+    round: 'Round of 32 - Left',
+    ...match
+  })),
+  ...knockoutData.round32.slice(8, 16).map((match, index) => ({
+    id: `round32-right_${index}`,
+    round: 'Round of 32 - Right',
+    ...match
+  })),
+  ...knockoutData.round16.slice(0, 4).map((match, index) => ({
+    id: `round16-left_${index}`,
+    round: 'Round of 16 - Left',
+    ...match
+  })),
+  ...knockoutData.round16.slice(4, 8).map((match, index) => ({
+    id: `round16-right_${index}`,
+    round: 'Round of 16 - Right',
+    ...match
+  })),
+  ...knockoutData.quarterfinals.slice(0, 2).map((match, index) => ({
+    id: `quarterfinals-left_${index}`,
+    round: 'Quarterfinals - Left',
+    ...match
+  })),
+  ...knockoutData.quarterfinals.slice(2, 4).map((match, index) => ({
+    id: `quarterfinals-right_${index}`,
+    round: 'Quarterfinals - Right',
+    ...match
+  })),
+  ...knockoutData.semifinals.slice(0, 1).map((match, index) => ({
+    id: `semifinals-left_${index}`,
+    round: 'Semifinals - Left',
+    ...match
+  })),
+  ...knockoutData.semifinals.slice(1, 2).map((match, index) => ({
+    id: `semifinals-right_${index}`,
+    round: 'Semifinals - Right',
+    ...match
+  })),
+  ...knockoutData.final.map((match, index) => ({
+    id: `final_${index}`,
+    round: 'Final',
+    ...match
+  }))
+]
+
+const knockoutMatches = buildKnockoutMatches()
 
 initI18n()
 
@@ -236,6 +292,11 @@ const setWinnerResultStatus = message => {
   winnerResultStatus.textContent = message
 }
 
+const setKnockoutResultsStatus = message => {
+  if (!knockoutResultsStatus) return
+  knockoutResultsStatus.textContent = message
+}
+
 const getAvailableTeams = () =>
   [...new Set(allMatches.flatMap(match => [match.team1, match.team2]))]
     .filter(Boolean)
@@ -394,6 +455,11 @@ const renderLockInputs = () => {
     winnerLockAtInput.disabled = isSavingLocks
   }
 
+  if (knockoutLockAtInput) {
+    knockoutLockAtInput.value = toDateTimeLocalValue(betLocks.knockoutLockedAt)
+    knockoutLockAtInput.disabled = isSavingLocks
+  }
+
   if (saveLocksBtn) saveLocksBtn.disabled = isSavingLocks
   if (clearLocksBtn) clearLocksBtn.disabled = isSavingLocks
 }
@@ -405,7 +471,8 @@ const saveLockSettings = async payload => {
     const saved = await setBetLocks(currentUser, payload)
     betLocks = {
       matchesLockedAt: saved.matchesLockedAt || '',
-      winnerLockedAt: saved.winnerLockedAt || ''
+      winnerLockedAt: saved.winnerLockedAt || '',
+      knockoutLockedAt: saved.knockoutLockedAt || ''
     }
     renderLockInputs()
     setLocksStatus(t('admin.locksSaved'))
@@ -423,12 +490,17 @@ const initializeLockSettings = () => {
   saveLocksBtn.addEventListener('click', async () => {
     await saveLockSettings({
       matchesLockedAt: toIsoOrEmpty(matchesLockAtInput?.value),
-      winnerLockedAt: toIsoOrEmpty(winnerLockAtInput?.value)
+      winnerLockedAt: toIsoOrEmpty(winnerLockAtInput?.value),
+      knockoutLockedAt: toIsoOrEmpty(knockoutLockAtInput?.value)
     })
   })
 
   clearLocksBtn.addEventListener('click', async () => {
-    await saveLockSettings({ matchesLockedAt: '', winnerLockedAt: '' })
+    await saveLockSettings({
+      matchesLockedAt: '',
+      winnerLockedAt: '',
+      knockoutLockedAt: ''
+    })
     setLocksStatus(t('admin.locksCleared'))
   })
 }
@@ -734,6 +806,95 @@ const renderMatchCard = match => {
   `
 }
 
+const renderKnockoutMatchCard = match => {
+  const result = allKnockoutResults[match.id]
+  const winner = result?.winner
+  const score1 = Number.isFinite(Number(result?.score1))
+    ? Number(result.score1)
+    : ''
+  const score2 = Number.isFinite(Number(result?.score2))
+    ? Number(result.score2)
+    : ''
+
+  return `
+    <article class="match-card">
+      <div class="match-header">
+        <div>${match.date ?? ''} ${match.time ?? ''}</div>
+        <div>${match.round ?? ''}</div>
+      </div>
+      <div class="match-content">
+        <div class="teams">
+          <span class="team-name">${translateTeamName(match.team1)}</span>
+          <span class="vs">VS</span>
+          <span class="team-name">${translateTeamName(match.team2)}</span>
+        </div>
+        <div class="score-inputs">
+          <label class="score-field">
+            <span>${translateTeamName(match.team1)}</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              class="knockout-score-input"
+              data-score-side="team1"
+              data-match-id="${match.id}"
+              value="${score1}"
+              ${isSavingKnockoutResult ? 'disabled' : ''}
+            />
+          </label>
+          <label class="score-field">
+            <span>${translateTeamName(match.team2)}</span>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              class="knockout-score-input"
+              data-score-side="team2"
+              data-match-id="${match.id}"
+              value="${score2}"
+              ${isSavingKnockoutResult ? 'disabled' : ''}
+            />
+          </label>
+        </div>
+        <div class="winner-buttons">
+          <button class="winner-btn knockout-winner-btn ${
+            winner === 'team1' ? 'active' : ''
+          }" data-match-id="${match.id}" data-winner="team1" ${
+    isSavingKnockoutResult ? 'disabled' : ''
+  }>
+            ${translateTeamName(match.team1)}
+          </button>
+          <button class="winner-btn knockout-winner-btn ${
+            winner === 'draw' ? 'active' : ''
+          }" data-match-id="${match.id}" data-winner="draw" ${
+    isSavingKnockoutResult ? 'disabled' : ''
+  }>
+            ${t('common.draw')}
+          </button>
+          <button class="winner-btn knockout-winner-btn ${
+            winner === 'team2' ? 'active' : ''
+          }" data-match-id="${match.id}" data-winner="team2" ${
+    isSavingKnockoutResult ? 'disabled' : ''
+  }>
+            ${translateTeamName(match.team2)}
+          </button>
+        </div>
+        <button
+          class="api-btn knockout-save-btn"
+          type="button"
+          data-match-id="${match.id}"
+          ${isSavingKnockoutResult ? 'disabled' : ''}
+        >
+          Save score
+        </button>
+        <div class="current-winner">${t('common.currentWinner', {
+          winner: winnerLabel(winner, match)
+        })}</div>
+      </div>
+    </article>
+  `
+}
+
 const getGroupedMatches = matches => {
   const grouped = {}
 
@@ -847,6 +1008,92 @@ const attachWinnerHandlers = () => {
   })
 }
 
+const attachKnockoutWinnerHandlers = () => {
+  document.querySelectorAll('.knockout-winner-btn').forEach(btn => {
+    btn.addEventListener('click', async event => {
+      event.stopPropagation()
+
+      const matchId = btn.dataset.matchId
+      const winner = btn.dataset.winner
+      if (!matchId || !winner || isSavingKnockoutResult) return
+
+      try {
+        isSavingKnockoutResult = true
+        renderKnockoutMatches()
+        const payload = await setMatchWinner(
+          currentUser,
+          `knockout-${matchId}`,
+          winner
+        )
+        allKnockoutResults[matchId] = payload
+        adminNotice.style.display = 'none'
+      } catch (error) {
+        adminNotice.style.display = 'block'
+        adminNotice.textContent =
+          error.message || 'Could not save knockout result'
+      } finally {
+        isSavingKnockoutResult = false
+        renderKnockoutMatches()
+      }
+    })
+  })
+}
+
+const parseKnockoutScore = value => {
+  const parsed = Number.parseInt(String(value || '').trim(), 10)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0
+}
+
+const resolveKnockoutWinner = (score1, score2, fallbackWinner) => {
+  if (score1 > score2) return 'team1'
+  if (score2 > score1) return 'team2'
+  return fallbackWinner || 'draw'
+}
+
+const attachKnockoutScoreHandlers = () => {
+  document.querySelectorAll('.knockout-save-btn').forEach(btn => {
+    btn.addEventListener('click', async event => {
+      event.stopPropagation()
+
+      const matchId = btn.dataset.matchId
+      if (!matchId || isSavingKnockoutResult) return
+
+      const card = btn.closest('.match-card')
+      const score1Input = card?.querySelector(
+        '.knockout-score-input[data-score-side="team1"]'
+      )
+      const score2Input = card?.querySelector(
+        '.knockout-score-input[data-score-side="team2"]'
+      )
+      const result = allKnockoutResults[matchId] || {}
+      const score1 = parseKnockoutScore(score1Input?.value)
+      const score2 = parseKnockoutScore(score2Input?.value)
+      const winner = resolveKnockoutWinner(score1, score2, result.winner)
+
+      try {
+        isSavingKnockoutResult = true
+        renderKnockoutMatches()
+        const payload = await setMatchWinner(
+          currentUser,
+          `knockout-${matchId}`,
+          winner,
+          { score1, score2 }
+        )
+        allKnockoutResults[matchId] = payload
+        setKnockoutResultsStatus('Knockout score saved')
+        adminNotice.style.display = 'none'
+      } catch (error) {
+        adminNotice.style.display = 'block'
+        adminNotice.textContent =
+          error.message || 'Could not save knockout score'
+      } finally {
+        isSavingKnockoutResult = false
+        renderKnockoutMatches()
+      }
+    })
+  })
+}
+
 const renderMatches = matches => {
   if (!matches.length) {
     matchesContainer.innerHTML = `<p>${t('admin.noMatchesFound')}</p>`
@@ -862,6 +1109,22 @@ const renderMatches = matches => {
 
   attachRoundToggleHandlers()
   attachWinnerHandlers()
+}
+
+const renderKnockoutMatches = () => {
+  if (!knockoutResultsContainer) return
+
+  if (!knockoutMatches.length) {
+    knockoutResultsContainer.innerHTML = '<p>No knockout matches found.</p>'
+    return
+  }
+
+  knockoutResultsContainer.innerHTML = knockoutMatches
+    .map(renderKnockoutMatchCard)
+    .join('')
+
+  attachKnockoutWinnerHandlers()
+  attachKnockoutScoreHandlers()
 }
 
 const renderUsers = () => {
@@ -1060,9 +1323,23 @@ const loadPage = async () => {
   ])
 
   allMatches = matches
-  allResults = results || {}
+  const resultEntries = Object.entries(results || {})
+  allResults = Object.fromEntries(
+    resultEntries.filter(
+      ([matchId]) => !String(matchId).startsWith('knockout-')
+    )
+  )
+  allKnockoutResults = Object.fromEntries(
+    resultEntries
+      .filter(([matchId]) => String(matchId).startsWith('knockout-'))
+      .map(([matchId, payload]) => [matchId.replace('knockout-', ''), payload])
+  )
   allUsers = users || []
-  betLocks = locks || { matchesLockedAt: '', winnerLockedAt: '' }
+  betLocks = locks || {
+    matchesLockedAt: '',
+    winnerLockedAt: '',
+    knockoutLockedAt: ''
+  }
   allWinnerBets = winnerBets || []
   winnerResult = winnerResultPayload || null
   pickDistributionVisibility = pickVisibility || { audience: 'admin' }
@@ -1087,6 +1364,7 @@ const loadPage = async () => {
 
   adminNotice.style.display = 'none'
   renderMatches(allMatches)
+  renderKnockoutMatches()
   renderUsers()
 }
 

@@ -387,6 +387,48 @@ body {
   white-space: nowrap;
 }
 
+.score-inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.score-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: #666;
+}
+
+.knockout-score-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.knockout-score-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.knockout-save-btn {
+  align-self: flex-start;
+}
+
+.compact-mode .score-inputs {
+  gap: 6px;
+}
+
+.compact-mode .knockout-score-input {
+  padding: 6px 8px;
+  font-size: 11px;
+}
+
 .compact-mode .vs {
   font-size: 10px;
 }
@@ -512,6 +554,10 @@ body {
   .winner-buttons {
     flex-direction: column;
     gap: 4px;
+  }
+
+  .score-inputs {
+    grid-template-columns: 1fr;
   }
 
   .winner-btn {
