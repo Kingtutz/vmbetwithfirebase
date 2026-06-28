@@ -149,6 +149,7 @@ let currentUser = null
 let userPredictions = {}
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '', knockoutLockedAt: '' }
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
+let bracketConnectionFrame = null
 
 if (adminNavLink) {
   adminNavLink.style.display = 'none'
@@ -238,6 +239,8 @@ document.addEventListener('DOMContentLoaded', () => {
     await loadUserPredictions()
     initializeBracket()
   })
+
+  window.addEventListener('resize', scheduleBracketConnections)
 })
 
 // Initialize the bracket display
@@ -308,6 +311,7 @@ function initializeBracket () {
   // Restore advanced teams from saved predictions
   restoreAdvancedTeams()
   updateThirdPlaceMatch()
+  scheduleBracketConnections()
 }
 
 // Render a round of matches
@@ -508,6 +512,7 @@ function selectWinner (matchId, winner, matchDiv) {
   }
 
   updateThirdPlaceMatch()
+  scheduleBracketConnections()
 }
 
 // Get the next round container and match info
@@ -671,6 +676,163 @@ function updateThirdPlaceMatch () {
     teamNameSpans[1].textContent = rightLoser
     teamNameSpans[1].title = rightLoser
   }
+}
+
+function scheduleBracketConnections () {
+  if (bracketConnectionFrame) {
+    cancelAnimationFrame(bracketConnectionFrame)
+  }
+
+  bracketConnectionFrame = requestAnimationFrame(() => {
+    bracketConnectionFrame = null
+    renderBracketConnections()
+  })
+}
+
+function renderBracketConnections () {
+  const container = document.querySelector('.bracket-container')
+  if (!container) return
+
+  let svg = container.querySelector('.bracket-connections')
+  if (!svg) {
+    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.classList.add('bracket-connections')
+    container.prepend(svg)
+  }
+
+  const width = Math.max(container.scrollWidth, container.clientWidth)
+  const height = Math.max(container.scrollHeight, container.clientHeight)
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`)
+  svg.setAttribute('width', String(width))
+  svg.setAttribute('height', String(height))
+  svg.innerHTML = ''
+
+  const ns = 'http://www.w3.org/2000/svg'
+  const containerRect = container.getBoundingClientRect()
+
+  const pointFor = (element, anchor) => {
+    const rect = element.getBoundingClientRect()
+    const left = rect.left - containerRect.left + container.scrollLeft
+    const top = rect.top - containerRect.top + container.scrollTop
+    const right = left + rect.width
+    const bottom = top + rect.height
+    const centerX = left + rect.width / 2
+    const centerY = top + rect.height / 2
+
+    switch (anchor) {
+      case 'left':
+        return { x: left, y: centerY }
+      case 'right':
+        return { x: right, y: centerY }
+      case 'top':
+        return { x: centerX, y: top }
+      case 'bottom':
+        return { x: centerX, y: bottom }
+      default:
+        return { x: centerX, y: centerY }
+    }
+  }
+
+  const addPath = (fromEl, fromAnchor, toEl, toAnchor, extraClass = '') => {
+    if (!fromEl || !toEl) return
+
+    const start = pointFor(fromEl, fromAnchor)
+    const end = pointFor(toEl, toAnchor)
+    const midX = (start.x + end.x) / 2
+
+    const path = document.createElementNS(ns, 'path')
+    path.setAttribute('d', `M ${start.x} ${start.y} H ${midX} V ${end.y} H ${end.x}`)
+    if (extraClass) path.setAttribute('class', extraClass)
+    svg.appendChild(path)
+  }
+
+  const addVerticalPath = (fromEl, toEl, extraClass = '') => {
+    if (!fromEl || !toEl) return
+
+    const start = pointFor(fromEl, 'bottom')
+    const end = pointFor(toEl, 'top')
+    const midY = (start.y + end.y) / 2
+
+    const path = document.createElementNS(ns, 'path')
+    path.setAttribute('d', `M ${start.x} ${start.y} V ${midY} H ${end.x} V ${end.y}`)
+    if (extraClass) path.setAttribute('class', extraClass)
+    svg.appendChild(path)
+  }
+
+  const connectSeries = (sourceRound, targetRound, sourceAnchor, targetAnchor, pairMap) => {
+    pairMap.forEach(([sourceIndex, targetIndex]) => {
+      const sourceEl = document.getElementById(`${sourceRound}_${sourceIndex}`)
+      const targetEl = document.getElementById(`${targetRound}_${targetIndex}`)
+      addPath(sourceEl, sourceAnchor, targetEl, targetAnchor)
+    })
+  }
+
+  connectSeries('round32-left', 'round16-left', 'right', 'left', [
+    [0, 0],
+    [1, 0],
+    [2, 1],
+    [3, 1],
+    [4, 2],
+    [5, 2],
+    [6, 3],
+    [7, 3]
+  ])
+  connectSeries('round32-right', 'round16-right', 'left', 'right', [
+    [0, 0],
+    [1, 0],
+    [2, 1],
+    [3, 1],
+    [4, 2],
+    [5, 2],
+    [6, 3],
+    [7, 3]
+  ])
+
+  connectSeries('round16-left', 'quarterfinals-left', 'right', 'left', [
+    [0, 0],
+    [1, 0],
+    [2, 1],
+    [3, 1]
+  ])
+  connectSeries('round16-right', 'quarterfinals-right', 'left', 'right', [
+    [0, 0],
+    [1, 0],
+    [2, 1],
+    [3, 1]
+  ])
+
+  connectSeries('quarterfinals-left', 'semifinals-left', 'right', 'left', [
+    [0, 0],
+    [1, 0]
+  ])
+  connectSeries('quarterfinals-right', 'semifinals-right', 'left', 'right', [
+    [0, 0],
+    [1, 0]
+  ])
+
+  addPath(
+    document.getElementById('semifinals-left_0'),
+    'right',
+    document.getElementById('final_0'),
+    'left'
+  )
+  addPath(
+    document.getElementById('semifinals-right_0'),
+    'left',
+    document.getElementById('final_0'),
+    'right'
+  )
+
+  addVerticalPath(
+    document.getElementById('semifinals-left_0'),
+    document.getElementById('third-place_0'),
+    'third-place'
+  )
+  addVerticalPath(
+    document.getElementById('semifinals-right_0'),
+    document.getElementById('third-place_0'),
+    'third-place'
+  )
 }
 
 // Find a match in a round by index
