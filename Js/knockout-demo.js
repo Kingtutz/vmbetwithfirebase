@@ -1,4 +1,4 @@
-import { auth, db, getBetLocks } from './firebase.js'
+import { auth, db, getBetLocks, isAdminUser } from './firebase.js'
 import {
   get,
   ref,
@@ -135,6 +135,17 @@ const knockoutData = {
 let currentUser = null
 let userPredictions = {}
 let betLocks = { matchesLockedAt: '', winnerLockedAt: '', knockoutLockedAt: '' }
+const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
+
+if (adminNavLink) {
+  adminNavLink.style.display = 'none'
+}
+
+async function updateAdminTabVisibility (user) {
+  if (!adminNavLink) return
+  const admin = await isAdminUser(user)
+  adminNavLink.style.display = admin ? '' : 'none'
+}
 
 function isKnockoutLockedByAdmin () {
   const lockAt = String(betLocks.knockoutLockedAt || '')
@@ -156,9 +167,7 @@ function renderLockState () {
 
   if (lockStatus) {
     lockStatus.style.display = locked ? 'block' : 'none'
-    lockStatus.textContent = locked
-      ? 'Knockout bets are locked by admin.'
-      : ''
+    lockStatus.textContent = locked ? 'Knockout bets are locked by admin.' : ''
   }
 }
 
@@ -206,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     currentUser = user
+    await updateAdminTabVisibility(user)
     const emailEl = document.getElementById('userEmail')
     if (emailEl) {
       emailEl.textContent = user.email || 'Knockout predictions'
@@ -404,10 +414,10 @@ function createMatchElement (match, matchId) {
     .addEventListener('dblclick', event => {
       event.preventDefault()
       event.stopPropagation()
-        if (isKnockoutLockedByAdmin()) {
-          showToast('Knockout bets are locked by admin', 'error')
-          return
-        }
+      if (isKnockoutLockedByAdmin()) {
+        showToast('Knockout bets are locked by admin', 'error')
+        return
+      }
       const score = prompt(`Enter score for ${match.team1}:`, score1)
       if (score !== null && score !== '') {
         const pred = userPredictions[matchId] || {}
@@ -423,10 +433,10 @@ function createMatchElement (match, matchId) {
     .addEventListener('dblclick', event => {
       event.preventDefault()
       event.stopPropagation()
-        if (isKnockoutLockedByAdmin()) {
-          showToast('Knockout bets are locked by admin', 'error')
-          return
-        }
+      if (isKnockoutLockedByAdmin()) {
+        showToast('Knockout bets are locked by admin', 'error')
+        return
+      }
       const score = prompt(`Enter score for ${match.team2}:`, score2)
       if (score !== null && score !== '') {
         const pred = userPredictions[matchId] || {}

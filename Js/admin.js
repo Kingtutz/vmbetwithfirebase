@@ -1297,10 +1297,7 @@ const attachRemoveUserHandlers = () => {
 const loadPage = async () => {
   const admin = await isAdminUser(currentUser)
   if (!admin) {
-    adminNotice.style.display = 'block'
-    adminNotice.textContent = t('admin.notAdmin')
-    matchesContainer.innerHTML = ''
-    usersList.innerHTML = ''
+    window.location.href = 'index.html'
     return
   }
 
