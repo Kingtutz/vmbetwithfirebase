@@ -657,9 +657,9 @@ export const getKnockoutLeaderboard = async () => {
     return resultsByMatch[matchId] || null
   }
 
-  const toNumber = value => {
+  const toNumber = (value, defaultVal = null) => {
     const parsed = Number.parseInt(String(value ?? '').trim(), 10)
-    return Number.isFinite(parsed) ? parsed : null
+    return Number.isFinite(parsed) ? parsed : defaultVal
   }
 
   const normalizeWinnerValue = value => {
@@ -699,10 +699,10 @@ export const getKnockoutLeaderboard = async () => {
         const result = resultForMatch(matchId)
         if (!result || !result.winner) return
 
-        const predictedScore1 = toNumber(prediction.score1)
-        const predictedScore2 = toNumber(prediction.score2)
-        const resultScore1 = toNumber(result.score1)
-        const resultScore2 = toNumber(result.score2)
+        const predictedScore1 = toNumber(prediction.score1, 0)
+        const predictedScore2 = toNumber(prediction.score2, 0)
+        const resultScore1 = toNumber(result.score1, 0)
+        const resultScore2 = toNumber(result.score2, 0)
 
         const predictedWinner =
           normalizeWinnerValue(prediction.winner) ||
@@ -720,20 +720,12 @@ export const getKnockoutLeaderboard = async () => {
           winnerPoints += 1
         }
 
-        if (
-          predictedScore1 !== null &&
-          resultScore1 !== null &&
-          predictedScore1 === resultScore1
-        ) {
+        if (predictedScore1 === resultScore1) {
           points += 1
           goalPoints += 1
         }
 
-        if (
-          predictedScore2 !== null &&
-          resultScore2 !== null &&
-          predictedScore2 === resultScore2
-        ) {
+        if (predictedScore2 === resultScore2) {
           points += 1
           goalPoints += 1
         }

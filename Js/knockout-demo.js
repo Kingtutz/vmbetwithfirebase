@@ -16,16 +16,22 @@ import {
 const knockoutData = {
   round32: [
     {
-      team1: 'South Africa',
-      team2: 'Canada',
-      date: 'June 28',
-      location: 'Inglewood'
-    },
-    {
       team1: 'Germany',
       team2: 'Paraguay',
       date: 'June 29',
       location: 'Houston'
+    },
+    {
+      team1: 'France',
+      team2: 'Sweden',
+      date: 'June 30',
+      location: 'Arlington'
+    },
+    {
+      team1: 'South Africa',
+      team2: 'Canada',
+      date: 'June 28',
+      location: 'Inglewood'
     },
     {
       team1: 'Netherlands',
@@ -33,12 +39,30 @@ const knockoutData = {
       date: 'June 29',
       location: 'Guadalupe'
     },
-    { team1: 'Brazil', team2: 'Japan', date: 'June 29', location: 'Houston' },
     {
-      team1: 'France',
-      team2: 'Sweden',
-      date: 'June 30',
-      location: 'Arlington'
+      team1: 'Portugal',
+      team2: 'Croatia',
+      date: 'July 2',
+      location: 'Inglewood'
+    },
+    {
+      team1: 'Spain',
+      team2: 'Austria',
+      date: 'July 2',
+      location: 'Santa Clara'
+    },
+    {
+      team1: 'United States',
+      team2: 'Bosnia and Herzegovina',
+      date: 'July 1',
+      location: 'Seattle'
+    },
+    { team1: 'Belgium', team2: 'Senegal', date: 'July 1', location: 'Seattle' },
+    {
+      team1: 'Brazil',
+      team2: 'Japan',
+      date: 'June 29',
+      location: 'Houston'
     },
     {
       team1: 'Ivory Coast',
@@ -58,30 +82,11 @@ const knockoutData = {
       date: 'July 1',
       location: 'Atlanta'
     },
-    { team1: 'Belgium', team2: 'Senegal', date: 'July 1', location: 'Seattle' },
     {
-      team1: 'United States',
-      team2: 'Bosnia and Herzegovina',
-      date: 'July 1',
-      location: 'Seattle'
-    },
-    {
-      team1: 'Spain',
-      team2: 'Austria',
-      date: 'July 2',
-      location: 'Santa Clara'
-    },
-    {
-      team1: 'Portugal',
-      team2: 'Croatia',
-      date: 'July 2',
-      location: 'Inglewood'
-    },
-    {
-      team1: 'Switzerland',
-      team2: 'Algeria',
-      date: 'July 2',
-      location: 'Vancouver'
+      team1: 'Argentina',
+      team2: 'Cape Verde',
+      date: 'July 3',
+      location: 'Arlington'
     },
     {
       team1: 'Australia',
@@ -90,10 +95,10 @@ const knockoutData = {
       location: 'Vancouver'
     },
     {
-      team1: 'Argentina',
-      team2: 'Cape Verde',
-      date: 'July 3',
-      location: 'Arlington'
+      team1: 'Switzerland',
+      team2: 'Algeria',
+      date: 'July 2',
+      location: 'Vancouver'
     },
     {
       team1: 'Colombia',
@@ -103,12 +108,12 @@ const knockoutData = {
     }
   ],
   round16: [
-    { team1: 'W73', team2: 'W75', date: 'July 4', location: 'Houston' },
     { team1: 'W74', team2: 'W77', date: 'July 4', location: 'Philadelphia' },
-    { team1: 'W76', team2: 'W78', date: 'July 5', location: 'East Rutherford' },
-    { team1: 'W79', team2: 'W80', date: 'July 5', location: 'Mexico City' },
+    { team1: 'W73', team2: 'W75', date: 'July 4', location: 'Houston' },
     { team1: 'W83', team2: 'W84', date: 'July 6', location: 'Mexico City' },
     { team1: 'W81', team2: 'W82', date: 'July 6', location: 'Seattle' },
+    { team1: 'W76', team2: 'W78', date: 'July 5', location: 'East Rutherford' },
+    { team1: 'W79', team2: 'W80', date: 'July 5', location: 'Mexico City' },
     { team1: 'W86', team2: 'W88', date: 'July 7', location: 'Atlanta' },
     { team1: 'W85', team2: 'W87', date: 'July 7', location: 'Vancouver' }
   ],
@@ -127,6 +132,14 @@ const knockoutData = {
       team1: 'W101',
       team2: 'W102',
       date: 'July 19',
+      location: 'East Rutherford'
+    }
+  ],
+  thirdPlace: [
+    {
+      team1: 'RU101',
+      team2: 'RU102',
+      date: 'July 18',
       location: 'East Rutherford'
     }
   ]
@@ -259,6 +272,12 @@ function initializeBracket () {
 
   // CENTER (Final)
   renderRound('final', knockoutData.final, 'final', 'Final')
+  renderRound(
+    'third-place',
+    knockoutData.thirdPlace,
+    'third-place',
+    'Play-off for third place'
+  )
 
   // RIGHT SIDE (flows right to left to center)
   renderRound(
@@ -288,6 +307,7 @@ function initializeBracket () {
 
   // Restore advanced teams from saved predictions
   restoreAdvancedTeams()
+  updateThirdPlaceMatch()
 }
 
 // Render a round of matches
@@ -409,43 +429,39 @@ function createMatchElement (match, matchId) {
   })
 
   // Click score bubble to edit score.
-  team1Div
-    .querySelector('.team-selector')
-    .addEventListener('click', event => {
-      event.preventDefault()
-      event.stopPropagation()
-      if (isKnockoutLockedByAdmin()) {
-        showToast('Knockout bets are locked by admin', 'error')
-        return
-      }
-      const score = prompt(`Enter score for ${match.team1}:`, score1)
-      if (score !== null && score !== '') {
-        const pred = userPredictions[matchId] || {}
-        pred.score1 = Math.max(0, parseInt(score) || 0)
-        userPredictions[matchId] = pred
-        team1Div.querySelector('.score').textContent = pred.score1
-        updateMatchStatus(matchDiv)
-      }
-    })
+  team1Div.querySelector('.team-selector').addEventListener('click', event => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (isKnockoutLockedByAdmin()) {
+      showToast('Knockout bets are locked by admin', 'error')
+      return
+    }
+    const score = prompt(`Enter score for ${match.team1}:`, score1)
+    if (score !== null && score !== '') {
+      const pred = userPredictions[matchId] || {}
+      pred.score1 = Math.max(0, parseInt(score) || 0)
+      userPredictions[matchId] = pred
+      team1Div.querySelector('.score').textContent = pred.score1
+      updateMatchStatus(matchDiv)
+    }
+  })
 
-  team2Div
-    .querySelector('.team-selector')
-    .addEventListener('click', event => {
-      event.preventDefault()
-      event.stopPropagation()
-      if (isKnockoutLockedByAdmin()) {
-        showToast('Knockout bets are locked by admin', 'error')
-        return
-      }
-      const score = prompt(`Enter score for ${match.team2}:`, score2)
-      if (score !== null && score !== '') {
-        const pred = userPredictions[matchId] || {}
-        pred.score2 = Math.max(0, parseInt(score) || 0)
-        userPredictions[matchId] = pred
-        team2Div.querySelector('.score').textContent = pred.score2
-        updateMatchStatus(matchDiv)
-      }
-    })
+  team2Div.querySelector('.team-selector').addEventListener('click', event => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (isKnockoutLockedByAdmin()) {
+      showToast('Knockout bets are locked by admin', 'error')
+      return
+    }
+    const score = prompt(`Enter score for ${match.team2}:`, score2)
+    if (score !== null && score !== '') {
+      const pred = userPredictions[matchId] || {}
+      pred.score2 = Math.max(0, parseInt(score) || 0)
+      userPredictions[matchId] = pred
+      team2Div.querySelector('.score').textContent = pred.score2
+      updateMatchStatus(matchDiv)
+    }
+  })
 
   updateMatchStatus(matchDiv)
   return matchDiv
@@ -490,6 +506,8 @@ function selectWinner (matchId, winner, matchDiv) {
     // Clear next round when selection is removed
     clearAdvancedTeam(matchId, currentRound)
   }
+
+  updateThirdPlaceMatch()
 }
 
 // Get the next round container and match info
@@ -611,6 +629,47 @@ function clearAdvancedTeam (matchId, currentRound) {
       teamNameSpan.textContent = originalTeam
       teamNameSpan.title = originalTeam
     }
+  }
+}
+
+function updateThirdPlaceMatch () {
+  const thirdPlaceContainer = document.getElementById('third-place')
+  if (!thirdPlaceContainer) return
+
+  const thirdPlaceMatch = thirdPlaceContainer.querySelector('.match-box')
+  if (!thirdPlaceMatch) return
+
+  const leftSemi = document.querySelector('#semifinals-left .match-box')
+  const rightSemi = document.querySelector('#semifinals-right .match-box')
+
+  const getLoserName = (roundId, matchBox, fallbackTeamIndex) => {
+    if (!matchBox) return null
+
+    const prediction = userPredictions[`${roundId}_0`] || {}
+    const teams = matchBox.querySelectorAll('.team-name')
+    const team1 = teams[0]?.textContent?.trim() || ''
+    const team2 = teams[1]?.textContent?.trim() || ''
+
+    if (prediction.winner === 1) return team2 || null
+    if (prediction.winner === 2) return team1 || null
+
+    const placeholder = knockoutData.thirdPlace[0]
+    return fallbackTeamIndex === 1
+      ? placeholder?.team1 || null
+      : placeholder?.team2 || null
+  }
+
+  const leftLoser = getLoserName('semifinals-left', leftSemi, 1)
+  const rightLoser = getLoserName('semifinals-right', rightSemi, 2)
+
+  const teamNameSpans = thirdPlaceMatch.querySelectorAll('.team-name')
+  if (teamNameSpans[0] && leftLoser) {
+    teamNameSpans[0].textContent = leftLoser
+    teamNameSpans[0].title = leftLoser
+  }
+  if (teamNameSpans[1] && rightLoser) {
+    teamNameSpans[1].textContent = rightLoser
+    teamNameSpans[1].title = rightLoser
   }
 }
 

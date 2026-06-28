@@ -54,6 +54,36 @@
       </section>
     </main>
 
+    <!-- Bracket prediction modal -->
+    <div
+      id="bracketModalBackdrop"
+      class="leaderboard-picks-backdrop"
+      style="display: none"
+      aria-hidden="true"
+    ></div>
+    <div
+      id="bracketModal"
+      class="leaderboard-picks-modal ko-bracket-modal"
+      style="display: none"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bracketModalTitle"
+    >
+      <div class="leaderboard-picks-modal-header">
+        <h3 class="leaderboard-picks-modal-title" id="bracketModalTitle">
+          Bracket Predictions
+        </h3>
+        <button
+          class="leaderboard-picks-close-btn"
+          id="bracketModalClose"
+          aria-label="Close"
+        >
+          ×
+        </button>
+      </div>
+      <div class="leaderboard-picks-modal-body" id="bracketModalBody"></div>
+    </div>
+
     <script type="module" src="Js/knockout-leaderboard.js"></script>
     <script>
       if (

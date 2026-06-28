@@ -397,3 +397,121 @@ body {
     padding: 12px;
   }
 }
+
+/* ── Knockout bracket modal ── */
+.leaderboard-row {
+  cursor: pointer;
+}
+
+.leaderboard-row:hover .player-name {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.ko-bracket-modal {
+  width: min(900px, calc(100vw - 16px));
+  max-height: min(88vh, 860px);
+}
+
+.ko-bracket-rounds {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.ko-bracket-round-section {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.ko-bracket-round-title {
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: #f5f2ec;
+  color: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.ko-bracket-match-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ko-bracket-match {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 8px 14px;
+  border-bottom: 1px solid #eee;
+  font-size: 13px;
+}
+
+.ko-bracket-match:last-child {
+  border-bottom: none;
+}
+
+.ko-bracket-team {
+  flex: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #444;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ko-bracket-team.winner-pick {
+  background: rgba(76, 175, 80, 0.12);
+  color: #1b5e20;
+  font-weight: 700;
+}
+
+.ko-bracket-vs {
+  flex: 0 0 28px;
+  text-align: center;
+  font-size: 11px;
+  color: #aaa;
+  font-weight: 600;
+}
+
+.ko-bracket-score {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #888;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+
+.ko-bracket-score-val {
+  background: #f0ede6;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-weight: 600;
+  color: var(--bg);
+}
+
+.ko-bracket-no-pick {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+@media (max-width: 600px) {
+  .ko-bracket-match {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ko-bracket-score {
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}

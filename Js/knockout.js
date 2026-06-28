@@ -1,34 +1,11 @@
-let auth = null
-let db = null
-let ref = null
-let get_ = null
-let set_ = null
-let onAuthStateChanged_ = null
-let signOut_ = null
-
-// Initialize Firebase asynchronously
-async function initializeFirebase() {
-  try {
-    const { auth: authImport, db: dbImport } = await import('./firebase.js')
-    auth = authImport
-    db = dbImport
-    
-    const firebaseDb = await import('https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js')
-    ref = firebaseDb.ref
-    get_ = firebaseDb.get
-    set_ = firebaseDb.set
-    
-    const firebaseAuth = await import('https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js')
-    onAuthStateChanged_ = firebaseAuth.onAuthStateChanged
-    signOut_ = firebaseAuth.signOut
-    
-    console.log('Firebase initialized successfully')
-    return true
-  } catch (error) {
-    console.warn('Firebase not available, running in demo mode:', error)
-    return false
-  }
-}
+import { auth, db } from './firebase.js'
+import {
+  ref,
+  get,
+  set,
+  onAuthStateChanged,
+  signOut
+} from 'https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js'
 
 // Tournament knockout structure with actual 2026 World Cup seeding
 const knockoutData = {
@@ -154,114 +131,53 @@ let currentUser = null
 let userPredictions = {}
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', async () => {
-  console.log('DOMContentLoaded - Initializing Firebase')
-  
-  const firebaseAvailable = await initializeFirebase()
-  
-  if (firebaseAvailable && onAuthStateChanged_) {
-    let authCheckTimeout = setTimeout(() => {
-      console.log('Auth check timeout - showing demo bracket')
+document.addEventListener('DOMContentLoaded', () => {
+  onAuthStateChanged(auth, async user => {
+    if (user) {
+      currentUser = user
+      document.getElementById('userEmail').textContent = user.email
+      await loadUserPredictions()
       initializeBracket()
-    }, 3000)
-    
-    onAuthStateChanged_(auth, async user => {
-      clearTimeout(authCheckTimeout)
-      console.log('Auth state changed:', user ? user.email : 'No user')
-      
-      if (user) {
-        currentUser = user
-        const emailEl = document.getElementById('userEmail')
-        if (emailEl) {
-          emailEl.textContent = user.email
-        }
-        
-        try {
-          await loadUserPredictions()
-          console.log('Predictions loaded:', userPredictions)
-          initializeBracket()
-          console.log('Bracket initialized')
-        } catch (error) {
-          console.error('Error initializing bracket:', error)
-          initializeBracket() // Show demo even on error
-        }
-      } else {
-        console.log('No user logged in - showing demo bracket')
-        const emailEl = document.getElementById('userEmail')
-        if (emailEl) {
-          emailEl.textContent = 'Demo Mode'
-        }
-        initializeBracket() // Show demo bracket
-      }
-    })
-  } else {
-    console.log('Firebase not available - showing demo bracket immediately')
-    const emailEl = document.getElementById('userEmail')
-    if (emailEl) {
-      emailEl.textContent = 'Demo Mode'
+    } else {
+      window.location.href = 'login.html'
     }
-    initializeBracket()
-  }
+  })
 
-  // Setup button listeners
   const logoutBtn = document.getElementById('logoutBtn')
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      if (firebaseAvailable && signOut_) {
-        signOut_(auth).then(() => {
-          window.location.href = 'login.html'
-        }).catch(error => {
-          console.error('Logout error:', error)
-          window.location.href = 'login.html'
-        })
-      } else {
+      signOut(auth).then(() => {
         window.location.href = 'login.html'
-      }
+      })
     })
   }
 
-  const saveBtn = document.getElementById('saveBtn')
-  if (saveBtn) {
-    saveBtn.addEventListener('click', savePredictions)
-  }
-  
-  const clearBtn = document.getElementById('clearBtn')
-  if (clearBtn) {
-    clearBtn.addEventListener('click', clearPredictions)
-  }
+  document.getElementById('saveBtn').addEventListener('click', savePredictions)
+  document
+    .getElementById('clearBtn')
+    .addEventListener('click', clearPredictions)
 })
 
 // Initialize the bracket display
-function initializeBracket() {
-  console.log('Initializing bracket with rounds:', Object.keys(knockoutData))
-  
-  renderRound('round32', knockoutData.round32, 'round32', 'Round of 32')
-  renderRound('round16', knockoutData.round16, 'round16', 'Round of 16')
-  renderRound('quarterfinals', knockoutData.quarterfinals, 'quarterfinals', 'Quarterfinals')
-  renderRound('semifinals', knockoutData.semifinals, 'semifinals', 'Semifinals')
-  renderRound('final', knockoutData.final, 'final', 'Final')
+function initializeBracket () {
+  renderRound('round32', knockoutData.round32, 'round32')
+  renderRound('round16', knockoutData.round16, 'round16')
+  renderRound('quarterfinals', knockoutData.quarterfinals, 'quarterfinals')
+  renderRound('semifinals', knockoutData.semifinals, 'semifinals')
+  renderRound('final', knockoutData.final, 'final')
 }
 
 // Render a round of matches
-function renderRound(containerId, matches, roundPrefix, roundName) {
+function renderRound (containerId, matches, roundPrefix) {
   const container = document.getElementById(containerId)
-  console.log(`Rendering ${roundName}:`, containerId, 'Container found:', !!container, 'Matches:', matches.length)
-  
-  if (!container) {
-    console.error(`Container not found: ${containerId}`)
-    return
-  }
+  if (!container) return
 
-  container.innerHTML = `<h3 style="color: #4caf50; text-align: center; margin-bottom: 1rem;">${roundName}</h3>`
+  container.innerHTML = ''
 
   matches.forEach((match, index) => {
-    try {
-      const matchId = `${roundPrefix}_${index}`
-      const matchDiv = createMatchElement(match, matchId)
-      container.appendChild(matchDiv)
-    } catch (error) {
-      console.error(`Error creating match ${roundPrefix}_${index}:`, error)
-    }
+    const matchId = `${roundPrefix}_${index}`
+    const matchDiv = createMatchElement(match, matchId)
+    container.appendChild(matchDiv)
   })
 }
 
@@ -386,15 +302,9 @@ function updateMatchStatus (matchDiv) {
 
 // Load user predictions from Firebase
 async function loadUserPredictions () {
-  if (!db || !get_ || !currentUser) {
-    console.log('Firebase not available or no user, skipping load')
-    userPredictions = {}
-    return
-  }
-  
   try {
     const userRef = ref(db, `knockout_predictions/${currentUser.uid}`)
-    const snapshot = await get_(userRef)
+    const snapshot = await get(userRef)
 
     if (snapshot.exists()) {
       userPredictions = snapshot.val()
@@ -409,20 +319,13 @@ async function loadUserPredictions () {
 
 // Save predictions to Firebase
 async function savePredictions () {
-  if (!db || !set_ || !currentUser) {
-    console.log('Firebase not available - saving to local storage')
-    localStorage.setItem('knockout_predictions', JSON.stringify(userPredictions))
-    showToast('Predictions saved locally (not synced to server)', 'success')
-    return
-  }
-  
   try {
     const saveBtn = document.getElementById('saveBtn')
     saveBtn.disabled = true
     saveBtn.textContent = 'Saving...'
 
     const userRef = ref(db, `knockout_predictions/${currentUser.uid}`)
-    await set_(userRef, userPredictions)
+    await set(userRef, userPredictions)
 
     saveBtn.disabled = false
     saveBtn.textContent = 'Save Predictions'
