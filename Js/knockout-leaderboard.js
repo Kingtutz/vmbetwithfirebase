@@ -5,7 +5,7 @@ import {
   logOut,
   onAuthChange,
   db
-} from './firebase.js'
+} from './firebase.js?v=20260629d'
 import {
   get,
   ref

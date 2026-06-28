@@ -683,18 +683,29 @@ export const getKnockoutLeaderboard = async () => {
 
   const resultForMatch = matchId => {
     const directResult = resultsByMatch[`knockout-${matchId}`]
-    if (directResult) return directResult
+    if (directResult) {
+      return { result: directResult, resultKey: `knockout-${matchId}` }
+    }
 
     const directUnprefixed = resultsByMatch[matchId]
-    if (directUnprefixed) return directUnprefixed
+    if (directUnprefixed) {
+      return { result: directUnprefixed, resultKey: matchId }
+    }
 
     const compatibleId = knockoutMatchIdCompatibilityMap[matchId]
     if (compatibleId) {
       const compatiblePrefixed = resultsByMatch[`knockout-${compatibleId}`]
-      if (compatiblePrefixed) return compatiblePrefixed
+      if (compatiblePrefixed) {
+        return {
+          result: compatiblePrefixed,
+          resultKey: `knockout-${compatibleId}`
+        }
+      }
 
       const compatibleUnprefixed = resultsByMatch[compatibleId]
-      if (compatibleUnprefixed) return compatibleUnprefixed
+      if (compatibleUnprefixed) {
+        return { result: compatibleUnprefixed, resultKey: compatibleId }
+      }
     }
 
     return null
@@ -727,7 +738,9 @@ export const getKnockoutLeaderboard = async () => {
     ([userId, userPredictions]) => {
       const predictionList = Object.entries(userPredictions || {}).map(
         ([matchId, prediction]) => ({
-          matchId: String(prediction?.matchId || matchId || '').trim(),
+          // Prefer the prediction object key since it is the persisted bracket slot.
+          // Some historical records contain stale embedded matchId values.
+          matchId: String(matchId || prediction?.matchId || '').trim(),
           ...prediction
         })
       )
@@ -735,13 +748,17 @@ export const getKnockoutLeaderboard = async () => {
       let winnerPoints = 0
       let goalPoints = 0
       let totalScorablePoints = 0
+      const bestByResultKey = new Map()
 
       predictionList.forEach(prediction => {
         const matchId = String(prediction?.matchId || '').trim()
         if (!matchId) return
 
-        const result = resultForMatch(matchId)
-        if (!result) return
+        const resolved = resultForMatch(matchId)
+        if (!resolved) return
+
+        const { result, resultKey } = resolved
+        if (!result || !resultKey) return
 
         const predictedScore1Raw = toNumber(prediction.score1, null)
         const predictedScore2Raw = toNumber(prediction.score2, null)
@@ -764,24 +781,41 @@ export const getKnockoutLeaderboard = async () => {
         const predictedWinnerFromField = normalizeWinnerValue(prediction.winner)
         const officialWinnerFromField = normalizeWinnerValue(result.winner)
 
-        const predictedWinner =
-          predictedWinnerFromScore || predictedWinnerFromField
-        const officialWinner =
-          officialWinnerFromScore || officialWinnerFromField
+        const resolveWinner = (winnerFromScore, winnerFromField) => {
+          // In knockout, drawn scores can still have a winner (penalties).
+          if (winnerFromScore === 'draw') {
+            if (winnerFromField === 'team1' || winnerFromField === 'team2') {
+              return winnerFromField
+            }
+            return 'draw'
+          }
+
+          return winnerFromScore || winnerFromField
+        }
+
+        const predictedWinner = resolveWinner(
+          predictedWinnerFromScore,
+          predictedWinnerFromField
+        )
+        const officialWinner = resolveWinner(
+          officialWinnerFromScore,
+          officialWinnerFromField
+        )
 
         if (!officialWinner) return
-
-        // 1 point for correct winner and 1 point for each correct goal value.
-        totalScorablePoints += 3
 
         const hasCorrectWinner =
           predictedWinner &&
           officialWinner &&
           predictedWinner === officialWinner
 
+        let winnerPoint = 0
+        let scorePoints = 0
+        let candidatePoints = 0
+
         if (hasCorrectWinner) {
-          points += 1
-          winnerPoints += 1
+          winnerPoint = 1
+          candidatePoints += 1
         }
 
         const predictedScore1ForPoints = predictedScore1Raw ?? 0
@@ -791,17 +825,33 @@ export const getKnockoutLeaderboard = async () => {
           resultScore1Raw !== null &&
           predictedScore1ForPoints === resultScore1Raw
         ) {
-          points += 1
-          goalPoints += 1
+          scorePoints += 1
+          candidatePoints += 1
         }
 
         if (
           resultScore2Raw !== null &&
           predictedScore2ForPoints === resultScore2Raw
         ) {
-          points += 1
-          goalPoints += 1
+          scorePoints += 1
+          candidatePoints += 1
         }
+
+        const prevBest = bestByResultKey.get(resultKey)
+        if (!prevBest || candidatePoints > prevBest.points) {
+          bestByResultKey.set(resultKey, {
+            points: candidatePoints,
+            winnerPoints: winnerPoint,
+            goalPoints: scorePoints
+          })
+        }
+      })
+
+      totalScorablePoints = bestByResultKey.size * 3
+      bestByResultKey.forEach(score => {
+        points += score.points
+        winnerPoints += score.winnerPoints
+        goalPoints += score.goalPoints
       })
 
       const email = usersByUid[userId]?.email || ''
@@ -819,20 +869,30 @@ export const getKnockoutLeaderboard = async () => {
         winnerPoints,
         goalPoints,
         predictionsCount: predictionList.length,
-        resolvedMatchesCount: predictionList.filter(prediction => {
-          const matchId = String(prediction?.matchId || '').trim()
-          if (!matchId) return false
-          const result = resultForMatch(matchId)
-          if (!result) return false
+        resolvedMatchesCount: (() => {
+          const uniqueResolvedKeys = new Set()
 
-          const winnerFromField = normalizeWinnerValue(result.winner)
-          const winnerFromScore = deriveWinnerFromScores(
-            toNumber(result.score1, null),
-            toNumber(result.score2, null)
-          )
+          predictionList.forEach(prediction => {
+            const matchId = String(prediction?.matchId || '').trim()
+            if (!matchId) return
 
-          return Boolean(winnerFromField || winnerFromScore)
-        }).length
+            const resolved = resultForMatch(matchId)
+            if (!resolved || !resolved.result || !resolved.resultKey) return
+
+            const result = resolved.result
+            const winnerFromField = normalizeWinnerValue(result.winner)
+            const winnerFromScore = deriveWinnerFromScores(
+              toNumber(result.score1, null),
+              toNumber(result.score2, null)
+            )
+
+            if (winnerFromField || winnerFromScore) {
+              uniqueResolvedKeys.add(resolved.resultKey)
+            }
+          })
+
+          return uniqueResolvedKeys.size
+        })()
       }
     }
   )
