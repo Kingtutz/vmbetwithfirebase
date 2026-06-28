@@ -408,10 +408,10 @@ function createMatchElement (match, matchId) {
     }
   })
 
-  // Double-click score bubble to edit score.
+  // Click score bubble to edit score.
   team1Div
     .querySelector('.team-selector')
-    .addEventListener('dblclick', event => {
+    .addEventListener('click', event => {
       event.preventDefault()
       event.stopPropagation()
       if (isKnockoutLockedByAdmin()) {
@@ -430,7 +430,7 @@ function createMatchElement (match, matchId) {
 
   team2Div
     .querySelector('.team-selector')
-    .addEventListener('dblclick', event => {
+    .addEventListener('click', event => {
       event.preventDefault()
       event.stopPropagation()
       if (isKnockoutLockedByAdmin()) {
