@@ -370,9 +370,30 @@ function createMatchElement (match, matchId) {
   matchDiv.setAttribute('data-match-id', matchId)
 
   const prediction = userPredictions[matchId] || {}
-  const winner = prediction.winner || null
+  const parsedWinner = Number.parseInt(String(prediction.winner ?? ''), 10)
+  const parsedScore1 = Number.parseInt(String(prediction.score1 ?? ''), 10)
+  const parsedScore2 = Number.parseInt(String(prediction.score2 ?? ''), 10)
+  const derivedWinner =
+    Number.isFinite(parsedScore1) &&
+    Number.isFinite(parsedScore2) &&
+    parsedScore1 !== parsedScore2
+      ? parsedScore1 > parsedScore2
+        ? 1
+        : 2
+      : null
+  const winner =
+    parsedWinner === 1 || parsedWinner === 2 ? parsedWinner : derivedWinner
   const score1 = prediction.score1 || 0
   const score2 = prediction.score2 || 0
+
+  if (
+    parsedWinner !== 1 &&
+    parsedWinner !== 2 &&
+    (winner === 1 || winner === 2)
+  ) {
+    prediction.winner = winner
+    userPredictions[matchId] = prediction
+  }
 
   const isTeam1Selected = winner === 1
   const isTeam2Selected = winner === 2

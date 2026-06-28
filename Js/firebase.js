@@ -697,7 +697,7 @@ export const getKnockoutLeaderboard = async () => {
         if (!matchId) return
 
         const result = resultForMatch(matchId)
-        if (!result || !result.winner) return
+        if (!result) return
 
         const predictedScore1 = toNumber(prediction.score1, 0)
         const predictedScore2 = toNumber(prediction.score2, 0)
@@ -710,6 +710,8 @@ export const getKnockoutLeaderboard = async () => {
         const officialWinner =
           normalizeWinnerValue(result.winner) ||
           deriveWinnerFromScores(resultScore1, resultScore2)
+
+        if (!officialWinner) return
 
         if (
           predictedWinner &&

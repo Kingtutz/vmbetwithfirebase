@@ -121,88 +121,193 @@ const closeBracketModal = () => {
   document.body.classList.remove('leaderboard-modal-open')
 }
 
-const renderBracketModal = predictions => {
-  // Group rounds that share the same label (left+right) for display
-  const grouped = [
-    { label: 'Round of 32', keys: ['round32-left', 'round32-right'] },
-    { label: 'Round of 16', keys: ['round16-left', 'round16-right'] },
-    {
-      label: 'Quarterfinals',
-      keys: ['quarterfinals-left', 'quarterfinals-right']
+const getPredictionForRoundMatch = (predictions, roundId, index) => {
+  const keyA = `${roundId}_${index}`
+  const altRound = roundId === 'thirdPlace' ? 'third-place' : roundId
+  const keyB = `${altRound}_${index}`
+  return predictions[keyA] || predictions[keyB] || {}
+}
+
+const deriveWinner = prediction => {
+  const explicitRaw = String(prediction?.winner ?? '')
+    .trim()
+    .toLowerCase()
+  const explicitNum = Number.parseInt(explicitRaw, 10)
+  if (explicitNum === 1 || explicitRaw === 'team1' || explicitRaw === 'home') {
+    return 1
+  }
+  if (explicitNum === 2 || explicitRaw === 'team2' || explicitRaw === 'away') {
+    return 2
+  }
+
+  const parsed1 = Number.parseInt(String(prediction?.score1 ?? ''), 10)
+  const parsed2 = Number.parseInt(String(prediction?.score2 ?? ''), 10)
+  const hasScore1 = Number.isFinite(parsed1)
+  const hasScore2 = Number.isFinite(parsed2)
+
+  if (!hasScore1 && !hasScore2) return null
+
+  const s1 = hasScore1 ? parsed1 : 0
+  const s2 = hasScore2 ? parsed2 : 0
+  if (s1 === s2) return null
+
+  return s1 > s2 ? 1 : 2
+}
+
+const nextRoundInfo = (roundId, matchIndex) => {
+  const map = {
+    'round32-left': {
+      round: 'round16-left',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
     },
-    { label: 'Semifinals', keys: ['semifinals-left', 'semifinals-right'] },
-    { label: 'Final', keys: ['final'] },
-    { label: 'Play-off for third place', keys: ['thirdPlace'] }
+    'round32-right': {
+      round: 'round16-right',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'round16-left': {
+      round: 'quarterfinals-left',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'round16-right': {
+      round: 'quarterfinals-right',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'quarterfinals-left': {
+      round: 'semifinals-left',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'quarterfinals-right': {
+      round: 'semifinals-right',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'semifinals-left': { round: 'final', match: 0, slot: 1 },
+    'semifinals-right': { round: 'final', match: 0, slot: 2 }
+  }
+
+  return map[roundId] || null
+}
+
+const renderBracketModal = predictions => {
+  const rounds = {
+    'round32-left': knockoutData['round32-left'].map(m => ({ ...m })),
+    'round16-left': knockoutData['round16-left'].map(m => ({ ...m })),
+    'quarterfinals-left': knockoutData['quarterfinals-left'].map(m => ({
+      ...m
+    })),
+    'semifinals-left': knockoutData['semifinals-left'].map(m => ({ ...m })),
+    final: knockoutData.final.map(m => ({ ...m })),
+    thirdPlace: knockoutData.thirdPlace.map(m => ({ ...m })),
+    'semifinals-right': knockoutData['semifinals-right'].map(m => ({ ...m })),
+    'quarterfinals-right': knockoutData['quarterfinals-right'].map(m => ({
+      ...m
+    })),
+    'round16-right': knockoutData['round16-right'].map(m => ({ ...m })),
+    'round32-right': knockoutData['round32-right'].map(m => ({ ...m }))
+  }
+
+  const processOrder = [
+    'round32-left',
+    'round32-right',
+    'round16-left',
+    'round16-right',
+    'quarterfinals-left',
+    'quarterfinals-right',
+    'semifinals-left',
+    'semifinals-right',
+    'final',
+    'thirdPlace'
   ]
 
-  const html = grouped
-    .map(group => {
-      const matchRows = group.keys.flatMap(roundKey => {
-        const matches = knockoutData[roundKey] || []
-        return matches.map((match, idx) => {
-          const matchPrefix =
-            roundKey === 'thirdPlace' ? 'third-place' : roundKey
-          const matchId = `${matchPrefix}_${idx}`
-          const fallbackMatchId = `${roundKey}_${idx}`
-          const pred =
-            predictions[matchId] || predictions[fallbackMatchId] || {}
-          const explicitWinner =
-            Number.parseInt(String(pred.winner ?? ''), 10) || null
-          const score1 = pred.score1 != null ? pred.score1 : 0
-          const score2 = pred.score2 != null ? pred.score2 : 0
-          const parsedScore1 = Number.parseInt(String(score1), 10)
-          const parsedScore2 = Number.parseInt(String(score2), 10)
-          const winnerFromScores =
-            Number.isFinite(parsedScore1) &&
-            Number.isFinite(parsedScore2) &&
-            parsedScore1 !== parsedScore2
-              ? parsedScore1 > parsedScore2
-                ? 1
-                : 2
-              : null
-          const winner = explicitWinner || winnerFromScores
+  processOrder.forEach(roundId => {
+    rounds[roundId].forEach((match, index) => {
+      const prediction = getPredictionForRoundMatch(predictions, roundId, index)
+      const winner = deriveWinner(prediction)
 
-          const t1Class =
-            winner === 1 ? 'ko-bracket-team winner-pick' : 'ko-bracket-team'
-          const t2Class =
-            winner === 2 ? 'ko-bracket-team winner-pick' : 'ko-bracket-team'
+      match.score1 =
+        prediction.score1 != null
+          ? Number.parseInt(String(prediction.score1), 10) || 0
+          : 0
+      match.score2 =
+        prediction.score2 != null
+          ? Number.parseInt(String(prediction.score2), 10) || 0
+          : 0
+      match.hasScore = prediction.score1 != null || prediction.score2 != null
+      match.winner = winner
 
-          const scoreHtml =
-            winner != null || pred.score1 != null || pred.score2 != null
-              ? `<span class="ko-bracket-score">
-               <span class="ko-bracket-score-val">${score1}</span>
-               –
-               <span class="ko-bracket-score-val">${score2}</span>
-             </span>`
-              : ''
+      if (winner !== 1 && winner !== 2) return
 
-          return `
-          <div class="ko-bracket-match">
-            <span class="${t1Class}" title="${match.team1}">${match.team1}</span>
-            <span class="ko-bracket-vs">vs</span>
-            <span class="${t2Class}" title="${match.team2}">${match.team2}</span>
-            ${scoreHtml}
-          </div>`
-        })
-      })
+      const winnerName = winner === 1 ? match.team1 : match.team2
+      const loserName = winner === 1 ? match.team2 : match.team1
+      const next = nextRoundInfo(roundId, index)
 
-      const hasPick = matchRows.some(row => row.includes('winner-pick'))
-      if (
-        !hasPick &&
-        matchRows.every(row => !row.includes('ko-bracket-score-val'))
-      ) {
-        // All empty - still show section but indicate no picks
+      if (next && rounds[next.round] && rounds[next.round][next.match]) {
+        if (next.slot === 1) rounds[next.round][next.match].team1 = winnerName
+        if (next.slot === 2) rounds[next.round][next.match].team2 = winnerName
       }
 
-      return `
-      <div class="ko-bracket-round-section">
-        <h4 class="ko-bracket-round-title">${group.label}</h4>
-        <div class="ko-bracket-match-list">${matchRows.join('')}</div>
-      </div>`
+      if (roundId === 'semifinals-left' && rounds.thirdPlace[0]) {
+        rounds.thirdPlace[0].team1 = loserName
+      }
+      if (roundId === 'semifinals-right' && rounds.thirdPlace[0]) {
+        rounds.thirdPlace[0].team2 = loserName
+      }
     })
-    .join('')
+  })
 
-  bracketModalBody.innerHTML = `<div class="ko-bracket-rounds">${html}</div>`
+  const renderMatch = (match, roundId, index) => {
+    const t1Class = match.winner === 1 ? 'ko-v-team winner-pick' : 'ko-v-team'
+    const t2Class = match.winner === 2 ? 'ko-v-team winner-pick' : 'ko-v-team'
+    const showScore = match.winner != null || match.hasScore
+
+    return `
+      <div class="ko-v-match" data-round="${roundId}" data-index="${index}">
+        <div class="ko-v-row ${match.winner === 1 ? 'is-winner' : ''}">
+          <span class="${t1Class}" title="${match.team1}">${match.team1}</span>
+          ${showScore ? `<span class="ko-v-score">${match.score1}</span>` : ''}
+        </div>
+        <div class="ko-v-row ${match.winner === 2 ? 'is-winner' : ''}">
+          <span class="${t2Class}" title="${match.team2}">${match.team2}</span>
+          ${showScore ? `<span class="ko-v-score">${match.score2}</span>` : ''}
+        </div>
+      </div>
+    `
+  }
+
+  const renderRoundColumn = (roundId, title) => `
+    <div class="ko-v-round">
+      <h4 class="ko-v-round-title">${title}</h4>
+      ${rounds[roundId].map((m, i) => renderMatch(m, roundId, i)).join('')}
+    </div>
+  `
+
+  bracketModalBody.innerHTML = `
+    <div class="ko-v-bracket">
+      <div class="ko-v-side ko-v-left">
+        ${renderRoundColumn('round32-left', 'Round of 32')}
+        ${renderRoundColumn('round16-left', 'Round of 16')}
+        ${renderRoundColumn('quarterfinals-left', 'Quarterfinals')}
+        ${renderRoundColumn('semifinals-left', 'Semifinals')}
+      </div>
+
+      <div class="ko-v-center">
+        ${renderRoundColumn('final', 'Final')}
+        ${renderRoundColumn('thirdPlace', 'Play-off for third place')}
+      </div>
+
+      <div class="ko-v-side ko-v-right">
+        ${renderRoundColumn('round32-right', 'Round of 32')}
+        ${renderRoundColumn('round16-right', 'Round of 16')}
+        ${renderRoundColumn('quarterfinals-right', 'Quarterfinals')}
+        ${renderRoundColumn('semifinals-right', 'Semifinals')}
+      </div>
+    </div>
+  `
 }
 
 bracketModalClose.addEventListener('click', closeBracketModal)
