@@ -40,6 +40,7 @@ const apiSyncStatus = document.getElementById('apiSyncStatus')
 const matchesLockAtInput = document.getElementById('matchesLockAt')
 const winnerLockAtInput = document.getElementById('winnerLockAt')
 const knockoutLockAtInput = document.getElementById('knockoutLockAt')
+const knockoutRestLockAtInput = document.getElementById('knockoutRestLockAt')
 const saveLocksBtn = document.getElementById('saveLocksBtn')
 const clearLocksBtn = document.getElementById('clearLocksBtn')
 const locksStatus = document.getElementById('locksStatus')
@@ -65,7 +66,13 @@ let isRemovingUser = false
 let roundCollapsed = {}
 let isSyncingLive = false
 let isSavingLocks = false
-let betLocks = { matchesLockedAt: '', winnerLockedAt: '', knockoutLockedAt: '' }
+let betLocks = {
+  matchesLockedAt: '',
+  winnerLockedAt: '',
+  knockoutLockedAt: '',
+  knockoutRound32LockedAt: '',
+  knockoutRestLockedAt: ''
+}
 let pickDistributionVisibility = { audience: 'admin' }
 let allWinnerBets = []
 let allKnockoutResults = {}
@@ -456,8 +463,17 @@ const renderLockInputs = () => {
   }
 
   if (knockoutLockAtInput) {
-    knockoutLockAtInput.value = toDateTimeLocalValue(betLocks.knockoutLockedAt)
+    knockoutLockAtInput.value = toDateTimeLocalValue(
+      betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt
+    )
     knockoutLockAtInput.disabled = isSavingLocks
+  }
+
+  if (knockoutRestLockAtInput) {
+    knockoutRestLockAtInput.value = toDateTimeLocalValue(
+      betLocks.knockoutRestLockedAt
+    )
+    knockoutRestLockAtInput.disabled = isSavingLocks
   }
 
   if (saveLocksBtn) saveLocksBtn.disabled = isSavingLocks
@@ -472,7 +488,10 @@ const saveLockSettings = async payload => {
     betLocks = {
       matchesLockedAt: saved.matchesLockedAt || '',
       winnerLockedAt: saved.winnerLockedAt || '',
-      knockoutLockedAt: saved.knockoutLockedAt || ''
+      knockoutLockedAt: saved.knockoutLockedAt || '',
+      knockoutRound32LockedAt:
+        saved.knockoutRound32LockedAt || saved.knockoutLockedAt || '',
+      knockoutRestLockedAt: saved.knockoutRestLockedAt || ''
     }
     renderLockInputs()
     setLocksStatus(t('admin.locksSaved'))
@@ -491,7 +510,8 @@ const initializeLockSettings = () => {
     await saveLockSettings({
       matchesLockedAt: toIsoOrEmpty(matchesLockAtInput?.value),
       winnerLockedAt: toIsoOrEmpty(winnerLockAtInput?.value),
-      knockoutLockedAt: toIsoOrEmpty(knockoutLockAtInput?.value)
+      knockoutRound32LockedAt: toIsoOrEmpty(knockoutLockAtInput?.value),
+      knockoutRestLockedAt: toIsoOrEmpty(knockoutRestLockAtInput?.value)
     })
   })
 
@@ -499,7 +519,8 @@ const initializeLockSettings = () => {
     await saveLockSettings({
       matchesLockedAt: '',
       winnerLockedAt: '',
-      knockoutLockedAt: ''
+      knockoutRound32LockedAt: '',
+      knockoutRestLockedAt: ''
     })
     setLocksStatus(t('admin.locksCleared'))
   })
@@ -1335,7 +1356,9 @@ const loadPage = async () => {
   betLocks = locks || {
     matchesLockedAt: '',
     winnerLockedAt: '',
-    knockoutLockedAt: ''
+    knockoutLockedAt: '',
+    knockoutRound32LockedAt: '',
+    knockoutRestLockedAt: ''
   }
   allWinnerBets = winnerBets || []
   winnerResult = winnerResultPayload || null

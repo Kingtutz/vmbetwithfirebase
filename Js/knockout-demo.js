@@ -147,7 +147,13 @@ const knockoutData = {
 
 let currentUser = null
 let userPredictions = {}
-let betLocks = { matchesLockedAt: '', winnerLockedAt: '', knockoutLockedAt: '' }
+let betLocks = {
+  matchesLockedAt: '',
+  winnerLockedAt: '',
+  knockoutLockedAt: '',
+  knockoutRound32LockedAt: '',
+  knockoutRestLockedAt: ''
+}
 const adminNavLink = document.querySelector('.nav-buttons a[href="admin.html"]')
 let bracketConnectionFrame = null
 
@@ -161,27 +167,65 @@ async function updateAdminTabVisibility (user) {
   adminNavLink.style.display = admin ? '' : 'none'
 }
 
-function isKnockoutLockedByAdmin () {
-  const lockAt = String(betLocks.knockoutLockedAt || '')
-  if (!lockAt) return false
+function isLockActive (lockAt) {
+  const value = String(lockAt || '')
+  if (!value) return false
 
-  const lockTime = new Date(lockAt).getTime()
+  const lockTime = new Date(value).getTime()
   if (Number.isNaN(lockTime)) return false
   return Date.now() >= lockTime
 }
 
+function isRound32Match (matchId) {
+  return String(matchId || '').startsWith('round32-')
+}
+
+function isKnockoutMatchLockedByAdmin (matchId) {
+  if (isRound32Match(matchId)) {
+    return isLockActive(
+      betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt
+    )
+  }
+
+  return isLockActive(betLocks.knockoutRestLockedAt)
+}
+
+function isAnyKnockoutLockedByAdmin () {
+  return (
+    isLockActive(betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt) ||
+    isLockActive(betLocks.knockoutRestLockedAt)
+  )
+}
+
+function getKnockoutLockMessage (matchId) {
+  if (isRound32Match(matchId)) {
+    return 'Round of 32 knockout bets are locked by admin'
+  }
+  return 'Knockout bets after Round of 32 are locked by admin'
+}
+
 function renderLockState () {
-  const locked = isKnockoutLockedByAdmin()
+  const anyLocked = isAnyKnockoutLockedByAdmin()
   const saveBtn = document.getElementById('saveBtn')
   const clearBtn = document.getElementById('clearBtn')
   const lockStatus = document.getElementById('lockStatus')
 
-  if (saveBtn) saveBtn.disabled = locked
-  if (clearBtn) clearBtn.disabled = locked
+  // Save stays available so users can still submit unlocked rounds.
+  if (saveBtn) saveBtn.disabled = false
+  if (clearBtn) clearBtn.disabled = anyLocked
 
   if (lockStatus) {
-    lockStatus.style.display = locked ? 'block' : 'none'
-    lockStatus.textContent = locked ? 'Knockout bets are locked by admin.' : ''
+    lockStatus.style.display = anyLocked ? 'block' : 'none'
+
+    const messages = []
+    if (isLockActive(betLocks.knockoutRound32LockedAt || betLocks.knockoutLockedAt)) {
+      messages.push('Round of 32 knockout bets are locked by admin.')
+    }
+    if (isLockActive(betLocks.knockoutRestLockedAt)) {
+      messages.push('Knockout bets after Round of 32 are locked by admin.')
+    }
+
+    lockStatus.textContent = messages.join(' ')
   }
 }
 
@@ -191,7 +235,11 @@ async function loadBetLocks () {
     betLocks = {
       matchesLockedAt: String(locks?.matchesLockedAt || ''),
       winnerLockedAt: String(locks?.winnerLockedAt || ''),
-      knockoutLockedAt: String(locks?.knockoutLockedAt || '')
+      knockoutLockedAt: String(locks?.knockoutLockedAt || ''),
+      knockoutRound32LockedAt: String(
+        locks?.knockoutRound32LockedAt || locks?.knockoutLockedAt || ''
+      ),
+      knockoutRestLockedAt: String(locks?.knockoutRestLockedAt || '')
     }
   } catch (error) {
     console.error('Error loading lock settings:', error)
@@ -457,8 +505,8 @@ function createMatchElement (match, matchId) {
   team1Div.querySelector('.team-selector').addEventListener('click', event => {
     event.preventDefault()
     event.stopPropagation()
-    if (isKnockoutLockedByAdmin()) {
-      showToast('Knockout bets are locked by admin', 'error')
+    if (isKnockoutMatchLockedByAdmin(matchId)) {
+      showToast(getKnockoutLockMessage(matchId), 'error')
       return
     }
     const score = prompt(`Enter score for ${match.team1}:`, score1)
@@ -475,8 +523,8 @@ function createMatchElement (match, matchId) {
   team2Div.querySelector('.team-selector').addEventListener('click', event => {
     event.preventDefault()
     event.stopPropagation()
-    if (isKnockoutLockedByAdmin()) {
-      showToast('Knockout bets are locked by admin', 'error')
+    if (isKnockoutMatchLockedByAdmin(matchId)) {
+      showToast(getKnockoutLockMessage(matchId), 'error')
       return
     }
     const score = prompt(`Enter score for ${match.team2}:`, score2)
@@ -532,8 +580,8 @@ function applyWinnerFromScores (matchId, matchDiv) {
 
 // Select a winner and advance to next round
 function selectWinner (matchId, winner, matchDiv) {
-  if (isKnockoutLockedByAdmin()) {
-    showToast('Knockout bets are locked by admin', 'error')
+  if (isKnockoutMatchLockedByAdmin(matchId)) {
+    showToast(getKnockoutLockMessage(matchId), 'error')
     return
   }
 
@@ -1008,11 +1056,6 @@ async function savePredictions () {
       return
     }
 
-    if (isKnockoutLockedByAdmin()) {
-      showToast('Knockout bets are locked by admin', 'error')
-      return
-    }
-
     const saveBtn = document.getElementById('saveBtn')
     saveBtn.disabled = true
     saveBtn.textContent = 'Saving...'
@@ -1040,8 +1083,8 @@ async function savePredictions () {
 
 // Clear all predictions
 async function clearPredictions () {
-  if (isKnockoutLockedByAdmin()) {
-    showToast('Knockout bets are locked by admin', 'error')
+  if (isAnyKnockoutLockedByAdmin()) {
+    showToast('Cannot clear all while knockout locks are active', 'error')
     return
   }
 

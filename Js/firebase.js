@@ -826,15 +826,22 @@ export const getBetLocks = async () => {
     return {
       matchesLockedAt: '',
       winnerLockedAt: '',
-      knockoutLockedAt: ''
+      knockoutLockedAt: '',
+      knockoutRound32LockedAt: '',
+      knockoutRestLockedAt: ''
     }
   }
 
   const value = snapshot.val() || {}
+  const fallbackKnockout = String(value.knockoutLockedAt || '')
   return {
     matchesLockedAt: String(value.matchesLockedAt || ''),
     winnerLockedAt: String(value.winnerLockedAt || ''),
-    knockoutLockedAt: String(value.knockoutLockedAt || '')
+    knockoutLockedAt: fallbackKnockout,
+    knockoutRound32LockedAt: String(
+      value.knockoutRound32LockedAt || fallbackKnockout
+    ),
+    knockoutRestLockedAt: String(value.knockoutRestLockedAt || '')
   }
 }
 
@@ -847,11 +854,17 @@ export const setBetLocks = async (user, locks = {}) => {
   const payload = {
     matchesLockedAt: String(locks.matchesLockedAt || '').trim(),
     winnerLockedAt: String(locks.winnerLockedAt || '').trim(),
-    knockoutLockedAt: String(locks.knockoutLockedAt || '').trim(),
+    knockoutRound32LockedAt: String(
+      locks.knockoutRound32LockedAt || locks.knockoutLockedAt || ''
+    ).trim(),
+    knockoutRestLockedAt: String(locks.knockoutRestLockedAt || '').trim(),
     updatedAt: new Date().toISOString(),
     updatedByUid: user?.uid || '',
     updatedByEmail: user?.email || ''
   }
+
+  // Backward compatibility for any code path still reading knockoutLockedAt.
+  payload.knockoutLockedAt = payload.knockoutRound32LockedAt
 
   await set(ref(db, 'settings/betLocks'), payload)
   await createAdminNotification(user, {
