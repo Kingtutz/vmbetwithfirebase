@@ -67,7 +67,7 @@ body {
   gap: 0;
   overflow: visible;
   padding: 3rem 0.5rem;
-  background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+  background: var(--bg);
   border-radius: 1rem;
   margin: 2rem 0;
   position: relative;
@@ -88,7 +88,7 @@ body {
 
 .bracket-connections path {
   fill: none;
-  stroke: rgba(76, 175, 80, 0.35);
+  stroke: rgba(200, 140, 80, 0.45);
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -96,7 +96,7 @@ body {
 
 .bracket-connections path.third-place {
   stroke-dasharray: 5 4;
-  stroke: rgba(76, 175, 80, 0.28);
+  stroke: rgba(200, 140, 80, 0.30);
 }
 
 /* Left and Right Bracket Sides */
@@ -157,7 +157,7 @@ body {
 }
 
 .round h3 {
-  color: #4caf50;
+  color: var(--text);
   text-align: center;
   margin: 0 0 0.75rem 0;
   font-size: 0.75rem;
@@ -165,7 +165,7 @@ body {
   letter-spacing: 0.05em;
   font-weight: 600;
   padding: 0.25rem 0;
-  border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+  border-bottom: 1px solid rgba(200, 140, 80, 0.3);
 }
 
 .match-box {
@@ -196,15 +196,15 @@ body {
 }
 
 .match-box:hover {
-  border-color: #4caf50;
-  background: #323232;
-  box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+  border-color: var(--text);
+  background: var(--bg);
+  box-shadow: 0 0 15px rgba(200, 140, 80, 0.2);
 }
 
 .match-box.completed {
-  border-color: #4caf50;
-  background: rgba(76, 175, 80, 0.1);
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  border-color: var(--text);
+  background: rgba(200, 140, 80, 0.1);
+  box-shadow: 0 0 10px rgba(200, 140, 80, 0.3);
 }
 
 .team-box {
@@ -218,7 +218,7 @@ body {
 }
 
 .team-box.selected {
-  background: rgba(76, 175, 80, 0.2);
+  background: rgba(200, 140, 80, 0.2);
 }
 
 .team-box:last-child {
@@ -244,12 +244,12 @@ body {
 
 .winner-target:hover,
 .winner-target:focus-visible {
-  color: #7de180;
+  color: var(--text);
   outline: none;
 }
 
 .team-box.selected .team-name {
-  color: #7de180;
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -257,9 +257,9 @@ body {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 2px solid rgba(76, 175, 80, 0.5);
-  background: rgba(76, 175, 80, 0.15);
-  color: #4caf50;
+  border: 2px solid rgba(200, 140, 80, 0.5);
+  background: rgba(200, 140, 80, 0.15);
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -272,15 +272,15 @@ body {
 }
 
 .team-selector:hover {
-  background: rgba(76, 175, 80, 0.25);
-  border-color: #4caf50;
+  background: rgba(200, 140, 80, 0.25);
+  border-color: var(--text);
 }
 
 .team-selector.selected {
-  background: #4caf50;
-  border-color: #4caf50;
-  color: #1a1a1a;
-  box-shadow: 0 0 12px rgba(76, 175, 80, 0.6);
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg);
+  box-shadow: 0 0 12px rgba(200, 140, 80, 0.6);
   font-size: 1rem;
 }
 
@@ -316,14 +316,15 @@ body {
 }
 
 .btn-save {
-  background: #4caf50;
-  color: #1a1a1a;
+  background: var(--text);
+  color: var(--bg);
 }
 
 .btn-save:hover {
-  background: #5cb85c;
+  background: var(--text);
+  opacity: 0.85;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 12px rgba(200, 140, 80, 0.3);
 }
 
 .btn-clear {
@@ -350,8 +351,8 @@ body {
 }
 
 .toast.success {
-  background: #4caf50;
-  color: #1a1a1a;
+  background: var(--text);
+  color: var(--bg);
 }
 
 .toast.error {
