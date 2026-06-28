@@ -140,7 +140,8 @@ const renderBracketModal = predictions => {
       const matchRows = group.keys.flatMap(roundKey => {
         const matches = knockoutData[roundKey] || []
         return matches.map((match, idx) => {
-          const matchId = `${roundKey}_${idx}`
+          const matchPrefix = roundKey === 'thirdPlace' ? 'third-place' : roundKey
+          const matchId = `${matchPrefix}_${idx}`
           const pred = predictions[matchId] || {}
           const winner = pred.winner // 1 or 2
           const score1 = pred.score1 != null ? pred.score1 : 0
