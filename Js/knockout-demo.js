@@ -446,6 +446,7 @@ function createMatchElement (match, matchId) {
       pred.score1 = Math.max(0, parseInt(score) || 0)
       userPredictions[matchId] = pred
       team1Div.querySelector('.score').textContent = pred.score1
+      applyWinnerFromScores(matchId, matchDiv)
       updateMatchStatus(matchDiv)
     }
   })
@@ -463,12 +464,49 @@ function createMatchElement (match, matchId) {
       pred.score2 = Math.max(0, parseInt(score) || 0)
       userPredictions[matchId] = pred
       team2Div.querySelector('.score').textContent = pred.score2
+      applyWinnerFromScores(matchId, matchDiv)
       updateMatchStatus(matchDiv)
     }
   })
 
   updateMatchStatus(matchDiv)
   return matchDiv
+}
+
+function applyWinnerFromScores (matchId, matchDiv) {
+  const prediction = userPredictions[matchId] || {}
+  const score1 = Number.parseInt(String(prediction.score1 ?? ''), 10)
+  const score2 = Number.parseInt(String(prediction.score2 ?? ''), 10)
+
+  if (
+    !Number.isFinite(score1) ||
+    !Number.isFinite(score2) ||
+    score1 === score2
+  ) {
+    return
+  }
+
+  const winnerFromScore = score1 > score2 ? 1 : 2
+  if (prediction.winner === winnerFromScore) return
+
+  prediction.winner = winnerFromScore
+  userPredictions[matchId] = prediction
+
+  const buttons = matchDiv.querySelectorAll('.team-selector')
+  buttons.forEach(btn => {
+    const btnTeam = parseInt(btn.getAttribute('data-team'))
+    btn.classList.toggle('selected', btnTeam === prediction.winner)
+  })
+
+  const teamRows = matchDiv.querySelectorAll('.team-box')
+  teamRows.forEach((row, idx) => {
+    row.classList.toggle('selected', prediction.winner === idx + 1)
+  })
+
+  const currentRound = matchDiv.parentElement.id
+  advanceTeam(matchId, winnerFromScore, currentRound)
+  updateThirdPlaceMatch()
+  scheduleBracketConnections()
 }
 
 // Select a winner and advance to next round
@@ -741,7 +779,10 @@ function renderBracketConnections () {
     const midX = (start.x + end.x) / 2
 
     const path = document.createElementNS(ns, 'path')
-    path.setAttribute('d', `M ${start.x} ${start.y} H ${midX} V ${end.y} H ${end.x}`)
+    path.setAttribute(
+      'd',
+      `M ${start.x} ${start.y} H ${midX} V ${end.y} H ${end.x}`
+    )
     if (extraClass) path.setAttribute('class', extraClass)
     svg.appendChild(path)
   }
@@ -754,12 +795,21 @@ function renderBracketConnections () {
     const midY = (start.y + end.y) / 2
 
     const path = document.createElementNS(ns, 'path')
-    path.setAttribute('d', `M ${start.x} ${start.y} V ${midY} H ${end.x} V ${end.y}`)
+    path.setAttribute(
+      'd',
+      `M ${start.x} ${start.y} V ${midY} H ${end.x} V ${end.y}`
+    )
     if (extraClass) path.setAttribute('class', extraClass)
     svg.appendChild(path)
   }
 
-  const connectSeries = (sourceRound, targetRound, sourceAnchor, targetAnchor, pairMap) => {
+  const connectSeries = (
+    sourceRound,
+    targetRound,
+    sourceAnchor,
+    targetAnchor,
+    pairMap
+  ) => {
     pairMap.forEach(([sourceIndex, targetIndex]) => {
       const sourceEl = document.getElementById(`${sourceRound}_${sourceIndex}`)
       const targetEl = document.getElementById(`${targetRound}_${targetIndex}`)
