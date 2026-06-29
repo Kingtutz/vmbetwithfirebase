@@ -237,7 +237,8 @@ const buildResolvedKnockoutMatches = () => {
 
       const winnerName = winnerSide === 1 ? match.team1 : match.team2
       const next = nextKnockoutRoundInfo(roundId, index)
-      if (!next || !rounds[next.round] || !rounds[next.round][next.match]) return
+      if (!next || !rounds[next.round] || !rounds[next.round][next.match])
+        return
 
       if (next.slot === 1) rounds[next.round][next.match].team1 = winnerName
       if (next.slot === 2) rounds[next.round][next.match].team2 = winnerName
@@ -429,7 +430,8 @@ const setKnockoutToplistInteractionStatus = message => {
 const renderKnockoutToplistInteractionControls = () => {
   if (!toggleKnockoutToplistInteractionBtn) return
 
-  const isEveryone = knockoutToplistInteractionVisibility.audience === 'everyone'
+  const isEveryone =
+    knockoutToplistInteractionVisibility.audience === 'everyone'
   toggleKnockoutToplistInteractionBtn.textContent = isEveryone
     ? 'Interaction: Everyone'
     : 'Interaction: Admin only'
@@ -461,7 +463,9 @@ const initializeKnockoutToplistInteractionSettings = () => {
         audience: String(payload.audience || 'admin')
       }
 
-      setKnockoutToplistInteractionStatus('Knockout Top List interaction saved.')
+      setKnockoutToplistInteractionStatus(
+        'Knockout Top List interaction saved.'
+      )
     } catch (error) {
       setKnockoutToplistInteractionStatus(
         error.message || 'Could not save Knockout Top List interaction setting.'
