@@ -145,6 +145,154 @@ const buildKnockoutMatches = () => [
 
 const knockoutMatches = buildKnockoutMatches()
 
+const getKnockoutWinnerSide = result => {
+  const explicit = String(result?.winner || '')
+    .trim()
+    .toLowerCase()
+
+  if (explicit === 'team1' || explicit === '1') return 1
+  if (explicit === 'team2' || explicit === '2') return 2
+
+  const parsed1 = Number.parseInt(String(result?.score1 ?? ''), 10)
+  const parsed2 = Number.parseInt(String(result?.score2 ?? ''), 10)
+  if (!Number.isFinite(parsed1) || !Number.isFinite(parsed2)) return null
+  if (parsed1 === parsed2) return null
+  return parsed1 > parsed2 ? 1 : 2
+}
+
+const nextKnockoutRoundInfo = (roundId, matchIndex) => {
+  const map = {
+    'round32-left': {
+      round: 'round16-left',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'round32-right': {
+      round: 'round16-right',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'round16-left': {
+      round: 'quarterfinals-left',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'round16-right': {
+      round: 'quarterfinals-right',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'quarterfinals-left': {
+      round: 'semifinals-left',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'quarterfinals-right': {
+      round: 'semifinals-right',
+      match: Math.floor(matchIndex / 2),
+      slot: (matchIndex % 2) + 1
+    },
+    'semifinals-left': { round: 'final', match: 0, slot: 1 },
+    'semifinals-right': { round: 'final', match: 0, slot: 2 }
+  }
+
+  return map[roundId] || null
+}
+
+const buildResolvedKnockoutMatches = () => {
+  const rounds = {
+    'round32-left': knockoutData.round32.slice(0, 8).map(m => ({ ...m })),
+    'round32-right': knockoutData.round32.slice(8, 16).map(m => ({ ...m })),
+    'round16-left': knockoutData.round16.slice(0, 4).map(m => ({ ...m })),
+    'round16-right': knockoutData.round16.slice(4, 8).map(m => ({ ...m })),
+    'quarterfinals-left': knockoutData.quarterfinals
+      .slice(0, 2)
+      .map(m => ({ ...m })),
+    'quarterfinals-right': knockoutData.quarterfinals
+      .slice(2, 4)
+      .map(m => ({ ...m })),
+    'semifinals-left': knockoutData.semifinals.slice(0, 1).map(m => ({ ...m })),
+    'semifinals-right': knockoutData.semifinals
+      .slice(1, 2)
+      .map(m => ({ ...m })),
+    final: knockoutData.final.map(m => ({ ...m }))
+  }
+
+  const processOrder = [
+    'round32-left',
+    'round32-right',
+    'round16-left',
+    'round16-right',
+    'quarterfinals-left',
+    'quarterfinals-right',
+    'semifinals-left',
+    'semifinals-right'
+  ]
+
+  processOrder.forEach(roundId => {
+    rounds[roundId].forEach((match, index) => {
+      const matchId = `${roundId}_${index}`
+      const winnerSide = getKnockoutWinnerSide(allKnockoutResults[matchId])
+      if (winnerSide !== 1 && winnerSide !== 2) return
+
+      const winnerName = winnerSide === 1 ? match.team1 : match.team2
+      const next = nextKnockoutRoundInfo(roundId, index)
+      if (!next || !rounds[next.round] || !rounds[next.round][next.match]) return
+
+      if (next.slot === 1) rounds[next.round][next.match].team1 = winnerName
+      if (next.slot === 2) rounds[next.round][next.match].team2 = winnerName
+    })
+  })
+
+  return [
+    ...rounds['round32-left'].map((match, index) => ({
+      id: `round32-left_${index}`,
+      round: 'Round of 32 - Left',
+      ...match
+    })),
+    ...rounds['round32-right'].map((match, index) => ({
+      id: `round32-right_${index}`,
+      round: 'Round of 32 - Right',
+      ...match
+    })),
+    ...rounds['round16-left'].map((match, index) => ({
+      id: `round16-left_${index}`,
+      round: 'Round of 16 - Left',
+      ...match
+    })),
+    ...rounds['round16-right'].map((match, index) => ({
+      id: `round16-right_${index}`,
+      round: 'Round of 16 - Right',
+      ...match
+    })),
+    ...rounds['quarterfinals-left'].map((match, index) => ({
+      id: `quarterfinals-left_${index}`,
+      round: 'Quarterfinals - Left',
+      ...match
+    })),
+    ...rounds['quarterfinals-right'].map((match, index) => ({
+      id: `quarterfinals-right_${index}`,
+      round: 'Quarterfinals - Right',
+      ...match
+    })),
+    ...rounds['semifinals-left'].map((match, index) => ({
+      id: `semifinals-left_${index}`,
+      round: 'Semifinals - Left',
+      ...match
+    })),
+    ...rounds['semifinals-right'].map((match, index) => ({
+      id: `semifinals-right_${index}`,
+      round: 'Semifinals - Right',
+      ...match
+    })),
+    ...rounds.final.map((match, index) => ({
+      id: `final_${index}`,
+      round: 'Final',
+      ...match
+    }))
+  ]
+}
+
 initI18n()
 
 const updateCompactToggleLabel = () => {
@@ -1197,12 +1345,14 @@ const renderMatches = matches => {
 const renderKnockoutMatches = () => {
   if (!knockoutResultsContainer) return
 
-  if (!knockoutMatches.length) {
+  const resolvedKnockoutMatches = buildResolvedKnockoutMatches()
+
+  if (!resolvedKnockoutMatches.length) {
     knockoutResultsContainer.innerHTML = '<p>No knockout matches found.</p>'
     return
   }
 
-  knockoutResultsContainer.innerHTML = knockoutMatches
+  knockoutResultsContainer.innerHTML = resolvedKnockoutMatches
     .map(renderKnockoutMatchCard)
     .join('')
 
