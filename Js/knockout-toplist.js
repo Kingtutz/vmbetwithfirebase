@@ -40,33 +40,6 @@ const knockoutData = {
   'third-place': [{ team1: 'RU101', team2: 'RU102' }]
 }
 
-const compatibilityMap = {
-  'round32-left_0': 'round32-left_1',
-  'round32-left_1': 'round32-left_4',
-  'round32-left_2': 'round32-left_0',
-  'round32-left_3': 'round32-left_2',
-  'round32-left_4': 'round32-right_3',
-  'round32-left_5': 'round32-right_2',
-  'round32-left_6': 'round32-right_1',
-  'round32-left_7': 'round32-right_0',
-  'round32-right_0': 'round32-left_3',
-  'round32-right_1': 'round32-left_5',
-  'round32-right_2': 'round32-left_6',
-  'round32-right_3': 'round32-left_7',
-  'round32-right_4': 'round32-right_6',
-  'round32-right_5': 'round32-right_5',
-  'round32-right_6': 'round32-right_4',
-  'round32-right_7': 'round32-right_7',
-  'round16-left_0': 'round16-left_1',
-  'round16-left_1': 'round16-left_0',
-  'round16-left_2': 'round16-right_0',
-  'round16-left_3': 'round16-right_1',
-  'round16-right_0': 'round16-left_2',
-  'round16-right_1': 'round16-left_3',
-  'round16-right_2': 'round16-right_2',
-  'round16-right_3': 'round16-right_3'
-}
-
 const toNumber = value => {
   const parsed = Number.parseInt(String(value ?? '').trim(), 10)
   return Number.isFinite(parsed) ? parsed : null
@@ -104,15 +77,6 @@ const resultForMatch = (resultsByMatch, matchId) => {
 
   const direct = resultsByMatch[matchId]
   if (direct) return direct
-
-  const mapped = compatibilityMap[matchId]
-  if (!mapped) return null
-
-  const mappedPrefixed = resultsByMatch[`knockout-${mapped}`]
-  if (mappedPrefixed) return mappedPrefixed
-
-  const mappedDirect = resultsByMatch[mapped]
-  if (mappedDirect) return mappedDirect
 
   return null
 }
@@ -235,8 +199,8 @@ const renderBracketModal = (predictions, resultsByMatch = {}) => {
       const matchId = `${roundId}_${index}`
       const result = resultForMatch(resultsByMatch, matchId)
       if (result) {
-        const p1 = toNumber(prediction.score1)
-        const p2 = toNumber(prediction.score2)
+        const p1 = toNumber(prediction.score1) ?? 0
+        const p2 = toNumber(prediction.score2) ?? 0
         const r1 = toNumber(result.score1)
         const r2 = toNumber(result.score2)
 
@@ -253,8 +217,8 @@ const renderBracketModal = (predictions, resultsByMatch = {}) => {
           Boolean(predWinner) &&
           Boolean(officialWinner) &&
           predWinner === officialWinner
-        const score1Correct = r1 !== null && p1 !== null && p1 === r1
-        const score2Correct = r2 !== null && p2 !== null && p2 === r2
+        const score1Correct = r1 !== null && p1 === r1
+        const score2Correct = r2 !== null && p2 === r2
         const points =
           (winnerCorrect ? 1 : 0) +
           (score1Correct ? 1 : 0) +
@@ -263,8 +227,8 @@ const renderBracketModal = (predictions, resultsByMatch = {}) => {
         match.scoring = {
           winnerPicked: Boolean(predWinner),
           winnerCorrect,
-          score1Picked: p1 !== null,
-          score2Picked: p2 !== null,
+          score1Picked: true,
+          score2Picked: true,
           score1Correct,
           score2Correct,
           points
@@ -322,41 +286,41 @@ const renderBracketModal = (predictions, resultsByMatch = {}) => {
                   !scoring.winnerPicked
                     ? 'neutral'
                     : scoring.winnerCorrect
-                      ? 'ok'
-                      : 'bad'
+                    ? 'ok'
+                    : 'bad'
                 }">Winner ${
-                  !scoring.winnerPicked
-                    ? 'No pick'
-                    : scoring.winnerCorrect
-                      ? 'Right'
-                      : 'Wrong'
-                }</span>
+                !scoring.winnerPicked
+                  ? 'No pick'
+                  : scoring.winnerCorrect
+                  ? 'Right'
+                  : 'Wrong'
+              }</span>
                 <span class="ko-v-pill ${
                   !scoring.score1Picked
                     ? 'neutral'
                     : scoring.score1Correct
-                      ? 'ok'
-                      : 'bad'
+                    ? 'ok'
+                    : 'bad'
                 }">S1 ${
-                  !scoring.score1Picked
-                    ? 'No pick'
-                    : scoring.score1Correct
-                      ? 'Right'
-                      : 'Wrong'
-                }</span>
+                !scoring.score1Picked
+                  ? 'No pick'
+                  : scoring.score1Correct
+                  ? 'Right'
+                  : 'Wrong'
+              }</span>
                 <span class="ko-v-pill ${
                   !scoring.score2Picked
                     ? 'neutral'
                     : scoring.score2Correct
-                      ? 'ok'
-                      : 'bad'
+                    ? 'ok'
+                    : 'bad'
                 }">S2 ${
-                  !scoring.score2Picked
-                    ? 'No pick'
-                    : scoring.score2Correct
-                      ? 'Right'
-                      : 'Wrong'
-                }</span>
+                !scoring.score2Picked
+                  ? 'No pick'
+                  : scoring.score2Correct
+                  ? 'Right'
+                  : 'Wrong'
+              }</span>
                 <span class="ko-v-pill points">+${scoring.points} pts</span>
               </div>`
             : '<div class="ko-v-judge empty">No result yet</div>'
@@ -464,12 +428,12 @@ const renderLeaderboard = rows => {
         <div class="leaderboard-row" data-uid="${
           entry.userId
         }" data-name="${formatUser(entry)}" style="cursor:${
-          interactionEnabled ? 'pointer' : 'default'
-        }" title="${
-          interactionEnabled
-            ? 'Click to view bracket'
-            : 'Only admins can open bracket details'
-        }">
+        interactionEnabled ? 'pointer' : 'default'
+      }" title="${
+        interactionEnabled
+          ? 'Click to view bracket'
+          : 'Only admins can open bracket details'
+      }">
           <div class="place">#${index + 1}</div>
           <div class="player">
             <span class="player-name">${formatUser(entry)}</span>

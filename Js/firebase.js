@@ -707,56 +707,12 @@ export const getKnockoutToplist = async () => {
     : {}
   const usersByUid = usersSnapshot.exists() ? usersSnapshot.val() || {} : {}
 
-  const compatibilityMap = {
-    'round32-left_0': 'round32-left_1',
-    'round32-left_1': 'round32-left_4',
-    'round32-left_2': 'round32-left_0',
-    'round32-left_3': 'round32-left_2',
-    'round32-left_4': 'round32-right_3',
-    'round32-left_5': 'round32-right_2',
-    'round32-left_6': 'round32-right_1',
-    'round32-left_7': 'round32-right_0',
-    'round32-right_0': 'round32-left_3',
-    'round32-right_1': 'round32-left_5',
-    'round32-right_2': 'round32-left_6',
-    'round32-right_3': 'round32-left_7',
-    'round32-right_4': 'round32-right_6',
-    'round32-right_5': 'round32-right_5',
-    'round32-right_6': 'round32-right_4',
-    'round32-right_7': 'round32-right_7',
-    'round16-left_0': 'round16-left_1',
-    'round16-left_1': 'round16-left_0',
-    'round16-left_2': 'round16-right_0',
-    'round16-left_3': 'round16-right_1',
-    'round16-right_0': 'round16-left_2',
-    'round16-right_1': 'round16-left_3',
-    'round16-right_2': 'round16-right_2',
-    'round16-right_3': 'round16-right_3'
-  }
-
   const resultForMatch = matchId => {
     const directPrefixed = resultsByMatch[`knockout-${matchId}`]
-    if (directPrefixed) {
-      return { result: directPrefixed, resultKey: `knockout-${matchId}` }
-    }
+    if (directPrefixed) return directPrefixed
 
     const direct = resultsByMatch[matchId]
-    if (direct) {
-      return { result: direct, resultKey: matchId }
-    }
-
-    const mapped = compatibilityMap[matchId]
-    if (!mapped) return null
-
-    const mappedPrefixed = resultsByMatch[`knockout-${mapped}`]
-    if (mappedPrefixed) {
-      return { result: mappedPrefixed, resultKey: `knockout-${mapped}` }
-    }
-
-    const mappedDirect = resultsByMatch[mapped]
-    if (mappedDirect) {
-      return { result: mappedDirect, resultKey: mapped }
-    }
+    if (direct) return direct
 
     return null
   }
@@ -801,20 +757,20 @@ export const getKnockoutToplist = async () => {
         })
       )
 
-      const bestByResultKey = new Map()
+      let points = 0
+      let totalWinnerPoints = 0
+      let totalScorePoints = 0
+      let resolvedMatchesCount = 0
 
       predictions.forEach(prediction => {
         const matchId = String(prediction?.matchId || '').trim()
         if (!matchId) return
 
-        const resolved = resultForMatch(matchId)
-        if (!resolved) return
+        const result = resultForMatch(matchId)
+        if (!result) return
 
-        const { result, resultKey } = resolved
-        if (!result || !resultKey) return
-
-        const p1 = toNumber(prediction.score1)
-        const p2 = toNumber(prediction.score2)
+        const p1 = toNumber(prediction.score1) ?? 0
+        const p2 = toNumber(prediction.score2) ?? 0
         const r1 = toNumber(result.score1)
         const r2 = toNumber(result.score2)
 
@@ -836,28 +792,14 @@ export const getKnockoutToplist = async () => {
           winnerPoints = 1
         }
 
-        if (r1 !== null && p1 !== null && p1 === r1) scorePoints += 1
-        if (r2 !== null && p2 !== null && p2 === r2) scorePoints += 1
+        if (r1 !== null && p1 === r1) scorePoints += 1
+        if (r2 !== null && p2 === r2) scorePoints += 1
 
         const total = winnerPoints + scorePoints
-        const prevBest = bestByResultKey.get(resultKey)
-        if (!prevBest || total > prevBest.points) {
-          bestByResultKey.set(resultKey, {
-            points: total,
-            winnerPoints,
-            scorePoints
-          })
-        }
-      })
-
-      let points = 0
-      let winnerPoints = 0
-      let scorePoints = 0
-
-      bestByResultKey.forEach(item => {
-        points += item.points
-        winnerPoints += item.winnerPoints
-        scorePoints += item.scorePoints
+        points += total
+        totalWinnerPoints += winnerPoints
+        totalScorePoints += scorePoints
+        resolvedMatchesCount += 1
       })
 
       return {
@@ -865,9 +807,9 @@ export const getKnockoutToplist = async () => {
         email: usersByUid[userId]?.email || '',
         nickname: usersByUid[userId]?.nickname || '',
         points,
-        winnerPoints,
-        scorePoints,
-        resolvedMatchesCount: bestByResultKey.size,
+        winnerPoints: totalWinnerPoints,
+        scorePoints: totalScorePoints,
+        resolvedMatchesCount,
         predictionsCount: predictions.length
       }
     }
