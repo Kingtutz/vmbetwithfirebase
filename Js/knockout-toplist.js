@@ -432,7 +432,7 @@ const renderLeaderboard = rows => {
       }" title="${
         interactionEnabled
           ? 'Click to view bracket'
-          : 'Only admins can open bracket details'
+          : 'Only admins can view other players\' knockout predictions'
       }">
           <div class="place">#${index + 1}</div>
           <div class="player">
@@ -478,7 +478,14 @@ const run = async () => {
         ? 'everyone'
         : 'admin'
 
-    notice.style.display = 'none'
+    if (!currentUserIsAdmin && interactionAudience !== 'everyone') {
+      notice.style.display = 'block'
+      notice.textContent =
+        'Only admins can view other players\' knockout predictions right now.'
+    } else {
+      notice.style.display = 'none'
+      notice.textContent = ''
+    }
     renderLeaderboard(rows)
   } catch (error) {
     notice.style.display = 'block'

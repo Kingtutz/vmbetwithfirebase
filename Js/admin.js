@@ -433,8 +433,8 @@ const renderKnockoutToplistInteractionControls = () => {
   const isEveryone =
     knockoutToplistInteractionVisibility.audience === 'everyone'
   toggleKnockoutToplistInteractionBtn.textContent = isEveryone
-    ? 'Interaction: Everyone'
-    : 'Interaction: Admin only'
+    ? 'Visible to all users'
+    : 'Visible to admins only'
   toggleKnockoutToplistInteractionBtn.disabled =
     isSavingKnockoutToplistInteractionVisibility
 }
@@ -464,11 +464,11 @@ const initializeKnockoutToplistInteractionSettings = () => {
       }
 
       setKnockoutToplistInteractionStatus(
-        'Knockout Top List interaction saved.'
+        'Knockout prediction visibility saved.'
       )
     } catch (error) {
       setKnockoutToplistInteractionStatus(
-        error.message || 'Could not save Knockout Top List interaction setting.'
+        error.message || 'Could not save knockout prediction visibility setting.'
       )
     } finally {
       isSavingKnockoutToplistInteractionVisibility = false
